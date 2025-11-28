@@ -1,0 +1,13 @@
+{
+  "editor.formatOnSave": true,
+  "[javascript][typescript][javascriptreact][typescriptreact][html][css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.tabWidth": 2,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.sortImports": "explicit",
+  }
+}
+
+

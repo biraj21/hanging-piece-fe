@@ -1,75 +1,63 @@
-# React + TypeScript + Vite
+# ChessTard Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based frontend for the ChessTard application built with modern web technologies.
 
-Currently, two official plugins are available:
+## Technology Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **Authentication**: Better Auth
+- **Validation**: Zod
 
-## React Compiler
+## Setup
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+This project uses [pnpm](https://pnpm.io/) as the package manager.
 
-Note: This will impact Vite dev & build performances.
+1. Install pnpm if you haven't already:
+   ```bash
+   npm install -g pnpm
+   ```
 
-## Expanding the ESLint configuration
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. Create a `.env` file in the root directory with the backend API URL:
+   ```env
+   VITE_API_BASE_URL=http://localhost:3000
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Scripts
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Available pnpm scripts for development:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `pnpm run dev` - Starts the development server with hot reload
+- `pnpm run build` - Builds the project for production
+- `pnpm run preview` - Previews the production build locally
+- `pnpm run lint` - Runs ESLint to check for code issues
+
+## Path Aliases
+
+This project uses the `@` alias for clean import paths throughout the codebase.
+
+### Configuration
+
+**TypeScript compilation:**
+- `tsconfig.app.json` maps `"@/*": ["./src/*"]` in `compilerOptions.paths`
+- Enables imports like `import { Component } from "@/components/Component"`
+
+**Vite bundler:**
+- `vite.config.ts` maps `"@"` to `"./src"` in `resolve.alias`
+- Allows the bundler to resolve the alias during development and build
+
+### Usage Example
+
+```typescript
+// Instead of: import { Button } from "../../components/Button"
+// Use: import { Button } from "@/components/Button"
+import { Button } from "@/components/Button";
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+This setup provides clean, consistent imports while supporting both development and production environments.
