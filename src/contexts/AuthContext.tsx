@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { authClient, signInWithGoogle as signInWithGoogleFn } from "@/config/auth";
 import { Loader } from "@/components/Loader";
+import { authClient, signInWithGoogle as signInWithGoogleFn } from "@/config/auth";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 interface User {
   id: string;
@@ -13,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  signIn: (callbackURL?: string) => Promise<void>;
+  signIn: (callbackPath?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -54,10 +54,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return <Loader fullScreen />;
   }
 
-  const signIn = async (callbackURL?: string) => {
+  const signIn = async (callbackPath?: string) => {
     try {
       setIsLoading(true);
-      await signInWithGoogleFn(callbackURL);
+      await signInWithGoogleFn(callbackPath);
     } catch (error) {
       console.error("Sign in failed:", error);
       setIsLoading(false);

@@ -1,15 +1,19 @@
 import { createAuthClient } from "better-auth/client";
 
 import { env } from "@/config/env";
+import { ROUTES } from "@/router/routes";
 
 export const authClient = createAuthClient({
   baseURL: env.VITE_API_BASE_URL,
 });
 
-export async function signInWithGoogle(callbackURL?: string) {
+export async function signInWithGoogle(callbackPath?: string) {
+  const callbackUrl = new URL(window.location.href);
+  callbackUrl.pathname = callbackPath || ROUTES.INDEX;
+
   const data = await authClient.signIn.social({
     provider: "google",
-    callbackURL: callbackURL || window.location.origin,
+    callbackURL: callbackUrl.toString(),
   });
   return data;
 }

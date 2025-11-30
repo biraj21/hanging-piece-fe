@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/Logo";
 import { Tagline } from "@/components/Tagline";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROUTES } from "@/router/routes";
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
@@ -10,7 +11,7 @@ export default function DashboardPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
+    navigate(ROUTES.INDEX);
   };
 
   return (
@@ -22,7 +23,7 @@ export default function DashboardPage() {
         {/* Welcome Message */}
         <div className="mt-4 mb-6">
           <div className="text-neutral-300 text-sm">
-            Glad to have you on board, <span className="underline text-green-500">{user?.email}</span>.
+            Glad to have you on board, <span className="text-green-500">{user?.email}</span>.
           </div>
         </div>
 
@@ -37,7 +38,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link to="/" className="underline text-sm text-white">
+          <Link to={ROUTES.INDEX} className="underline text-sm text-white">
             Home
           </Link>
           <button

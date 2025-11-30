@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router";
-import { useAuth } from "@/contexts/AuthContext";
+
+import { Loader } from "@/components/Loader";
 import { Logo } from "@/components/Logo";
 import { Tagline } from "@/components/Tagline";
-import { Loader } from "@/components/Loader";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROUTES } from "@/router/routes";
 
 export default function IndexPage() {
   const { isAuthenticated, isLoading, signIn } = useAuth();
@@ -47,7 +49,7 @@ export default function IndexPage() {
         {/* Action Button */}
         <div>
           <button
-            onClick={() => (isAuthenticated ? navigate("/dashboard") : signIn())}
+            onClick={() => (isAuthenticated ? navigate(ROUTES.DASHBOARD) : signIn(ROUTES.DASHBOARD))}
             className="bg-white hover:bg-neutral-100 text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto min-w-[160px]"
           >
             {isAuthenticated ? "Go to Dashboard" : "Join waitlist"}
