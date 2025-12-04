@@ -5,6 +5,7 @@ import { ROUTES } from "@/router/routes";
 
 export const authClient = createAuthClient({
   baseURL: env.VITE_API_BASE_URL,
+  basePath: "/auth",
 });
 
 export async function signInWithGoogle(callbackPath?: string) {
