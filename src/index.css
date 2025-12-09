@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+.move-item-white-piece-inverted-for-black {
+  filter: invert(0.9) brightness(1.4);
+}
+
+@layer base {
+  /* Default scrollbar look across the app */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #08b57e transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #08b57e;
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

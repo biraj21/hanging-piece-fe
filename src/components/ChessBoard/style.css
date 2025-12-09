@@ -1,0 +1,51 @@
+/* ============================================
+   CHESSBOARD THEMES
+   ============================================ */
+
+/* THEME: Brown (uses chessground.brown.css defaults) */
+/* No overrides needed - inherits from chessground.brown.css */
+
+/* THEME: Dark Gray */
+.cg-theme-dark-gray cg-board {
+  background-color: #ababab;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ababab' width='200' height='200'/%3E%3Crect fill='%23656565' x='100' width='100' height='100'/%3E%3Crect fill='%23656565' y='100' width='100' height='100'/%3E%3C/svg%3E");
+  background-size: 25%;
+}
+
+.cg-theme-dark-gray coords {
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* THEME: Green */
+.cg-theme-green cg-board {
+  background-color: #ffffdd;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ffffdd' width='200' height='200'/%3E%3Crect fill='%2386a666' x='100' width='100' height='100'/%3E%3Crect fill='%2386a666' y='100' width='100' height='100'/%3E%3C/svg%3E");
+  background-size: 25%;
+}
+
+.cg-theme-green coords {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================
+   SHARED INTERACTIVE HIGHLIGHTS
+   ============================================ */
+
+.cg-wrap cg-board square.last-move {
+  background-color: rgba(155, 199, 0, 0.4);
+}
+
+.cg-wrap cg-board square.selected {
+  background-color: rgba(20, 85, 30, 0.5);
+}
+
+.cg-wrap cg-board square.check {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 0, 0, 1) 0%,
+    rgba(231, 0, 0, 1) 25%,
+    rgba(169, 0, 0, 0) 89%,
+    rgba(158, 0, 0, 0) 100%
+  );
+}

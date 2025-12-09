@@ -1,11 +1,16 @@
+import LogoImage from "/img/logo-compressed.png";
+
 interface LogoProps {
   className?: string;
 }
 
 export const Logo: React.FC<LogoProps> = ({ className = "" }) => {
   return (
-    <h1 className={`text-4xl sm:text-5xl font-extralight text-neutral-500 mb-1 tracking-tight ${className}`}>
-      hanging <span className="text-white">piece</span>
-    </h1>
+    <div className={`inline-flex items-center gap-2 ${className}`}>
+      <img src={LogoImage} alt="Logo" className="w-10 h-10 rounded-md" />
+      <h1 className="text-4xl sm:text-5xl font-extralight text-neutral-500 mb-1 tracking-tight">
+        hanging <span className="text-white">piece</span>
+      </h1>
+    </div>
   );
 };

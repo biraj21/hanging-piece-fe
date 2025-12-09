@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router";
 
+import ExplainerPage from "@/pages/analysis";
 import DashboardPage from "@/pages/dashboard";
 import IndexPage from "@/pages/index";
 import LoginPage from "@/pages/login";
@@ -12,6 +13,7 @@ export default function AppRouter() {
       <Route path={ROUTES.INDEX} element={<IndexPage />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+      <Route path={ROUTES.ANALYSIS} element={<ExplainerPage />} />
 
       {/* catch all */}
       <Route path="*" element={<div>404</div>} />

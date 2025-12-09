@@ -1,6 +1,6 @@
-# ChessTard Frontend
+# Hanging Piece Frontend
 
-A React-based frontend for the ChessTard application built with modern web technologies.
+A React-based frontend for the Hanging Piece application built with modern web technologies.
 
 ## Technology Stack
 
@@ -15,11 +15,13 @@ A React-based frontend for the ChessTard application built with modern web techn
 This project uses [pnpm](https://pnpm.io/) as the package manager.
 
 1. Install pnpm if you haven't already:
+
    ```bash
    npm install -g pnpm
    ```
 
 2. Install dependencies:
+
    ```bash
    pnpm install
    ```
@@ -45,10 +47,12 @@ This project uses the `@` alias for clean import paths throughout the codebase.
 ### Configuration
 
 **TypeScript compilation:**
+
 - `tsconfig.app.json` maps `"@/*": ["./src/*"]` in `compilerOptions.paths`
 - Enables imports like `import { Component } from "@/components/Component"`
 
 **Vite bundler:**
+
 - `vite.config.ts` maps `"@"` to `"./src"` in `resolve.alias`
 - Allows the bundler to resolve the alias during development and build
 

@@ -1,5 +1,5 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/Logo";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const { signIn, isLoading } = useAuth();
