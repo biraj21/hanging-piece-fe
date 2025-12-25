@@ -16,9 +16,10 @@ export interface ChessBoardProps {
   lastMove?: [Key, Key];
   theme?: ChessBoardTheme;
   className?: string;
+  arrows?: Array<{ orig: Key; dest: Key; brush?: string }>;
 }
 
-const ChessBoard: React.FC<ChessBoardProps> = ({ theme = "green", fen, lastMove, className = "" }) => {
+const ChessBoard: React.FC<ChessBoardProps> = ({ theme = "green", fen, lastMove, className = "", arrows = [] }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
 
@@ -29,14 +30,16 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ theme = "green", fen, lastMove,
     }
 
     if (cgRef.current) {
-      console.log("Setting fen:", fen, "and lastMove:", lastMove);
-      cgRef.current.set({ fen, lastMove });
+      cgRef.current.set({ fen, lastMove, drawable: { shapes: arrows } });
     } else {
-      console.log("Creating new board with fen:", fen, "and lastMove:", lastMove);
       const defaultConfig: Config = {
         orientation: "white",
         fen,
         lastMove,
+        drawable: {
+          enabled: true,
+          shapes: arrows,
+        },
         movable: {
           free: false,
           dests: new Map(),
@@ -56,7 +59,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ theme = "green", fen, lastMove,
 
       cgRef.current = Chessground(boardRef.current, defaultConfig);
     }
-  }, [fen, lastMove]);
+  }, [fen, lastMove, arrows]);
 
   // destroy the board when the component unmounts
   useEffect(() => {
