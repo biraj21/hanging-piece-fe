@@ -124,6 +124,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
                 {badContinuation.map((cont, idx) => {
                   return (
                     <MoveCard
+                      key={`bad-${idx}`}
                       type="bad"
                       cont={cont}
                       ply={move.ply + idx + 1}
@@ -154,6 +155,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
                 {bestContinuation.map((cont, idx) => {
                   return (
                     <MoveCard
+                      key={`best-${idx}`}
                       type="best"
                       cont={cont}
                       ply={move.ply + idx}
@@ -190,17 +192,26 @@ interface MoveCardProps {
 const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, onClick }) => {
   const moveNum = Math.ceil(ply / 2);
   const isWhite = ply % 2 === 1;
-  const color = type === "best" ? "emerald" : "red";
+  const isBest = type === "best";
+
+  // Use static Tailwind classes based on type
+  const baseClasses = isBest ? "hover:bg-emerald-950/30" : "hover:bg-red-950/30";
+
+  const selectedClasses = isSelected
+    ? isBest
+      ? "bg-emerald-950/40 border border-emerald-500/50 shadow-lg"
+      : "bg-red-950/40 border border-red-500/50 shadow-lg"
+    : "border border-transparent";
+
+  const textColorClass = isBest ? "text-emerald-400" : "text-red-400";
 
   return (
     <button
       onClick={onClick}
-      className={`w-full flex flex-col items-start gap-2 text-sm px-2 py-1.5 rounded hover:bg-${color}-950/30 text-left cursor-pointer ${
-        isSelected ? `bg-${color}-950/40 border border-${color}-500/50 shadow-lg` : "border border-transparent"
-      }`}
+      className={`w-full flex flex-col items-start gap-2 text-sm px-2 py-1.5 rounded ${baseClasses} text-left cursor-pointer ${selectedClasses}`}
       title="Click to visualize this position"
     >
-      <span className={`text-{color}-400 font-mono font-semibold shrink-0 min-w-[60px]`}>
+      <span className={`${textColorClass} font-mono font-semibold shrink-0 min-w-[60px]`}>
         {isWhite ? `${moveNum}. ${cont.move}` : `${moveNum}... ${cont.move}`}
       </span>
       <p className="text-xs text-neutral-300 leading-relaxed">{cont.reason}</p>

@@ -52,7 +52,7 @@ function initDB(): Promise<IDBDatabase> {
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: ["gameHash", "moveIndex"] });
+        const store = db.createObjectStore(STORE_NAME, { keyPath: ["gameId", "moveIndex"] });
         store.createIndex("timestamp", "timestamp", { unique: false });
       }
     };
