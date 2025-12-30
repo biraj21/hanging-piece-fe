@@ -29,7 +29,7 @@ interface AnalysisProps {
   gameId?: string;
   pgn?: string;
   boardOrientation?: BlackAndWhite;
-  source?: "chess.com" | "lichess" | "pgn";
+  source?: "chesscom" | "lichess" | "pgn";
 }
 
 export const Analysis: React.FC<AnalysisProps> = ({

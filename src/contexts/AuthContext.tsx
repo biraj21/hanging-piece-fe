@@ -7,6 +7,8 @@ interface User {
   email: string;
   name?: string;
   image?: string;
+  chesscomId?: string | null;
+  lichessId?: string | null;
 }
 
 interface AuthContextType {

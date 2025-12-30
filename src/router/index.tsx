@@ -5,6 +5,7 @@ import AnalysisPage from "@/pages/analysis";
 import DashboardPage from "@/pages/dashboard";
 import IndexPage from "@/pages/index";
 import LoginPage from "@/pages/login";
+import OnboardingPage from "@/pages/onboarding";
 
 import { ROUTES } from "./routes";
 
@@ -20,6 +21,7 @@ export default function AppRouter() {
       <Route element={<ProtectedRoutes redirectTo={ROUTES.LOGIN} />}>
         <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
         <Route path={ROUTES.ANALYSIS} element={<AnalysisPage />} />
+        <Route path={ROUTES.ONBOARDING} element={<OnboardingPage />} />
       </Route>
 
       {/* catch all */}
