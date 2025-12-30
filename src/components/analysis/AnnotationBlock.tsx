@@ -12,6 +12,8 @@ import { parseUciContinuation } from "@/utils/chess";
 import { MoveQualityIcon } from "./MoveQualityIcon";
 import { TellMeWhyButton } from "./TellMeWhy";
 
+const EXPLAIN_ENDPOINT = env.VITE_API_BASE_URL.toString() + "explain";
+
 type AnnotationBlockProps = {
   moveIndex: number;
   moves: GameMove[];
@@ -281,7 +283,7 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
       console.debug("  Best continuation:", bestContinuation.map((c) => c.pgn).join(" "));
       console.debug("");
 
-      const response = await fetch(`${env.VITE_API_BASE_URL}/explain`, {
+      const response = await fetch(EXPLAIN_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

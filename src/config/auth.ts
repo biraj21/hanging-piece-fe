@@ -4,7 +4,7 @@ import { env } from "@/config/env";
 import { ROUTES } from "@/router/routes";
 
 export const authClient = createAuthClient({
-  baseURL: env.VITE_API_BASE_URL,
+  baseURL: env.VITE_API_BASE_URL.toString(),
   basePath: "/auth",
 });
 
