@@ -13,7 +13,7 @@ export const Loader: React.FC<LoaderProps> = ({ fullScreen = false, message = "L
 
   if (fullScreen) {
     return (
-      <div className="min-h-screen w-full overflow-x-hidden bg-neutral-950 flex flex-col items-center justify-center">
+      <div className="min-h-screen w-full overflow-x-hidden bg-neutral-800 flex flex-col items-center justify-center">
         {content}
       </div>
     );

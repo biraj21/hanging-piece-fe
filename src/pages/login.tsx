@@ -5,7 +5,7 @@ export default function LoginPage() {
   const { signIn, isLoading } = useAuth();
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-neutral-950 flex flex-col items-center justify-center px-6 py-12">
+    <div className="min-h-screen w-full overflow-x-hidden bg-neutral-800 flex flex-col items-center justify-center px-6 py-12">
       <div className="text-center w-full max-w-md">
         {/* Logo/Brand */}
         <Logo className="mb-12" />

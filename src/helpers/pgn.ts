@@ -1,4 +1,4 @@
-import { isNormal, makeSquare, makeUci } from "chessops";
+import { isNormal, makeSquare, makeUci, type Position } from "chessops";
 import { makeFen } from "chessops/fen";
 import {
   parseComment,
@@ -12,8 +12,22 @@ import {
 } from "chessops/pgn";
 import { parseSan } from "chessops/san";
 
-/** Best continuation (array of SANs) if this move was suboptimal */
-type Variation = string[];
+export type VariationMove = {
+  san: string;
+  /** FEN after this move */
+  fen: string;
+  /** FEN before this move */
+  beforeFen: string;
+  /** Square the piece moved from */
+  from: string;
+  /** Square the piece moved to */
+  to: string;
+  /** UCI notation for the move */
+  uci: string;
+};
+
+/** Best continuation (array of moves with FENs) if this move was suboptimal */
+export type Variation = VariationMove[];
 
 export type MoveQuality = "blunder" | "mistake" | "inaccuracy" | "good" | "brilliant" | null;
 
@@ -39,7 +53,7 @@ export interface GameMoveInit {
   nags?: number[];
   /** Clock time in seconds after this move */
   clock?: number;
-  /** Best continuations (array of Variations, which is an array of SANs) */
+  /** Best continuations (array of Variations, which includes SAN + before/after FEN) */
   variations?: Variation[];
 }
 
@@ -120,7 +134,47 @@ export interface ParsedGame {
   moves: GameMove[];
 }
 
-function collectionVariations(prevMoveNode: ChildNode<PgnNodeData>): Variation[] | undefined {
+/**
+ * Parses a SAN move and advances the position by playing it.
+ *
+ * **IMPORTANT**: This function mutates the `position` object by calling `position.play()`.
+ *
+ * @param position - The chess position to play the move on (will be mutated)
+ * @param san - Standard Algebraic Notation of the move (e.g., "e4", "Nf3")
+ * @returns Object containing move details: fen (after), beforeFen, from, to, uci
+ * @throws Error if the move is illegal
+ */
+function parseSanAndAdvancePosition(position: Position, san: string) {
+  const beforeFen = makeFen(position.toSetup());
+  const move = parseSan(position, san);
+  if (!move) {
+    throw new Error(`Illegal variation move at ${san}`);
+  }
+
+  let from: string;
+  let to: string;
+  if (isNormal(move)) {
+    from = makeSquare(move.from);
+    to = makeSquare(move.to);
+  } else {
+    from = makeSquare(move.to);
+    to = makeSquare(move.to);
+  }
+  const uci = makeUci(move);
+
+  position.play(move);
+  const fen = makeFen(position.toSetup());
+
+  return {
+    fen,
+    beforeFen,
+    from,
+    to,
+    uci,
+  };
+}
+
+function collectionVariations(prevMoveNode: ChildNode<PgnNodeData>, basePosition: Position): Variation[] | undefined {
   if (prevMoveNode.children.length === 1) {
     return undefined;
   }
@@ -129,9 +183,15 @@ function collectionVariations(prevMoveNode: ChildNode<PgnNodeData>): Variation[]
 
   for (let i = 1; i < prevMoveNode.children.length; i++) {
     const variation: Variation = [];
+    const position = basePosition.clone();
     let current = prevMoveNode.children[i];
     while (current) {
-      variation.push(current.data.san);
+      const san = current.data.san;
+      const moveDetails = parseSanAndAdvancePosition(position, san);
+      variation.push({
+        san,
+        ...moveDetails,
+      });
       current = current.children[0];
     }
     variations.push(variation);
@@ -191,37 +251,20 @@ export function parsePgnToGame(pgn: string): ParsedGame {
     // current move is children[0] of previous move, so the variations would be
     // children[1], children[2], etc. of the previous move
     if (prevMoveNode) {
-      variations = collectionVariations(prevMoveNode);
+      variations = collectionVariations(prevMoveNode, position.clone());
     }
 
-    const move = parseSan(position, moveNode.data.san);
-    if (!move) {
-      throw new Error(`Illegal move at ${moveNode.data.san}`);
-    }
-
-    let from: string;
-    let to: string;
-    if (isNormal(move)) {
-      from = makeSquare(move.from);
-      to = makeSquare(move.to);
-    } else {
-      from = makeSquare(move.to);
-      to = makeSquare(move.to);
-    }
-
-    const uci = makeUci(move);
-
-    position.play(move);
-    const fen = makeFen(position.toSetup());
+    const san = moveNode.data.san;
+    const moveDetails = parseSanAndAdvancePosition(position, san);
 
     parsedGame.moves.push(
       new GameMove({
         ply: parsedGame.moves.length + 1,
-        san: moveNode.data.san,
-        fen,
-        from,
-        to,
-        uci,
+        san,
+        fen: moveDetails.fen,
+        from: moveDetails.from,
+        to: moveDetails.to,
+        uci: moveDetails.uci,
         textComments,
         evaluation,
         nags: moveNode.data.nags,

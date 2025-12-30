@@ -45,5 +45,3 @@ export const MoveQualityIcon: React.FC<MoveQualityIconProps> = ({ moveQuality, s
 
   return <div className={getSymbolClasses(moveQuality, size)}>{symbol}</div>;
 };
-
-export default MoveQualityIcon;

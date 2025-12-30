@@ -34,7 +34,7 @@ const formatEval = (move: GameMove) => {
   }
 
   if (isPawnsEval(move.evaluation)) {
-    return `${move.evaluation.pawns > 0 ? "+" : ""}${move.evaluation.pawns.toFixed(1)}`;
+    return `${move.evaluation.pawns > 0 ? "+" : ""}${move.evaluation.pawns.toFixed(2)}`;
   }
 
   return `#${move.evaluation.mate}`;
@@ -70,5 +70,3 @@ export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, cl
     </div>
   );
 };
-
-export default MoveItem;

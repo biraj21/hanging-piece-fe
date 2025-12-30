@@ -5,8 +5,8 @@ interface TaglineProps {
 export const Tagline: React.FC<TaglineProps> = ({ className = "" }) => {
   return (
     <div className={className}>
-      <p className="text-sm text-neutral-400 italic">Tell me why...</p>
-      <p className="text-xs text-neutral-600">ain't nothing but a blunder</p>
+      <p className="text-sm text-neutral-300 italic">Tell me why...</p>
+      <p className="text-xs text-neutral-400">ain't nothing but a blunder</p>
     </div>
   );
 };

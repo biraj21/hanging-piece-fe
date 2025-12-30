@@ -1,5 +1,5 @@
 import { Analysis } from "@/components/analysis";
 
-export default function ExplainerPage() {
+export default function AnalysisPage() {
   return <Analysis />;
 }

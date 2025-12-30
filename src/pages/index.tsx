@@ -22,7 +22,7 @@ export default function IndexPage() {
   }
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-neutral-950 flex flex-col items-center justify-center px-6 py-12">
+    <div className="min-h-screen w-full overflow-x-hidden bg-neutral-800 flex flex-col items-center justify-center px-6 py-12">
       <div className="text-center w-full max-w-md">
         {/* Logo/Brand */}
         <Logo />
@@ -37,7 +37,7 @@ export default function IndexPage() {
         {/* Feature highlights */}
         <div className="mb-12 space-y-3">
           {indexFeatures.map((feature, index) => (
-            <p key={index} className="text-neutral-500 text-sm">
+            <p key={index} className="text-neutral-400 text-sm">
               <span className="text-neutral-300">→</span> {feature}
             </p>
           ))}
@@ -50,7 +50,7 @@ export default function IndexPage() {
         <div>
           <button
             onClick={() => (isAuthenticated ? navigate(ROUTES.DASHBOARD) : signIn(ROUTES.DASHBOARD))}
-            className="bg-white hover:bg-neutral-100 text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto min-w-[160px]"
+            className="bg-white hover:bg-neutral-100 text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto min-w-40"
           >
             {isAuthenticated ? "Go to Dashboard" : "Join waitlist"}
           </button>
