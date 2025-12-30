@@ -30,10 +30,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const checkSession = async () => {
+  const checkSession = async (refresh = false) => {
     try {
       setIsLoading(true);
-      const session = await authClient.getSession();
+      const session = await authClient.getSession({
+        ...(refresh && { query: { disableCookieCache: refresh } }),
+      });
       if (session.data?.user) {
         setUser(session.data.user as User);
       } else {
@@ -81,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const refreshSession = async () => {
-    await checkSession();
+    await checkSession(true);
   };
 
   const value: AuthContextType = {

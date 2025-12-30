@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Logo } from "@/components/Logo";
@@ -6,6 +6,8 @@ import { ProfilePreview } from "@/components/ProfilePreview";
 import { env } from "@/config/env";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
+
+const DEBOUNCE_MS = 500;
 
 export default function OnboardingPage() {
   const { user, refreshSession } = useAuth();
@@ -37,110 +39,144 @@ export default function OnboardingPage() {
     url?: string;
   } | null>(null);
 
-  const validateChesscomId = async (id: string) => {
-    if (!id.trim()) {
+  // Refs to track abort controllers for cancelling in-flight requests
+  const chesscomAbortRef = useRef<AbortController | null>(null);
+  const lichessAbortRef = useRef<AbortController | null>(null);
+
+  // Debounced Chess.com validation
+  useEffect(() => {
+    const trimmedId = chesscomId.trim();
+
+    // Reset state if empty
+    if (!trimmedId) {
       setIsChesscomValid(false);
       setChesscomData(null);
+      setIsValidatingChesscom(false);
       return;
     }
 
+    // Mark as validating immediately for UI feedback
     setIsValidatingChesscom(true);
-    setError(null);
+    setIsChesscomValid(false);
     setChesscomData(null);
 
-    try {
-      const response = await fetch(`https://api.chess.com/pub/player/${id.trim()}`);
-      if (response.ok) {
-        const data = await response.json();
-        setIsChesscomValid(true);
-        setChesscomData({
-          avatar: data.avatar,
-          username: data.username,
-          name: data.name,
-          country: data.country ? data.country.split("/").pop() : undefined,
-          league: data.league,
-          followers: data.followers,
-          url: data.url,
+    const timeoutId = setTimeout(async () => {
+      // Abort any previous request
+      chesscomAbortRef.current?.abort();
+      const controller = new AbortController();
+      chesscomAbortRef.current = controller;
+
+      try {
+        const response = await fetch(`https://api.chess.com/pub/player/${trimmedId}`, {
+          signal: controller.signal,
         });
-      } else {
+        if (response.ok) {
+          const data = await response.json();
+          setIsChesscomValid(true);
+          setChesscomData({
+            avatar: data.avatar,
+            username: data.username,
+            name: data.name,
+            country: data.country ? data.country.split("/").pop() : undefined,
+            league: data.league,
+            followers: data.followers,
+            url: data.url,
+          });
+          setError(null);
+        } else {
+          setIsChesscomValid(false);
+          setChesscomData(null);
+          setError("Chess.com username not found");
+        }
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+        console.error("Error validating Chess.com ID:", err);
         setIsChesscomValid(false);
         setChesscomData(null);
-        setError("Chess.com username not found");
+        setError("Failed to validate Chess.com username");
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsValidatingChesscom(false);
+        }
       }
-    } catch (err) {
-      console.error("Error validating Chess.com ID:", err);
-      setIsChesscomValid(false);
-      setChesscomData(null);
-      setError("Failed to validate Chess.com username");
-    } finally {
-      setIsValidatingChesscom(false);
-    }
-  };
+    }, DEBOUNCE_MS);
 
-  const validateLichessId = async (id: string) => {
-    if (!id.trim()) {
+    return () => {
+      clearTimeout(timeoutId);
+      chesscomAbortRef.current?.abort();
+    };
+  }, [chesscomId]);
+
+  // Debounced Lichess validation
+  useEffect(() => {
+    const trimmedId = lichessId.trim();
+
+    // Reset state if empty
+    if (!trimmedId) {
       setIsLichessValid(false);
       setLichessData(null);
+      setIsValidatingLichess(false);
       return;
     }
 
+    // Mark as validating immediately for UI feedback
     setIsValidatingLichess(true);
-    setError(null);
+    setIsLichessValid(false);
     setLichessData(null);
 
-    try {
-      const response = await fetch(`https://lichess.org/api/user/${id.trim()}`);
-      if (response.ok) {
-        const data = await response.json();
-        setIsLichessValid(true);
+    const timeoutId = setTimeout(async () => {
+      // Abort any previous request
+      lichessAbortRef.current?.abort();
+      const controller = new AbortController();
+      lichessAbortRef.current = controller;
 
-        // Get the highest rating from perfs (prefer non-provisional ratings)
-        const perfs = data.perfs || {};
-        const ratings = Object.values(perfs)
-          .map((perf: any) => (perf.prov ? null : perf.rating))
-          .filter((rating): rating is number => rating !== null && rating !== undefined);
-        const highestRating = ratings.length > 0 ? Math.max(...ratings) : undefined;
-
-        setLichessData({
-          username: data.username,
-          name: data.profile?.realName,
-          title: data.title,
-          rating: highestRating,
-          country: data.profile?.flag,
-          url: data.url || `https://lichess.org/@/${data.username}`,
+      try {
+        const response = await fetch(`https://lichess.org/api/user/${trimmedId}`, {
+          signal: controller.signal,
         });
-      } else {
+        if (response.ok) {
+          const data = await response.json();
+
+          // Get the highest rating from perfs (prefer non-provisional ratings)
+          const perfs = data.perfs || {};
+          const ratings = Object.values(perfs)
+            .map((perf: any) => (perf.prov ? null : perf.rating))
+            .filter((rating): rating is number => rating !== null && rating !== undefined);
+          const highestRating = ratings.length > 0 ? Math.max(...ratings) : undefined;
+
+          setIsLichessValid(true);
+          setLichessData({
+            username: data.username,
+            name: data.profile?.realName,
+            title: data.title,
+            rating: highestRating,
+            country: data.profile?.flag,
+            url: data.url || `https://lichess.org/@/${data.username}`,
+          });
+          setError(null);
+        } else {
+          setIsLichessValid(false);
+          setLichessData(null);
+          setError("Lichess username not found");
+        }
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+        console.error("Error validating Lichess ID:", err);
         setIsLichessValid(false);
         setLichessData(null);
-        setError("Lichess username not found");
+        setError("Failed to validate Lichess username");
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsValidatingLichess(false);
+        }
       }
-    } catch (err) {
-      console.error("Error validating Lichess ID:", err);
-      setIsLichessValid(false);
-      setLichessData(null);
-      setError("Failed to validate Lichess username");
-    } finally {
-      setIsValidatingLichess(false);
-    }
-  };
+    }, DEBOUNCE_MS);
 
-  const handleChesscomBlur = () => {
-    if (chesscomId.trim()) {
-      validateChesscomId(chesscomId);
-    } else {
-      setIsChesscomValid(false);
-      setError(null);
-    }
-  };
-
-  const handleLichessBlur = () => {
-    if (lichessId.trim()) {
-      validateLichessId(lichessId);
-    } else {
-      setIsLichessValid(false);
-      setError(null);
-    }
-  };
+    return () => {
+      clearTimeout(timeoutId);
+      lichessAbortRef.current?.abort();
+    };
+  }, [lichessId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,14 +266,8 @@ export default function OnboardingPage() {
               id="chesscomId"
               type="text"
               value={chesscomId}
-              onChange={(e) => {
-                setChesscomId(e.target.value);
-                setIsChesscomValid(false);
-                setChesscomData(null);
-                setError(null);
-              }}
-              onBlur={handleChesscomBlur}
-              disabled={isSubmitting || isValidatingChesscom}
+              onChange={(e) => setChesscomId(e.target.value)}
+              disabled={isSubmitting}
               placeholder="Enter your Chess.com username"
               className="w-full bg-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white disabled:bg-neutral-600 disabled:cursor-not-allowed"
             />
@@ -270,14 +300,8 @@ export default function OnboardingPage() {
               id="lichessId"
               type="text"
               value={lichessId}
-              onChange={(e) => {
-                setLichessId(e.target.value);
-                setIsLichessValid(false);
-                setLichessData(null);
-                setError(null);
-              }}
-              onBlur={handleLichessBlur}
-              disabled={isSubmitting || isValidatingLichess}
+              onChange={(e) => setLichessId(e.target.value)}
+              disabled={isSubmitting}
               placeholder="Enter your Lichess username"
               className="w-full bg-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white disabled:bg-neutral-600 disabled:cursor-not-allowed"
             />
