@@ -1,6 +1,8 @@
 import { Loader } from "@/components/Loader";
 import { authClient, signInWithGoogle as signInWithGoogleFn } from "@/config/auth";
+import { ROUTES } from "@/router/routes";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router";
 
 interface User {
   id: string;
@@ -30,6 +32,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
   const checkSession = async (refresh = false) => {
     try {
       setIsLoading(true);
@@ -53,6 +58,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     checkSession();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    // Check if user needs onboarding (neither chesscomId nor lichessId is set)
+    const needsOnboarding = !user.chesscomId && !user.lichessId;
+    if (needsOnboarding && pathname !== ROUTES.ONBOARDING) {
+      navigate(ROUTES.ONBOARDING, {
+        replace: true,
+        state: {
+          redirectTo: pathname,
+        },
+      });
+    } else if (!needsOnboarding && pathname === ROUTES.ONBOARDING) {
+      navigate(ROUTES.DASHBOARD);
+    }
+  }, [user]);
 
   if (isLoading) {
     return <Loader fullScreen />;

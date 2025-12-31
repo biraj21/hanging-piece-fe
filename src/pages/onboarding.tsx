@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 import { Logo } from "@/components/Logo";
 import { ProfilePreview } from "@/components/ProfilePreview";
@@ -12,6 +12,7 @@ const DEBOUNCE_MS = 500;
 export default function OnboardingPage() {
   const { user, refreshSession } = useAuth();
   const navigate = useNavigate();
+  const { state } = useLocation();
 
   const [chesscomId, setChesscomId] = useState(user?.chesscomId || "");
   const [lichessId, setLichessId] = useState(user?.lichessId || "");
@@ -182,10 +183,15 @@ export default function OnboardingPage() {
     e.preventDefault();
 
     // Validate that at least one platform is provided
+
+    // Enable submit if:
+    // 1. Chess.com ID is provided and validated successfully, OR
+    // 2. Lichess ID is provided and validated successfully, OR
+    // 3. Both are provided (both must be valid if provided)
     const hasChesscom = chesscomId.trim() && isChesscomValid;
     const hasLichess = lichessId.trim() && isLichessValid;
-
-    if (!hasChesscom && !hasLichess) {
+    const canSubmit = hasChesscom || hasLichess;
+    if (!canSubmit) {
       setError("Please provide at least one valid chess platform username (Chess.com or Lichess)");
       return;
     }
@@ -223,7 +229,7 @@ export default function OnboardingPage() {
 
       // Refresh session to get updated user data
       await refreshSession();
-      navigate(ROUTES.DASHBOARD);
+      navigate(state.redirectTo || ROUTES.DASHBOARD);
     } catch (err) {
       console.error("Error updating profile:", err);
       setError(err instanceof Error ? err.message : "Failed to update profile");
@@ -231,14 +237,6 @@ export default function OnboardingPage() {
       setIsSubmitting(false);
     }
   };
-
-  // Enable submit if:
-  // 1. Chess.com ID is provided and validated successfully, OR
-  // 2. Lichess ID is provided and validated successfully, OR
-  // 3. Both are provided (both must be valid if provided)
-  const hasChesscom = chesscomId.trim() && isChesscomValid;
-  const hasLichess = lichessId.trim() && isLichessValid;
-  const canSubmit = hasChesscom || hasLichess;
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-neutral-800 flex flex-col items-center justify-center px-6 py-8">
@@ -325,13 +323,13 @@ export default function OnboardingPage() {
           </div>
 
           {/* Error Message */}
-          {error && <div className="text-red-400 text-xs text-left">{error}</div>}
+          {error && <div className="text-red-400 text-xs text-center">{error}</div>}
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={!canSubmit || isSubmitting || isValidatingChesscom || isValidatingLichess}
-            className="bg-white hover:bg-neutral-100 disabled:bg-neutral-300 disabled:cursor-not-allowed text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full mt-2"
+            disabled={isSubmitting || isValidatingChesscom || isValidatingLichess}
+            className="bg-white hover:bg-neutral-100 disabled:bg-neutral-400 disabled:cursor-not-allowed text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full mt-2"
           >
             {isSubmitting ? "Saving..." : "Continue"}
           </button>
