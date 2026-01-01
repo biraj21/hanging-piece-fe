@@ -1,4 +1,4 @@
-import { Brain } from "lucide-react";
+import { BrainIcon } from "lucide-react";
 
 interface TellMeWhyButtonProps {
   onClick?: () => void;
@@ -15,7 +15,7 @@ export const TellMeWhyButton: React.FC<TellMeWhyButtonProps> = ({ onClick, disab
         disabled ? "opacity-60 cursor-not-allowed hover:scale-100 hover:bg-emerald-600" : ""
       }`}
     >
-      <Brain className="w-4 h-4" />
+      <BrainIcon className="w-4 h-4" />
       {loading ? "Thinking..." : "Tell me why"}
     </button>
   );

@@ -12,6 +12,7 @@
   "dependencies": {
     "@lichess-org/chessground": "^9.9.0",
     "@tailwindcss/vite": "^4.1.17",
+    "@tanstack/react-query": "^5.90.16",
     "better-auth": "^1.4.3",
     "chessops": "^0.15.0",
     "lucide-react": "^0.555.0",

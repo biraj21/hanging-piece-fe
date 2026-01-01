@@ -18,7 +18,7 @@ const getAnnotationClasses = (moveQuality: MoveQuality) => {
     case "blunder":
       return "bg-red-500/50 border border-red-500 text-red-100";
     case "mistake":
-      return "bg-orange-500/50 border border-orange-500 text-orange-100";
+      return "bg-amber-500/50 border border-amber-500 text-amber-100";
     case "inaccuracy":
       return "bg-blue-500/50 border border-blue-500 text-blue-100";
     case "good":

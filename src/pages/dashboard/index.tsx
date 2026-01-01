@@ -1,53 +1,63 @@
-import { Link, useNavigate } from "react-router";
+import { BarChart3Icon, SwordsIcon } from "lucide-react";
+import { Link } from "react-router";
 
-import { Logo } from "@/components/Logo";
-import { Tagline } from "@/components/Tagline";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
 
 export default function DashboardPage() {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate(ROUTES.INDEX);
-  };
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-neutral-800 flex flex-col items-center justify-center px-6 py-12">
-      <div className="text-center w-full max-w-md">
-        {/* Logo/Brand */}
-        <Logo />
-
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-6 py-12">
+      <div className="w-full max-w-2xl">
         {/* Welcome Message */}
-        <div className="mt-4 mb-6">
-          <div className="text-neutral-300 text-sm">
-            Glad to have you on board, <span className="text-green-500">{user?.email}</span>.
-          </div>
+        <div className="mb-12 text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Welcome back</h1>
+          <p className="text-neutral-400 text-sm">
+            Hey{" "}
+            <span className="text-white font-medium">{user?.name?.split(" ")[0] || user?.email?.split("@")[0]}</span>,
+            ready to analyze some chess?
+          </p>
         </div>
 
-        {/* Tagline */}
-        <Tagline />
-
-        {/* Status Badge */}
-        <div className="mb-12 mt-8">
-          <div className="inline-block bg-white text-neutral-900 px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-widest">
-            Coming Soon
-          </div>
-        </div>
-
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link to={ROUTES.INDEX} className="underline text-sm text-white">
-            Home
-          </Link>
-          <button
-            onClick={handleSignOut}
-            className="underline text-sm text-red-400 bg-transparent p-0 border-none outline-none cursor-pointer"
-            type="button"
+        {/* Action Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Link
+            to={ROUTES.GAMES}
+            className="group bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-4 hover:border-neutral-600 transition-all hover:shadow-lg hover:shadow-black/20"
           >
-            Sign out
-          </button>
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
+                <SwordsIcon className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-white mb-0.5">My Games</h3>
+                <p className="text-xs text-neutral-400">Browse and analyze your games</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            to={ROUTES.ANALYSIS}
+            className="group bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-4 hover:border-neutral-600 transition-all hover:shadow-lg hover:shadow-black/20"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
+                <BarChart3Icon className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-white mb-0.5">Analyze PGN</h3>
+                <p className="text-xs text-neutral-400">Import and analyze any game</p>
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Quick Stats or Info */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-neutral-500">
+            Powered by Stockfish • AI-driven explanations • Multi-platform support
+          </p>
         </div>
       </div>
     </div>

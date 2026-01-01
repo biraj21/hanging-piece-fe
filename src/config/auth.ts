@@ -10,7 +10,7 @@ export const authClient = createAuthClient({
 
 export async function signInWithGoogle(callbackPath?: string) {
   const callbackUrl = new URL(window.location.href);
-  callbackUrl.pathname = callbackPath || ROUTES.INDEX;
+  callbackUrl.pathname = callbackPath || ROUTES.DASHBOARD;
 
   const data = await authClient.signIn.social({
     provider: "google",

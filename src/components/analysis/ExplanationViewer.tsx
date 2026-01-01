@@ -1,4 +1,4 @@
-import { GraduationCap, RotateCcw } from "lucide-react";
+import { GraduationCapIcon, RotateCcwIcon } from "lucide-react";
 import React, { useState } from "react";
 
 import type { GameMove } from "@/helpers/pgn";
@@ -13,7 +13,7 @@ type ExplanationViewerProps = {
   bestContinuation: Array<{ move: string; color?: string; reason: string }>;
   badLine: Array<EngineLineMove>;
   bestLine: Array<EngineLineMove>;
-  onVisualize: (lineMove: EngineLineMove) => void;
+  onVisualize: (lineMove: EngineLineMove, brush: "red" | "green") => void;
   onNavigateToOriginalMove?: () => void;
 };
 
@@ -22,7 +22,7 @@ const getMoveQualityDisplay = (quality: string | null) => {
     case "blunder":
       return { text: "BLUNDER", color: "text-red-400" };
     case "mistake":
-      return { text: "MISTAKE", color: "text-orange-400" };
+      return { text: "MISTAKE", color: "text-amber-400" };
     case "inaccuracy":
       return { text: "INACCURACY", color: "text-blue-400" };
     case "good":
@@ -63,7 +63,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
       {/* Header */}
       <div className="pb-2.5 border-b border-neutral-600/50 flex items-center gap-2 shrink-0">
         <div className="w-8 h-8 rounded-full bg-linear-to-br from-emerald-500 to-green-800 flex items-center justify-center shrink-0">
-          <GraduationCap size={16} className="text-white" />
+          <GraduationCapIcon size={16} className="text-white" />
         </div>
         <div className="flex-1">
           <h3 className="text-xs font-semibold text-neutral-200">Chess Coach</h3>
@@ -92,7 +92,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
                   className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-neutral-300 bg-neutral-700/50 hover:bg-neutral-700 rounded-md transition-colors border border-neutral-600/50 hover:border-neutral-500"
                   title="View original position"
                 >
-                  <RotateCcw size={14} />
+                  <RotateCcwIcon size={14} />
                 </button>
               )}
             </div>
@@ -132,7 +132,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
                       onClick={() => {
                         setSelectedBestMove(null); // Deselect best move
                         setSelectedBadMove(idx);
-                        onVisualize(badLine[idx]);
+                        onVisualize(badLine[idx], "red");
                       }}
                     />
                   );
@@ -163,7 +163,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
                       onClick={() => {
                         setSelectedBadMove(null); // Deselect bad move
                         setSelectedBestMove(idx);
-                        onVisualize(bestLine[idx]);
+                        onVisualize(bestLine[idx], "green");
                       }}
                     />
                   );

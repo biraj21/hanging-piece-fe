@@ -1,0 +1,516 @@
+import {
+  useChesscomArchives,
+  useChesscomGamesInfinite,
+  useChesscomProfile,
+  useLichessGamesInfinite,
+  useLichessProfile,
+} from "@/api/queries";
+import { ProfilePreview } from "@/components/ProfilePreview";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROUTES } from "@/router/routes";
+import type { UnifiedGame } from "@/types";
+import { BarChart3Icon, ClockIcon, FilterIcon, MinusIcon, SwordsIcon, TrophyIcon, XIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+
+const GAMES_PER_BATCH = 20;
+
+export default function GamesPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [activeSource, setActiveSource] = useState<"chesscom" | "lichess">(() => {
+    const platformParam = searchParams.get("platform");
+    if (platformParam === "chesscom" || platformParam === "lichess") {
+      return platformParam;
+    }
+    return user?.chesscomId ? "chesscom" : "lichess";
+  });
+  const [resultFilter, setResultFilter] = useState<"all" | "win" | "loss" | "draw">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Update query params when platform changes
+  useEffect(() => {
+    setSearchParams({ platform: activeSource }, { replace: true });
+  }, [activeSource, setSearchParams]);
+
+  // Fetch Chess.com archives with centralized hook
+  const { data: chesscomArchives = [] } = useChesscomArchives(user?.chesscomId, {
+    enabled: !!user?.chesscomId && activeSource === "chesscom",
+  });
+
+  // Fetch Chess.com games with infinite query
+  const {
+    data: chesscomGamesData,
+    isLoading: isLoadingChesscom,
+    fetchNextPage: fetchNextChesscomPage,
+    hasNextPage: hasMoreChesscom,
+    isFetchingNextPage: isFetchingMoreChesscom,
+  } = useChesscomGamesInfinite(user?.chesscomId, chesscomArchives, {
+    enabled: !!user?.chesscomId && chesscomArchives.length > 0 && activeSource === "chesscom",
+  });
+
+  // Fetch Lichess games with infinite query
+  const {
+    data: lichessGamesData,
+    isLoading: isLoadingLichess,
+    fetchNextPage: fetchNextLichessPage,
+    hasNextPage: hasMoreLichess,
+    isFetchingNextPage: isFetchingMoreLichess,
+  } = useLichessGamesInfinite(user?.lichessId, GAMES_PER_BATCH, {
+    enabled: !!user?.lichessId && activeSource === "lichess",
+  });
+
+  // Fetch Chess.com profile with centralized hook
+  const { data: chesscomProfile } = useChesscomProfile(user?.chesscomId, {
+    enabled: !!user?.chesscomId && activeSource === "chesscom",
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  // Fetch Lichess profile with centralized hook
+  const { data: lichessProfile } = useLichessProfile(user?.lichessId, {
+    enabled: !!user?.lichessId && activeSource === "lichess",
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  // Flatten all pages into a single array
+  const chesscomGames: UnifiedGame[] = chesscomGamesData?.pages.flat() ?? [];
+  const lichessGames: UnifiedGame[] = lichessGamesData?.pages.flat() ?? [];
+
+  // Show games based on selected source
+  const allGames = (activeSource === "chesscom" ? chesscomGames : lichessGames).sort(
+    (a: UnifiedGame, b: UnifiedGame) => b.timestamp - a.timestamp
+  );
+
+  const isLoading = activeSource === "chesscom" ? isLoadingChesscom : isLoadingLichess;
+  const hasMore = activeSource === "chesscom" ? hasMoreChesscom : hasMoreLichess;
+  const isFetchingMore = activeSource === "chesscom" ? isFetchingMoreChesscom : isFetchingMoreLichess;
+
+  const fetchMoreGames = () => {
+    if (activeSource === "chesscom") {
+      fetchNextChesscomPage();
+    } else {
+      fetchNextLichessPage();
+    }
+  };
+
+  const handleAnalyzeGame = (game: UnifiedGame) => {
+    // Determine which color the user played
+    const userUsername = (user?.chesscomId || user?.lichessId || "").toLowerCase();
+    const isUserWhite = game.white.username.toLowerCase() === userUsername;
+    const boardOrientation = isUserWhite ? "white" : "black";
+
+    // Navigate to analysis page with game data
+    navigate(ROUTES.ANALYSIS, {
+      state: {
+        pgn: game.pgn,
+        gameId: game.id,
+        source: game.source,
+        boardOrientation,
+      },
+    });
+  };
+
+  // Filter games
+  const filteredGames = allGames.filter((game) => {
+    // Result filter
+    if (resultFilter !== "all" && game.result !== resultFilter) return false;
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return game.white.username.toLowerCase().includes(query) || game.black.username.toLowerCase().includes(query);
+    }
+
+    return true;
+  });
+
+  const getResultBadgeColor = (result: string) => {
+    switch (result) {
+      case "win":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "loss":
+        return "bg-red-500/20 text-red-400 border-red-500/30";
+      case "draw":
+        return "bg-neutral-500/20 text-neutral-400 border-neutral-500/30";
+      default:
+        return "bg-neutral-600/20 text-neutral-400 border-neutral-600/30";
+    }
+  };
+
+  const formatDate = (timestamp: number) => {
+    // Lichess uses milliseconds, Chess.com uses seconds
+    const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const extractOpeningFromPGN = (pgn: string): string => {
+    // Try standard Opening tag first
+    const openingMatch = pgn.match(/\[Opening "([^"]+)"\]/);
+    if (openingMatch) return openingMatch[1];
+
+    // Try Chess.com's ECOUrl format
+    const ecoUrlMatch = pgn.match(/\[ECOUrl "https:\/\/www\.chess\.com\/openings\/([^"]+)"\]/);
+    if (ecoUrlMatch) {
+      // Convert URL format to readable name
+      // e.g., "Reti-Opening-1...d5" -> "Reti Opening"
+      const urlPath = ecoUrlMatch[1];
+      const openingName = urlPath
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+        .replace(/\s+\d+\.+.*$/, "") // Remove move notation like "1...d5"
+        .trim();
+      return openingName;
+    }
+
+    // Fallback to ECO code
+    const ecoMatch = pgn.match(/\[ECO "([^"]+)"\]/);
+    if (ecoMatch) return ecoMatch[1];
+
+    return "Unknown";
+  };
+
+  const extractTimeControlFromPGN = (pgn: string): string => {
+    const timeControlMatch = pgn.match(/\[TimeControl "([^"]+)"\]/);
+    if (timeControlMatch) {
+      const tc = timeControlMatch[1];
+      // Convert seconds to minutes format (e.g., "600+0" -> "10+0")
+      if (tc.includes("+")) {
+        const [base, increment] = tc.split("+");
+        const baseMinutes = Math.floor(parseInt(base) / 60);
+        return `${baseMinutes}+${increment}`;
+      }
+      return tc;
+    }
+    return "";
+  };
+
+  const countMovesFromPGN = (pgn: string): number => {
+    if (!pgn) return 0;
+
+    // Extract the moves part (after the headers)
+    const parts = pgn.split(/\n\n/);
+    const movesSection = parts[parts.length - 1] || "";
+
+    // Remove game result notation
+    const cleanMoves = movesSection.replace(/\s+(1-0|0-1|1\/2-1\/2|\*)\s*$/, "");
+
+    // Count all individual moves (both white and black)
+    // Remove annotations, comments, and variations
+    const withoutAnnotations = cleanMoves
+      .replace(/\{[^}]*\}/g, "") // Remove comments
+      .replace(/\([^)]*\)/g, "") // Remove variations
+      .replace(/[!?]+/g, ""); // Remove annotations
+
+    // Split by move numbers and count actual moves
+    const moves = withoutAnnotations
+      .split(/\d+\.+/)
+      .slice(1) // Remove empty first element
+      .join(" ")
+      .split(/\s+/)
+      .filter((move) => move && move.length > 0 && !move.match(/^[\d\-\/\*]+$/));
+
+    return moves.length;
+  };
+
+  return (
+    <div className="min-h-screen w-full text-white">
+      {/* Page Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4">
+        <h1 className="text-3xl font-bold text-white mb-2">My Games</h1>
+        <p className="text-sm text-neutral-400">
+          {activeSource === "chesscom" && user?.chesscomId && `Viewing games from Chess.com`}
+          {activeSource === "lichess" && user?.lichessId && `Viewing games from Lichess`}
+        </p>
+      </div>
+
+      {/* Stats and Filters */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
+        {/* Profile Preview */}
+        {!isLoading && (
+          <div className="mb-6">
+            {activeSource === "chesscom" && chesscomProfile && user?.chesscomId && (
+              <ProfilePreview
+                platform="chesscom"
+                avatar={chesscomProfile.avatar}
+                username={chesscomProfile.username || user.chesscomId}
+                name={chesscomProfile.name}
+                country={chesscomProfile.country}
+                league={chesscomProfile.league}
+                url={chesscomProfile.url}
+              />
+            )}
+            {activeSource === "lichess" && lichessProfile && user?.lichessId && (
+              <ProfilePreview
+                platform="lichess"
+                username={lichessProfile.username || user.lichessId}
+                name={lichessProfile.name}
+                title={lichessProfile.title}
+                rating={lichessProfile.rating}
+                country={lichessProfile.country}
+                url={lichessProfile.url}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Stats Summary */}
+        {!isLoading && (
+          <div className="mb-6 grid grid-cols-3 gap-3">
+            <div className="bg-neutral-900/60 border border-green-500/20 rounded-lg p-3">
+              <div className="flex items-center gap-1.5 text-xs text-green-400/70 font-medium mb-1">
+                <TrophyIcon className="w-3.5 h-3.5" />
+                <span>Wins</span>
+              </div>
+              <div className="text-2xl font-bold text-green-400">
+                {filteredGames.filter((g) => g.result === "win").length}
+              </div>
+            </div>
+            <div className="bg-neutral-900/60 border border-red-500/20 rounded-lg p-3">
+              <div className="flex items-center gap-1.5 text-xs text-red-400/70 font-medium mb-1">
+                <XIcon className="w-3.5 h-3.5" />
+                <span>Losses</span>
+              </div>
+              <div className="text-2xl font-bold text-red-400">
+                {filteredGames.filter((g) => g.result === "loss").length}
+              </div>
+            </div>
+            <div className="bg-neutral-900/60 border border-neutral-500/20 rounded-lg p-3">
+              <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-medium mb-1">
+                <MinusIcon className="w-3.5 h-3.5" />
+                <span>Draws</span>
+              </div>
+              <div className="text-2xl font-bold text-neutral-300">
+                {filteredGames.filter((g) => g.result === "draw").length}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3 mb-6">
+          {/* Top Row: Source Dropdown and Search */}
+          <div className="flex flex-row gap-3">
+            {/* Source Dropdown */}
+            {user?.chesscomId && user?.lichessId && (
+              <div>
+                <select
+                  value={activeSource}
+                  onChange={(e) => {
+                    setActiveSource(e.target.value as "chesscom" | "lichess");
+                  }}
+                  className="w-full sm:w-auto px-4 py-2 bg-neutral-700 text-white rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-neutral-500 cursor-pointer"
+                >
+                  <option value="chesscom">Chess.com</option>
+                  <option value="lichess">Lichess</option>
+                </select>
+              </div>
+            )}
+
+            {/* Search */}
+            <div className="flex-1 sm:max-w-xs">
+              <input
+                type="text"
+                placeholder="Search opponent..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 bg-neutral-900/50 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500"
+              />
+            </div>
+          </div>
+
+          {/* Bottom Row: Result Filter */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
+            <button
+              onClick={() => setResultFilter("all")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
+                resultFilter === "all"
+                  ? "bg-neutral-700 text-white"
+                  : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
+              }`}
+            >
+              <FilterIcon className="w-3.5 h-3.5" />
+              <span>All</span>
+            </button>
+            <button
+              onClick={() => setResultFilter("win")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
+                resultFilter === "win"
+                  ? "bg-green-600 text-white"
+                  : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
+              }`}
+            >
+              <TrophyIcon className="w-3.5 h-3.5" />
+              <span>Wins</span>
+            </button>
+            <button
+              onClick={() => setResultFilter("loss")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
+                resultFilter === "loss"
+                  ? "bg-red-600 text-white"
+                  : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
+              }`}
+            >
+              <XIcon className="w-3.5 h-3.5" />
+              <span>Losses</span>
+            </button>
+            <button
+              onClick={() => setResultFilter("draw")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
+                resultFilter === "draw"
+                  ? "bg-neutral-600 text-white"
+                  : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
+              }`}
+            >
+              <MinusIcon className="w-3.5 h-3.5" />
+              <span>Draws</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Games Grid */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-neutral-600 border-t-white rounded-full animate-spin" />
+              <p className="text-neutral-400">Loading your games...</p>
+            </div>
+          </div>
+        ) : filteredGames.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <p className="text-neutral-400 text-lg mb-2">No games found</p>
+              <p className="text-neutral-500 text-sm">Try adjusting your filters</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredGames.map((game) => {
+                const isUserWhite =
+                  game.white.username.toLowerCase() ===
+                  (user?.chesscomId?.toLowerCase() || user?.lichessId?.toLowerCase());
+                const userColor = isUserWhite ? "white" : "black";
+
+                // Use opening field if available (Lichess), otherwise parse PGN (Chess.com)
+                const opening = game.opening?.name || extractOpeningFromPGN(game.pgn);
+                const moveCount = countMovesFromPGN(game.pgn);
+                const timeControl = extractTimeControlFromPGN(game.pgn);
+
+                return (
+                  <div
+                    key={game.id}
+                    className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-3 hover:border-neutral-600 transition-all hover:shadow-lg hover:shadow-black/20 group"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1 text-xs text-neutral-500">
+                          <ClockIcon className="w-3 h-3" />
+                          <span>{game.timeControl}</span>
+                        </div>
+                        {timeControl && (
+                          <>
+                            <span className="text-xs text-neutral-600">•</span>
+                            <span className="text-xs text-neutral-500">{timeControl}</span>
+                          </>
+                        )}
+                        <span className="text-xs text-neutral-600">•</span>
+                        <div className="flex items-center gap-1 text-xs text-neutral-500">
+                          <SwordsIcon className="w-3 h-3" />
+                          <span>{moveCount}</span>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getResultBadgeColor(
+                          game.result
+                        )}`}
+                      >
+                        {game.result.toUpperCase()}
+                      </span>
+                    </div>
+
+                    {/* Players */}
+                    <div className="space-y-1.5 mb-4 px-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 bg-white rounded-full" />
+                          <span
+                            className={`text-sm ${
+                              userColor === "white" ? "font-semibold text-white" : "text-neutral-300"
+                            }`}
+                          >
+                            {game.white.username}
+                            {userColor === "white" && (
+                              <span className="text-neutral-500 font-normal text-xs ml-1">(you)</span>
+                            )}
+                          </span>
+                        </div>
+                        <span className="text-xs text-neutral-400">{game.white.rating}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 bg-neutral-900 rounded-full border border-neutral-500" />
+                          <span
+                            className={`text-sm ${
+                              userColor === "black" ? "font-semibold text-white" : "text-neutral-300"
+                            }`}
+                          >
+                            {game.black.username}
+                            {userColor === "black" && (
+                              <span className="text-neutral-500 font-normal text-xs ml-1">(you)</span>
+                            )}
+                          </span>
+                        </div>
+                        <span className="text-xs text-neutral-400">{game.black.rating}</span>
+                      </div>
+                    </div>
+
+                    {/* Opening */}
+                    <div className="my-3 px-1">
+                      <p className="text-xs text-neutral-400 truncate">{opening}</p>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-3 border-t border-neutral-700/50">
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                        <div>{formatDate(game.timestamp)}</div>
+                      </div>
+                      <button
+                        onClick={() => handleAnalyzeGame(game)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition group-hover:bg-neutral-600"
+                      >
+                        <BarChart3Icon className="w-3.5 h-3.5" />
+                        <span>Analyze</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={fetchMoreGames}
+                  disabled={isFetchingMore}
+                  className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:bg-neutral-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all text-sm"
+                >
+                  {isFetchingMore ? "Loading..." : "Load More Games"}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

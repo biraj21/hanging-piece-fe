@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 
-import { Logo } from "@/components/Logo";
+import { backendApi } from "@/api/backend";
+import { useChesscomProfile, useLichessProfile } from "@/api/queries";
 import { ProfilePreview } from "@/components/ProfilePreview";
-import { env } from "@/config/env";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
-
-const DEBOUNCE_MS = 500;
+import { debounce } from "@/utils/function";
 
 export default function OnboardingPage() {
   const { user, refreshSession } = useAuth();
@@ -16,192 +15,54 @@ export default function OnboardingPage() {
 
   const [chesscomId, setChesscomId] = useState(user?.chesscomId || "");
   const [lichessId, setLichessId] = useState(user?.lichessId || "");
-  const [isChesscomValid, setIsChesscomValid] = useState(false);
-  const [isLichessValid, setIsLichessValid] = useState(false);
-  const [isValidatingChesscom, setIsValidatingChesscom] = useState(false);
-  const [isValidatingLichess, setIsValidatingLichess] = useState(false);
+  const [chesscomIdForQuery, setChesscomIdForQuery] = useState(user?.chesscomId || "");
+  const [lichessIdForQuery, setLichessIdForQuery] = useState(user?.lichessId || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [chesscomData, setChesscomData] = useState<{
-    avatar?: string;
-    username?: string;
-    name?: string;
-    country?: string;
-    league?: string;
-    followers?: number;
-    url?: string;
-  } | null>(null);
-  const [lichessData, setLichessData] = useState<{
-    username?: string;
-    name?: string;
-    title?: string;
-    rating?: number;
-    country?: string;
-    url?: string;
-  } | null>(null);
 
-  // Refs to track abort controllers for cancelling in-flight requests
-  const chesscomAbortRef = useRef<AbortController | null>(null);
-  const lichessAbortRef = useRef<AbortController | null>(null);
+  // Debounced setters for API queries
+  const debouncedSetChesscomId = debounce((value: string) => setChesscomIdForQuery(value), 500);
+  const debouncedSetLichessId = debounce((value: string) => setLichessIdForQuery(value), 500);
 
-  // Debounced Chess.com validation
-  useEffect(() => {
-    const trimmedId = chesscomId.trim();
+  // Fetch Chess.com profile with centralized hook (debounced)
+  const {
+    data: chesscomData,
+    isLoading: isValidatingChesscom,
+    isError: isChesscomError,
+    isSuccess: isChesscomValid,
+  } = useChesscomProfile(chesscomIdForQuery.trim() || null, {
+    enabled: chesscomIdForQuery.trim().length > 0,
+  });
 
-    // Reset state if empty
-    if (!trimmedId) {
-      setIsChesscomValid(false);
-      setChesscomData(null);
-      setIsValidatingChesscom(false);
-      return;
-    }
-
-    // Mark as validating immediately for UI feedback
-    setIsValidatingChesscom(true);
-    setIsChesscomValid(false);
-    setChesscomData(null);
-
-    const timeoutId = setTimeout(async () => {
-      // Abort any previous request
-      chesscomAbortRef.current?.abort();
-      const controller = new AbortController();
-      chesscomAbortRef.current = controller;
-
-      try {
-        const response = await fetch(`https://api.chess.com/pub/player/${trimmedId}`, {
-          signal: controller.signal,
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setIsChesscomValid(true);
-          setChesscomData({
-            avatar: data.avatar,
-            username: data.username,
-            name: data.name,
-            country: data.country ? data.country.split("/").pop() : undefined,
-            league: data.league,
-            followers: data.followers,
-            url: data.url,
-          });
-          setError(null);
-        } else {
-          setIsChesscomValid(false);
-          setChesscomData(null);
-          setError("Chess.com username not found");
-        }
-      } catch (err) {
-        if ((err as Error).name === "AbortError") return;
-        console.error("Error validating Chess.com ID:", err);
-        setIsChesscomValid(false);
-        setChesscomData(null);
-        setError("Failed to validate Chess.com username");
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsValidatingChesscom(false);
-        }
-      }
-    }, DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timeoutId);
-      chesscomAbortRef.current?.abort();
-    };
-  }, [chesscomId]);
-
-  // Debounced Lichess validation
-  useEffect(() => {
-    const trimmedId = lichessId.trim();
-
-    // Reset state if empty
-    if (!trimmedId) {
-      setIsLichessValid(false);
-      setLichessData(null);
-      setIsValidatingLichess(false);
-      return;
-    }
-
-    // Mark as validating immediately for UI feedback
-    setIsValidatingLichess(true);
-    setIsLichessValid(false);
-    setLichessData(null);
-
-    const timeoutId = setTimeout(async () => {
-      // Abort any previous request
-      lichessAbortRef.current?.abort();
-      const controller = new AbortController();
-      lichessAbortRef.current = controller;
-
-      try {
-        const response = await fetch(`https://lichess.org/api/user/${trimmedId}`, {
-          signal: controller.signal,
-        });
-        if (response.ok) {
-          const data = await response.json();
-
-          // Get the highest rating from perfs (prefer non-provisional ratings)
-          const perfs = data.perfs || {};
-          const ratings = Object.values(perfs)
-            .map((perf: any) => (perf.prov ? null : perf.rating))
-            .filter((rating): rating is number => rating !== null && rating !== undefined);
-          const highestRating = ratings.length > 0 ? Math.max(...ratings) : undefined;
-
-          setIsLichessValid(true);
-          setLichessData({
-            username: data.username,
-            name: data.profile?.realName,
-            title: data.title,
-            rating: highestRating,
-            country: data.profile?.flag,
-            url: data.url || `https://lichess.org/@/${data.username}`,
-          });
-          setError(null);
-        } else {
-          setIsLichessValid(false);
-          setLichessData(null);
-          setError("Lichess username not found");
-        }
-      } catch (err) {
-        if ((err as Error).name === "AbortError") return;
-        console.error("Error validating Lichess ID:", err);
-        setIsLichessValid(false);
-        setLichessData(null);
-        setError("Failed to validate Lichess username");
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsValidatingLichess(false);
-        }
-      }
-    }, DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timeoutId);
-      lichessAbortRef.current?.abort();
-    };
-  }, [lichessId]);
+  // Fetch Lichess profile with centralized hook (debounced)
+  const {
+    data: lichessData,
+    isLoading: isValidatingLichess,
+    isError: isLichessError,
+    isSuccess: isLichessValid,
+  } = useLichessProfile(lichessIdForQuery.trim() || null, {
+    enabled: lichessIdForQuery.trim().length > 0,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate that at least one platform is provided
-
-    // Enable submit if:
-    // 1. Chess.com ID is provided and validated successfully, OR
-    // 2. Lichess ID is provided and validated successfully, OR
-    // 3. Both are provided (both must be valid if provided)
     const hasChesscom = chesscomId.trim() && isChesscomValid;
     const hasLichess = lichessId.trim() && isLichessValid;
     const canSubmit = hasChesscom || hasLichess;
+
     if (!canSubmit) {
       setError("Please provide at least one valid chess platform username (Chess.com or Lichess)");
       return;
     }
 
-    if (chesscomId.trim() && !isChesscomValid) {
+    if (chesscomId.trim() && (isValidatingChesscom || isChesscomError)) {
       setError("Please enter a valid Chess.com username");
       return;
     }
 
-    if (lichessId.trim() && !isLichessValid) {
+    if (lichessId.trim() && (isValidatingLichess || isLichessError)) {
       setError("Please enter a valid Lichess username");
       return;
     }
@@ -210,22 +71,10 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${env.VITE_API_BASE_URL}profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          chesscomId: chesscomId.trim() || null,
-          lichessId: lichessId.trim() || null,
-        }),
+      await backendApi.updateProfile({
+        chesscomId: chesscomId.trim() || null,
+        lichessId: lichessId.trim() || null,
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to update profile");
-      }
 
       // Refresh session to get updated user data
       await refreshSession();
@@ -240,100 +89,130 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-neutral-800 flex flex-col items-center justify-center px-6 py-8">
-      <div className="w-full max-w-sm">
-        <div className="text-center">
-          {/* Logo/Brand */}
-          <Logo className="mb-8" />
-
-          <div className="text-neutral-300 text-sm mb-4 text-center">
-            Welcome! Let's connect your chess accounts to get started.
-            <span className="block text-neutral-400 text-xs mt-1">
-              Add your Chess.com or Lichess username (or both if you play on multiple platforms).
-            </span>
-          </div>
+      <div className="w-full max-w-lg">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Connect Your Accounts</h1>
+          <p className="text-neutral-400 text-sm">Add your Chess.com or Lichess username to analyze your games</p>
         </div>
 
-        {/* Onboarding Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Chess.com ID Input */}
-          <div className="space-y-1.5">
-            <label htmlFor="chesscomId" className="block text-left text-neutral-300 text-xs font-medium">
-              Chess.com Username
-            </label>
-            <input
-              id="chesscomId"
-              type="text"
-              value={chesscomId}
-              onChange={(e) => setChesscomId(e.target.value)}
-              disabled={isSubmitting}
-              placeholder="Enter your Chess.com username"
-              className="w-full bg-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white disabled:bg-neutral-600 disabled:cursor-not-allowed"
-            />
-            {isValidatingChesscom && <p className="text-left text-neutral-400 text-xs">Validating...</p>}
-            {chesscomId.trim() && !isValidatingChesscom && isChesscomValid && (
-              <div className="space-y-1.5">
-                <p className="text-left text-green-400 text-xs">✓ Valid</p>
-                {chesscomData && (
-                  <ProfilePreview
-                    platform="chesscom"
-                    avatar={chesscomData.avatar}
-                    username={chesscomData.username || ""}
-                    name={chesscomData.name}
-                    country={chesscomData.country}
-                    league={chesscomData.league}
-                    followers={chesscomData.followers}
-                    url={chesscomData.url}
-                  />
-                )}
+        {/* Onboarding Form Card */}
+        <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Chess.com ID Input */}
+            <div className="space-y-1.5">
+              <label htmlFor="chesscomId" className="block text-left text-white text-xs font-medium">
+                Chess.com Username
+              </label>
+              <input
+                id="chesscomId"
+                type="text"
+                value={chesscomId}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setChesscomId(value);
+                  debouncedSetChesscomId(value);
+                }}
+                disabled={isSubmitting}
+                placeholder="e.g., hikaru"
+                className="w-full bg-neutral-800/50 border border-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 disabled:bg-neutral-800 disabled:cursor-not-allowed placeholder-neutral-500"
+              />
+              {isValidatingChesscom && (
+                <p className="text-left text-neutral-400 text-xs flex items-center gap-1">
+                  <span className="inline-block w-3 h-3 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+                  Validating...
+                </p>
+              )}
+              {chesscomId.trim() && !isValidatingChesscom && isChesscomValid && (
+                <div className="space-y-2">
+                  <p className="text-left text-green-400 text-xs font-medium">✓ Account found</p>
+                  {chesscomData && (
+                    <ProfilePreview
+                      platform="chesscom"
+                      avatar={chesscomData.avatar}
+                      username={chesscomData.username || ""}
+                      name={chesscomData.name}
+                      country={chesscomData.country}
+                      league={chesscomData.league}
+                      url={chesscomData.url}
+                    />
+                  )}
+                </div>
+              )}
+              {chesscomId.trim() && !isValidatingChesscom && isChesscomError && (
+                <p className="text-left text-red-400 text-xs">✗ Username not found</p>
+              )}
+            </div>
+
+            {/* Lichess ID Input */}
+            <div className="space-y-1.5">
+              <label htmlFor="lichessId" className="block text-left text-white text-xs font-medium">
+                Lichess Username
+              </label>
+              <input
+                id="lichessId"
+                type="text"
+                value={lichessId}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setLichessId(value);
+                  debouncedSetLichessId(value);
+                }}
+                disabled={isSubmitting}
+                placeholder="e.g., DrNykterstein"
+                className="w-full bg-neutral-800/50 border border-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 disabled:bg-neutral-800 disabled:cursor-not-allowed placeholder-neutral-500"
+              />
+              {isValidatingLichess && (
+                <p className="text-left text-neutral-400 text-xs flex items-center gap-1">
+                  <span className="inline-block w-3 h-3 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+                  Validating...
+                </p>
+              )}
+              {lichessId.trim() && !isValidatingLichess && isLichessValid && (
+                <div className="space-y-2">
+                  <p className="text-left text-green-400 text-xs font-medium">✓ Account found</p>
+                  {lichessData && (
+                    <ProfilePreview
+                      platform="lichess"
+                      username={lichessData.username || ""}
+                      name={lichessData.name}
+                      title={lichessData.title}
+                      rating={lichessData.rating}
+                      country={lichessData.country}
+                      url={lichessData.url}
+                    />
+                  )}
+                </div>
+              )}
+              {lichessId.trim() && !isValidatingLichess && isLichessError && (
+                <p className="text-left text-red-400 text-xs">✗ Username not found</p>
+              )}
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-lg text-center">
+                {error}
               </div>
             )}
-          </div>
 
-          {/* Lichess ID Input */}
-          <div className="space-y-1.5">
-            <label htmlFor="lichessId" className="block text-left text-neutral-300 text-xs font-medium">
-              Lichess Username
-            </label>
-            <input
-              id="lichessId"
-              type="text"
-              value={lichessId}
-              onChange={(e) => setLichessId(e.target.value)}
-              disabled={isSubmitting}
-              placeholder="Enter your Lichess username"
-              className="w-full bg-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white disabled:bg-neutral-600 disabled:cursor-not-allowed"
-            />
-            {isValidatingLichess && <p className="text-left text-neutral-400 text-xs">Validating...</p>}
-            {lichessId.trim() && !isValidatingLichess && isLichessValid && (
-              <div className="space-y-1.5">
-                <p className="text-left text-green-400 text-xs">✓ Valid</p>
-                {lichessData && (
-                  <ProfilePreview
-                    platform="lichess"
-                    username={lichessData.username || ""}
-                    name={lichessData.name}
-                    title={lichessData.title}
-                    rating={lichessData.rating}
-                    country={lichessData.country}
-                    url={lichessData.url}
-                  />
-                )}
-              </div>
-            )}
-          </div>
+            {/* Submit Button */}
+            <div className="pt-1">
+              <button
+                type="submit"
+                disabled={isSubmitting || isValidatingChesscom || isValidatingLichess}
+                className="bg-white hover:bg-neutral-100 disabled:bg-neutral-600 disabled:cursor-not-allowed text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full"
+              >
+                {isSubmitting ? "Saving..." : "Continue"}
+              </button>
+            </div>
+          </form>
+        </div>
 
-          {/* Error Message */}
-          {error && <div className="text-red-400 text-xs text-center">{error}</div>}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting || isValidatingChesscom || isValidatingLichess}
-            className="bg-white hover:bg-neutral-100 disabled:bg-neutral-400 disabled:cursor-not-allowed text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full mt-2"
-          >
-            {isSubmitting ? "Saving..." : "Continue"}
-          </button>
-        </form>
+        {/* Footer note */}
+        <p className="text-center text-xs text-neutral-500 mt-6">
+          You can add or update accounts later from your profile
+        </p>
       </div>
     </div>
   );

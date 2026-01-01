@@ -1,4 +1,4 @@
-import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, FlipVertical } from "lucide-react";
+import { ChevronFirstIcon, ChevronLastIcon, ChevronLeftIcon, ChevronRightIcon, FlipVerticalIcon } from "lucide-react";
 
 interface MoveControlsProps {
   goToFirst: () => void;
@@ -22,35 +22,35 @@ export const MoveControls: React.FC<MoveControlsProps> = ({
         className="flex-1 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 rounded text-sm font-medium transition flex items-center justify-center"
         title="First move"
       >
-        <ChevronFirst size={16} />
+        <ChevronFirstIcon size={16} />
       </button>
       <button
         onClick={goToPrevious}
         className="flex-1 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 rounded text-sm font-medium transition flex items-center justify-center"
         title="Previous move"
       >
-        <ChevronLeft size={16} />
+        <ChevronLeftIcon size={16} />
       </button>
       <button
         onClick={goToNext}
         className="flex-1 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 rounded text-sm font-medium transition flex items-center justify-center"
         title="Next move"
       >
-        <ChevronRight size={16} />
+        <ChevronRightIcon size={16} />
       </button>
       <button
         onClick={goToLast}
         className="flex-1 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 rounded text-sm font-medium transition flex items-center justify-center"
         title="Last move"
       >
-        <ChevronLast size={16} />
+        <ChevronLastIcon size={16} />
       </button>
       <button
         onClick={flipBoard}
         className="flex-1 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 rounded text-sm font-medium transition flex items-center justify-center"
         title="Flip board"
       >
-        <FlipVertical size={16} />
+        <FlipVerticalIcon size={16} />
       </button>
     </div>
   );

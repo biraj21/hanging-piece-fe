@@ -29,4 +29,8 @@ button,
   *::-webkit-scrollbar-track {
     background: transparent;
   }
+
+  body {
+    @apply bg-neutral-800 text-white;
+  }
 }

@@ -86,6 +86,13 @@ export const Analysis: React.FC<AnalysisProps> = ({
     }
   };
 
+  // Auto-parse PGN when provided as prop
+  useEffect(() => {
+    if (pgnProp && pgnProp.trim()) {
+      parsePGN(pgnProp);
+    }
+  }, [pgnProp]);
+
   const handlePGNSubmit = () => {
     if (pgn.trim()) {
       parsePGN(pgn);
@@ -213,13 +220,13 @@ export const Analysis: React.FC<AnalysisProps> = ({
   }, [activeExplanation, explanationStep]);
 
   const handleVisualizeMove = useCallback(
-    (lineMove: EngineLineMove) => {
+    (lineMove: EngineLineMove, brush: "red" | "green") => {
       if (lineMove.fen) {
         setPreviewFen(lineMove.fen);
         setPreviewLastMove([lineMove.from as Key, lineMove.to as Key]);
 
         // Show arrow for this move
-        setArrows([{ orig: lineMove.from as Key, dest: lineMove.to as Key, brush: "red" }]);
+        setArrows([{ orig: lineMove.from as Key, dest: lineMove.to as Key, brush }]);
       } else {
         console.log("  ❌ No FEN in lineMove");
       }
@@ -438,7 +445,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
                 {moves.length === 0 ? (
                   <div className="text-neutral-500 text-center py-12">
-                    <p className="text-sm opacity-60">Load a PGN to see moves</p>
+                    <p className="text-sm opacity-60">Load a PGN from Advanced tab to see moves</p>
                   </div>
                 ) : (
                   <>

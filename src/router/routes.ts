@@ -7,6 +7,8 @@ export const ROUTES = {
   LOGIN: "/login",
 
   DASHBOARD: "/dashboard",
+  GAMES: "/games",
   ANALYSIS: "/analysis",
   ONBOARDING: "/onboarding",
+  PROFILE: "/profile",
 };

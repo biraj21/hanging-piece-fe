@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { env } from "@/config/env";
+import { backendApi } from "@/api/backend";
 import { INITIAL_FEN } from "@/constants";
 import { getExplanation, storeExplanation } from "@/helpers/explanation-cache";
 import type { GameMove, MoveQuality, Variation } from "@/helpers/pgn";
@@ -35,7 +35,7 @@ const getAnnotationClasses = (moveQuality: MoveQuality) => {
     case "blunder":
       return "bg-red-500/50 border border-red-500 text-red-100";
     case "mistake":
-      return "bg-orange-500/50 border border-orange-500 text-orange-100";
+      return "bg-amber-500/50 border border-amber-500 text-amber-100";
     case "inaccuracy":
       return "bg-blue-500/50 border border-blue-500 text-blue-100";
     case "good":
@@ -241,8 +241,8 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
         const color = idx % 2 === 0 ? moverColor : moverColor === "w" ? "b" : "w";
         return {
           pgn: item.san,
-          before_fen: item.beforeFen,
-          after_fen: item.afterFen,
+          beforeFen: item.beforeFen,
+          afterFen: item.afterFen,
           color,
         };
       });
@@ -252,8 +252,8 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
         const color = idx % 2 === 0 ? moverColor : moverColor === "w" ? "b" : "w";
         return {
           pgn: item.san,
-          before_fen: item.beforeFen,
-          after_fen: item.afterFen,
+          beforeFen: item.beforeFen,
+          afterFen: item.afterFen,
           color,
         };
       });
@@ -261,11 +261,11 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
       const body = {
         color: moverColor,
         moveQuality: moveQuality || undefined,
-        mate: mateValue,
+        mate: mateValue(),
         move: {
           pgn: move.san,
-          before_fen: beforeFen,
-          after_fen: move.fen,
+          beforeFen: beforeFen,
+          afterFen: move.fen,
         },
         badContinuation,
         bestContinuation, // Now includes the best move as the first element
@@ -281,24 +281,7 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
       console.debug("  Best continuation:", bestContinuation.map((c) => c.pgn).join(" "));
       console.debug("");
 
-      const response = await fetch(`${env.VITE_API_BASE_URL}explain`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch explanation");
-      }
-
-      const data = (await response.json()) as {
-        explanation: string;
-        badContinuation?: Array<{ move: string; color?: string; reason: string }>;
-        bestContinuation?: Array<{ move: string; color?: string; reason: string }>;
-      };
+      const data = await backendApi.explainMove(body);
 
       // Format lines for storage and display
       const badLineFormatted = badContinuationParsed.slice(0, 8).map((item) => ({
