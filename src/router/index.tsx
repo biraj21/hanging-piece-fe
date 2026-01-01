@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router";
 
 import { ProtectedRoutes, StrictlyPublicRoutes } from "@/components/route-protection";
-import { DashboardLayout } from "@/layouts/Dashboard";
+import { DashboardLayout } from "@/layouts/dashboard";
 import AnalysisPage from "@/pages/analysis";
 import DashboardPage from "@/pages/dashboard";
 import GamesPage from "@/pages/games";

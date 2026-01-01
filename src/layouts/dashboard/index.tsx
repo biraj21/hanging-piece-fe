@@ -1,12 +1,12 @@
 import { Outlet } from "react-router";
 
-import { Sidebar } from "@/components/Sidebar";
+import { Navbar } from "./Navbar";
 
 export const DashboardLayout = () => {
   return (
     <div className="min-h-screen w-full bg-neutral-800 text-white">
-      <Sidebar />
-      <main className="ml-12 sm:ml-16 min-h-screen">
+      <Navbar />
+      <main className="md:ml-16 min-h-screen pb-12 md:pb-0">
         <Outlet />
       </main>
     </div>

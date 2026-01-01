@@ -270,7 +270,7 @@ export default function GamesPage() {
                 <TrophyIcon className="w-3.5 h-3.5" />
                 <span>Wins</span>
               </div>
-              <div className="text-2xl font-bold text-green-400">
+              <div className="text-lg md:text-2xl font-bold text-green-400">
                 {filteredGames.filter((g) => g.result === "win").length}
               </div>
             </div>
@@ -279,7 +279,7 @@ export default function GamesPage() {
                 <XIcon className="w-3.5 h-3.5" />
                 <span>Losses</span>
               </div>
-              <div className="text-2xl font-bold text-red-400">
+              <div className="text-lg md:text-2xl font-bold text-red-400">
                 {filteredGames.filter((g) => g.result === "loss").length}
               </div>
             </div>
@@ -288,7 +288,7 @@ export default function GamesPage() {
                 <MinusIcon className="w-3.5 h-3.5" />
                 <span>Draws</span>
               </div>
-              <div className="text-2xl font-bold text-neutral-300">
+              <div className="text-lg md:text-2xl font-bold text-neutral-300">
                 {filteredGames.filter((g) => g.result === "draw").length}
               </div>
             </div>
@@ -343,7 +343,7 @@ export default function GamesPage() {
               onClick={() => setResultFilter("win")}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
                 resultFilter === "win"
-                  ? "bg-green-600 text-white"
+                  ? "bg-neutral-700 text-white"
                   : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
               }`}
             >
@@ -354,7 +354,7 @@ export default function GamesPage() {
               onClick={() => setResultFilter("loss")}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
                 resultFilter === "loss"
-                  ? "bg-red-600 text-white"
+                  ? "bg-neutral-700 text-white"
                   : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
               }`}
             >
@@ -365,7 +365,7 @@ export default function GamesPage() {
               onClick={() => setResultFilter("draw")}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
                 resultFilter === "draw"
-                  ? "bg-neutral-600 text-white"
+                  ? "bg-neutral-700 text-white"
                   : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
               }`}
             >
