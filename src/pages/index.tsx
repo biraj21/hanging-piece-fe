@@ -50,7 +50,7 @@ export default function IndexPage() {
         <div>
           <button
             onClick={() => (isAuthenticated ? navigate(ROUTES.DASHBOARD) : signIn(ROUTES.DASHBOARD))}
-            className="bg-white hover:bg-neutral-100 text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto min-w-40"
+            className="bg-white hover:bg-neutral-100 text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             {isAuthenticated ? "Go to Dashboard" : "Join waitlist"}
           </button>

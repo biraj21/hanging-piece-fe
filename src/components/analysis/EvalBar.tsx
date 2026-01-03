@@ -2,12 +2,12 @@ import type { Evaluation } from "chessops/pgn";
 import React from "react";
 
 import { isMateEval } from "@/helpers/pgn";
-import type { BlackAndWhite } from "@/types";
+import type { BlackOrWhite } from "@/types";
 
 interface EvalBarProps {
   evaluation: Evaluation;
   className?: string;
-  orientation?: BlackAndWhite;
+  orientation?: BlackOrWhite;
 }
 
 /**

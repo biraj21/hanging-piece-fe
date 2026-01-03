@@ -1,11 +1,4 @@
-export type BlackAndWhite = "white" | "black";
-
-export type EngineLineMove = {
-  san: string;
-  from: string;
-  to: string;
-  fen: string;
-};
+export type BlackOrWhite = "white" | "black";
 
 /**
  * A unified game type that can be used for both Chess.com and Lichess.
@@ -26,4 +19,24 @@ export type UnifiedGame = {
     name: string;
     ply?: number;
   };
+};
+
+export type EngineMateEval = { mate: number };
+export type EngineCentipawnEval = { cp: number };
+export type EngineEvaluation = EngineMateEval | EngineCentipawnEval;
+
+export type EngineMove = {
+  san: string;
+  from: string;
+  to: string;
+  fen: string;
+  evaluation?: EngineEvaluation;
+};
+
+export type Explanation = {
+  explanation: string;
+  badContinuation: Array<{ move: string; color?: string; reason: string }>;
+  bestContinuation: Array<{ move: string; color?: string; reason: string }>;
+  badLine: EngineMove[];
+  bestLine: EngineMove[];
 };

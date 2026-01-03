@@ -29,7 +29,7 @@ export type VariationMove = {
 /** Best continuation (array of moves with FENs) if this move was suboptimal */
 export type Variation = VariationMove[];
 
-export type MoveQuality = "blunder" | "mistake" | "inaccuracy" | "good" | "brilliant" | null;
+export type MoveQuality = "blunder" | "mistake" | "inaccuracy" | "good" | "brilliant";
 
 /** Named args for GameMove construction */
 export interface GameMoveInit {
@@ -102,9 +102,9 @@ export class GameMove {
    * Derive a quality label from NAGs (Numeric Annotation Glyphs).
    * Prioritises more severe glyphs first.
    */
-  getQuality(): MoveQuality {
+  getQuality(): MoveQuality | undefined {
     if (!this.nags || this.nags.length === 0) {
-      return null;
+      return;
     }
 
     const priority: Array<{ nag: number; quality: MoveQuality }> = [
@@ -122,7 +122,7 @@ export class GameMove {
       }
     }
 
-    return null;
+    return;
   }
 }
 
@@ -278,10 +278,7 @@ export function parsePgnToGame(pgn: string): ParsedGame {
   return parsedGame;
 }
 
-// Re-export Evaluation type from chessops for convenience
-export type { Evaluation };
-
-export const getMoveQualitySymbol = (moveQuality: MoveQuality): string | null => {
+export function getMoveQualitySymbol(moveQuality: MoveQuality): string {
   switch (moveQuality) {
     case "blunder":
       return "??";
@@ -293,7 +290,38 @@ export const getMoveQualitySymbol = (moveQuality: MoveQuality): string | null =>
       return "!";
     case "brilliant":
       return "!!";
-    default:
-      return null;
   }
-};
+}
+
+/**
+ * Get NAG (Numeric Annotation Glyph) from move quality
+ * @param quality - Move quality
+ * @returns NAG number or undefined
+ */
+export function getNagFromQuality(quality: MoveQuality): number | undefined {
+  switch (quality) {
+    case "blunder":
+      return 4; // ??
+    case "mistake":
+      return 2; // ?
+    case "inaccuracy":
+      return 6; // ?!
+    case "good":
+      return 1; // !
+    case "brilliant":
+      return 3; // !!
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Check if a parsed game has analysis (evaluations or NAGs)
+ * @param game - Parsed game
+ * @returns true if game has analysis annotations
+ */
+export function hasAnalysis(game: ParsedGame): boolean {
+  return game.moves.some((move) => {
+    return (move.nags && move.nags.length > 0) || move.evaluation !== undefined;
+  });
+}

@@ -1,23 +1,20 @@
 import { GraduationCapIcon, RotateCcwIcon } from "lucide-react";
 import React, { useState } from "react";
 
-import type { GameMove } from "@/helpers/pgn";
-import type { EngineLineMove } from "@/types";
+import type { GameMove, MoveQuality } from "@/helpers/pgn";
+import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 
 import { MoveQualityIcon } from "./MoveQualityIcon";
 
 type ExplanationViewerProps = {
   move: GameMove;
-  explanation: string;
-  badContinuation: Array<{ move: string; color?: string; reason: string }>;
-  bestContinuation: Array<{ move: string; color?: string; reason: string }>;
-  badLine: Array<EngineLineMove>;
-  bestLine: Array<EngineLineMove>;
-  onVisualize: (lineMove: EngineLineMove, brush: "red" | "green") => void;
+  explanation: Explanation;
+  userColor?: BlackOrWhite; // Color the user is playing as
+  onVisualize: (lineMove: EngineMove, brush: "red" | "green") => void;
   onNavigateToOriginalMove?: () => void;
 };
 
-const getMoveQualityDisplay = (quality: string | null) => {
+const getMoveQualityDisplay = (quality?: MoveQuality) => {
   switch (quality) {
     case "blunder":
       return { text: "BLUNDER", color: "text-red-400" };
@@ -36,14 +33,13 @@ const getMoveQualityDisplay = (quality: string | null) => {
 
 export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
   move,
-  explanation,
-  badContinuation,
-  bestContinuation,
-  badLine,
-  bestLine,
+  explanation: explanationProp,
+  userColor,
   onVisualize,
   onNavigateToOriginalMove,
 }) => {
+  const { explanation, badContinuation, bestContinuation, badLine, bestLine } = explanationProp;
+
   const [selectedBadMove, setSelectedBadMove] = useState<number | null>(null);
   const [selectedBestMove, setSelectedBestMove] = useState<number | null>(null);
 
@@ -53,6 +49,21 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
     const isWhite = ply % 2 === 1;
     return isWhite ? `${moveNumber}. ${san}` : `${moveNumber}... ${san}`;
   };
+
+  // Get the player who made the move being analyzed
+  const getPlayerLabel = (): string => {
+    const isWhite = move.ply % 2 === 1;
+    const moveColor: BlackOrWhite = isWhite ? "white" : "black";
+
+    if (!userColor) {
+      return moveColor;
+    }
+
+    const player = moveColor === userColor ? "you" : "your opponent";
+    return `${player} (${moveColor})`;
+  };
+
+  const playerLabel = getPlayerLabel();
 
   const moveQuality = move.getQuality();
   const quality = getMoveQualityDisplay(moveQuality);
@@ -77,7 +88,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
           {
             <div className="flex items-center justify-between gap-2">
               <div className={`text-sm font-bold ${quality.color} flex items-center gap-2`}>
-                <MoveQualityIcon moveQuality={moveQuality} size="medium" />
+                {moveQuality && <MoveQualityIcon moveQuality={moveQuality} size="medium" />}
                 <span>
                   {renderMoveNotation(move.san, move.ply)} was a {quality.text}
                 </span>
@@ -116,7 +127,9 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
               <div className="w-full px-3 py-2 bg-red-950/20 hover:bg-red-950/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-red-400">☠️</span>
-                  <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wide">What goes wrong</h4>
+                  <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wide">
+                    {`What goes wrong for ${playerLabel}`}
+                  </h4>
                 </div>
               </div>
 
@@ -147,7 +160,9 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
               <div className="w-full px-3 py-2 bg-emerald-950/20 hover:bg-emerald-950/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-emerald-400">✅</span>
-                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Best line</h4>
+                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+                    {`Best line for ${playerLabel}`}
+                  </h4>
                 </div>
               </div>
 

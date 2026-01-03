@@ -1,4 +1,5 @@
 import { env } from "@/config/env";
+import type { BlackOrWhite } from "@/types";
 
 /**
  * Backend API functions
@@ -9,24 +10,25 @@ interface UpdateProfilePayload {
   lichessId?: string | null;
 }
 
-type Continuation = {
-  pgn: string;
+type Continuation = Array<{
+  san: string;
   beforeFen: string;
   afterFen: string;
   color: string;
-};
+}>;
 
-interface ExplainMovePayload {
-  color: string;
+export interface ExplainMovePayload {
+  color: BlackOrWhite;
+  userColor?: BlackOrWhite; // Color the user is playing as
   moveQuality?: string;
   mate: number;
   move: {
-    pgn: string;
+    san: string;
     beforeFen: string;
     afterFen: string;
   };
-  badContinuation: Array<Continuation>;
-  bestContinuation: Array<Continuation>;
+  badContinuation: Continuation;
+  bestContinuation: Continuation;
   opening?: string;
   eco?: string;
   additionalContext?: string;
@@ -34,8 +36,8 @@ interface ExplainMovePayload {
 
 interface ExplainMoveResponse {
   explanation: string;
-  badContinuation?: Array<{ move: string; color?: string; reason: string }>;
-  bestContinuation?: Array<{ move: string; color?: string; reason: string }>;
+  badContinuation: Array<{ move: string; color: BlackOrWhite; reason: string }>;
+  bestContinuation: Array<{ move: string; color: BlackOrWhite; reason: string }>;
 }
 
 export const backendApi = {

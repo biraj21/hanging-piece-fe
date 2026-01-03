@@ -9,7 +9,7 @@ import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
 
 import { EvalBar } from "@/components/analysis/EvalBar";
-import type { BlackAndWhite } from "@/types";
+import type { BlackOrWhite } from "@/types";
 
 import "./style.css";
 
@@ -28,7 +28,7 @@ export interface ChessBoardProps {
   theme?: ChessBoardTheme;
   className?: string;
   arrows?: Array<BoardArrow>;
-  orientation?: BlackAndWhite;
+  orientation?: BlackOrWhite;
   evaluation?: Evaluation;
   players?: {
     white: PlayerInfo;
@@ -39,7 +39,7 @@ export interface ChessBoardProps {
 interface PlayerInfoProps {
   name: string;
   elo: string;
-  color: BlackAndWhite;
+  color: BlackOrWhite;
 }
 
 const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color }) => {
@@ -141,6 +141,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         )}
         <div className="flex-1">
           <div
+            id="hp-chessboard-wrapper"
             ref={boardRef}
             className={`cg-wrap cg-theme-${theme} w-full aspect-square rounded-lg shadow-2xl overflow-hidden`}
           />

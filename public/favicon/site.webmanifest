@@ -1,5 +1,5 @@
 {
-  "name": "Hanging Piece - AI Chess Coach",
+  "name": "Hanging Piece - Your AI Chess Coach",
   "short_name": "Hanging Piece",
   "description": "Your AI Chess Coach - Stockfish says you blundered, Hanging Piece will tell you WHY.",
   "icons": [
@@ -9,6 +9,6 @@
   "theme_color": "#000000",
   "background_color": "#000000",
   "display": "standalone",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "scope": "/"
 }

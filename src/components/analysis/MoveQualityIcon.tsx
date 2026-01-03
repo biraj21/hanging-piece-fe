@@ -39,9 +39,5 @@ const getSymbolClasses = (
 
 export const MoveQualityIcon: React.FC<MoveQualityIconProps> = ({ moveQuality, size = "small" }) => {
   const symbol = getMoveQualitySymbol(moveQuality);
-  if (!symbol) {
-    return null;
-  }
-
   return <div className={getSymbolClasses(moveQuality, size)}>{symbol}</div>;
 };

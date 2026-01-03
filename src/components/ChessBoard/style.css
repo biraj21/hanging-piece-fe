@@ -2,6 +2,47 @@
    CHESSBOARD THEMES
    ============================================ */
 
+/* ----- start: make coords responsive ----- */
+
+#hp-chessboard-wrapper.cg-wrap coords {
+  /* based on PR https://github.com/lichess-org/chessground/pull/343/files */
+  font-size: calc(7px + 4 * (100vw - 320px) / 880);
+  user-select: none;
+  -webkit-user-select: none;
+  font-weight: bold;
+}
+
+#hp-chessboard-wrapper.cg-wrap coords.ranks {
+  width: 1em;
+  height: 100%;
+  top: 2px;
+  left: 0;
+  right: 0;
+  flex-flow: column-reverse;
+}
+
+#hp-chessboard-wrapper.cg-wrap coords.files {
+  width: 100%;
+  height: 1em;
+  bottom: 0px;
+  left: -2px;
+  flex-flow: row;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+#hp-chessboard-wrapper.cg-wrap coords.ranks coord {
+  align-self: center;
+  transform: translateY(0%);
+}
+
+#hp-chessboard-wrapper.cg-wrap coords.files coord {
+  align-self: center;
+  text-align: right;
+}
+
+/* ----- end: make coords responsive -----*/
+
 /* THEME: Brown (uses chessground.brown.css defaults) */
 /* No overrides needed - inherits from chessground.brown.css */
 

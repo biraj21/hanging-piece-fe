@@ -1,34 +1,29 @@
 import type { Key } from "@lichess-org/chessground/types";
+import type { Evaluation } from "chessops/pgn";
+import { SearchIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { ChessBoard, type BoardArrow } from "@/components/ChessBoard";
-import { INITIAL_FEN } from "@/constants";
-import { getExplanation } from "@/helpers/explanation-cache";
-import { parsePgnToGame, type GameMove, type ParsedGame } from "@/helpers/pgn";
-import type { BlackAndWhite, EngineLineMove } from "@/types";
+import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
+import { useAuth } from "@/contexts/AuthContext";
+import { analyzeGame, type AnalysisProgress } from "@/helpers/game-analyzer";
+import { hasAnalysis, isMateEval, parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
+import { isCentipawnEval } from "@/helpers/stockfish";
+import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 import { generateGameHash } from "@/utils/chess";
 import { isUrl } from "@/utils/string";
 
+import { explain } from "@/helpers/explain";
 import { AnnotationBlock } from "./AnnotationBlock";
 import { ExplanationViewer } from "./ExplanationViewer";
 import { MoveControls } from "./MoveControls";
 import { MoveItem } from "./MoveItem";
 
-type ActiveExplanation = {
-  move: GameMove;
-  moveIndex: number;
-  explanation: string;
-  badContinuation: Array<{ move: string; color?: string; reason: string }>;
-  bestContinuation: Array<{ move: string; color?: string; reason: string }>;
-  badLine: Array<EngineLineMove>;
-  bestLine: Array<EngineLineMove>;
-};
-
 interface AnalysisProps {
   gameId?: string;
   pgn?: string;
-  boardOrientation?: BlackAndWhite;
+  boardOrientation?: BlackOrWhite;
   source?: "chesscom" | "lichess" | "pgn";
 }
 
@@ -38,25 +33,35 @@ export const Analysis: React.FC<AnalysisProps> = ({
   boardOrientation: boardOrientationProp = "white",
   source = "pgn",
 }) => {
+  const { user } = useAuth();
   const [pgn, setPgn] = useState(pgnProp);
-  const [boardOrientation, setBoardOrientation] = useState<BlackAndWhite>(boardOrientationProp);
+  const [boardOrientation, setBoardOrientation] = useState<BlackOrWhite>(boardOrientationProp);
   const [game, setGame] = useState<ParsedGame | null>(null);
   const [gameId, setGameId] = useState<string>(gameIdProp || "");
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [arrows, setArrows] = useState<Array<BoardArrow>>([]);
   const [previewFen, setPreviewFen] = useState<string | null>(null);
   const [previewLastMove, setPreviewLastMove] = useState<[Key, Key] | undefined>(undefined);
+  const [previewEvaluation, setPreviewEvaluation] = useState<Evaluation | null>(null);
 
   // Tab state
   const [activeTab, setActiveTab] = useState<"game" | "coach" | "advanced">("game");
 
   // Explanation state
-  const [activeExplanation, setActiveExplanation] = useState<ActiveExplanation | null>(null);
-  const [explanationStep, setExplanationStep] = useState(0);
+  const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [activeExplanation, setActiveExplanation] = useState<{ moveIndex: number; explanation: Explanation } | null>(
+    null
+  );
+
+  // Analysis state
+  const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgress | null>(null);
+  const [gameHasAnalysis, setGameHasAnalysis] = useState(false);
 
   // Get current move data
   const currentMove = currentMoveIndex >= 0 ? game?.moves[currentMoveIndex] : null;
-  const currentFen = previewFen || currentMove?.fen || INITIAL_FEN;
+
+  // During analysis, use progress FEN; otherwise use preview FEN (during explanation) or current move FEN
+  const currentFen = analysisProgress?.currentFen || previewFen || currentMove?.fen || INITIAL_FEN;
   const previousMove: [Key, Key] | undefined =
     previewLastMove || (currentMove ? [currentMove.from as Key, currentMove.to as Key] : undefined);
 
@@ -70,6 +75,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
       setGame(parsed);
       setCurrentMoveIndex(0);
+      setGameHasAnalysis(hasAnalysis(parsed));
 
       if (gameIdProp) {
         setGameId(gameIdProp);
@@ -83,6 +89,35 @@ export const Analysis: React.FC<AnalysisProps> = ({
       toast.error(err instanceof Error ? err.message : "Failed to parse PGN");
       setGame(null);
       setGameId("");
+      setGameHasAnalysis(false);
+    }
+  };
+
+  const handleStartReview = async () => {
+    if (!game) {
+      return;
+    }
+
+    setCurrentMoveIndex(0);
+
+    try {
+      const analyzedGame = await analyzeGame(game, STOCKFISH_DEFAULT_DEPTH, {
+        onProgress: (progress) => {
+          setAnalysisProgress(progress);
+          // Update board to show current position being analyzed
+          setCurrentMoveIndex(progress.currentMoveIndex);
+        },
+      });
+
+      setGame(analyzedGame);
+      setGameHasAnalysis(true);
+      setCurrentMoveIndex(0);
+      toast.success("Analysis complete!");
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      toast.error(err instanceof Error ? err.message : "Analysis failed");
+    } finally {
+      setAnalysisProgress(null);
     }
   };
 
@@ -101,14 +136,18 @@ export const Analysis: React.FC<AnalysisProps> = ({
   };
 
   const handleMoveClick = (index: number) => {
+    if (analysisProgress) {
+      return;
+    }
+
     setCurrentMoveIndex(index);
     // Close explanation when navigating to different move
     if (activeExplanation && activeExplanation.moveIndex !== index) {
       setActiveExplanation(null);
-      setExplanationStep(0);
       setArrows([]);
       setPreviewFen(null);
       setPreviewLastMove(undefined);
+      setPreviewEvaluation(null);
     }
   };
 
@@ -121,10 +160,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
     // Close explanation when jumping to first
     if (activeExplanation && activeExplanation.moveIndex !== 0) {
       setActiveExplanation(null);
-      setExplanationStep(0);
       setArrows([]);
       setPreviewFen(null);
       setPreviewLastMove(undefined);
+      setPreviewEvaluation(null);
     }
   }, [game, activeExplanation]);
 
@@ -138,10 +177,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
     // Close explanation when jumping to last
     if (activeExplanation && activeExplanation.moveIndex !== lastIndex) {
       setActiveExplanation(null);
-      setExplanationStep(0);
       setArrows([]);
       setPreviewFen(null);
       setPreviewLastMove(undefined);
+      setPreviewEvaluation(null);
     }
   }, [game, activeExplanation]);
 
@@ -161,10 +200,11 @@ export const Analysis: React.FC<AnalysisProps> = ({
       // Close explanation when navigating
       if (activeExplanation && activeExplanation.moveIndex !== newIndex) {
         setActiveExplanation(null);
-        setExplanationStep(0);
+
         setArrows([]);
         setPreviewFen(null);
         setPreviewLastMove(undefined);
+        setPreviewEvaluation(null);
       }
     },
     [game, currentMoveIndex, activeExplanation]
@@ -181,52 +221,50 @@ export const Analysis: React.FC<AnalysisProps> = ({
   // Note: Arrows and previews are cleared in navigation handlers when explanation closes
 
   // Handle explanation display
-  const handleShowExplanation = useCallback((explanation: ActiveExplanation) => {
-    setActiveExplanation(explanation);
-    setExplanationStep(0);
-    setCurrentMoveIndex(explanation.moveIndex);
+  const handleExplanation = async (moveIndex: number, annotationText: string) => {
+    setCurrentMoveIndex(moveIndex);
+
+    // reset all preview states
+    setLoadingExplanation(true);
     setPreviewFen(null);
     setPreviewLastMove(undefined);
-    // Auto-switch to AI Coach tab
-    setActiveTab("coach");
-  }, []);
+    setPreviewEvaluation(null);
+    setArrows([]);
 
-  // Set arrows when explanation changes
-  useEffect(() => {
-    if (!activeExplanation) return;
+    const explanation = await explain({
+      gameId: gameId,
+      moves: game?.moves || [],
+      moveIndex: moveIndex,
+      userColor: userColor,
+      opening: opening,
+      eco: eco,
+      annotationText: annotationText,
+    });
 
-    const explanationParagraphs = activeExplanation.explanation.split("\n\n").filter((p) => p.trim().length > 0);
-    const explanationEndStep = 1 + explanationParagraphs.length;
-
-    // Show initial arrows during intro and explanation steps
-    if (explanationStep < explanationEndStep) {
-      const initialArrows: Array<BoardArrow> = [];
-      if (activeExplanation.move.from && activeExplanation.move.to) {
-        initialArrows.push({
-          orig: activeExplanation.move.from as Key,
-          dest: activeExplanation.move.to as Key,
-          brush: "red",
-        });
-      }
-      if (activeExplanation.bestLine[0]?.from && activeExplanation.bestLine[0]?.to) {
-        initialArrows.push({
-          orig: activeExplanation.bestLine[0].from as Key,
-          dest: activeExplanation.bestLine[0].to as Key,
-          brush: "green",
-        });
-      }
-      setArrows(initialArrows);
-    }
-  }, [activeExplanation, explanationStep]);
+    setActiveExplanation({ moveIndex, explanation });
+    setLoadingExplanation(false);
+    setActiveTab("coach"); // auto-switch to AI Coach tab
+  };
 
   const handleVisualizeMove = useCallback(
-    (lineMove: EngineLineMove, brush: "red" | "green") => {
+    (lineMove: EngineMove, brush: "red" | "green") => {
       if (lineMove.fen) {
         setPreviewFen(lineMove.fen);
         setPreviewLastMove([lineMove.from as Key, lineMove.to as Key]);
 
         // Show arrow for this move
         setArrows([{ orig: lineMove.from as Key, dest: lineMove.to as Key, brush }]);
+
+        // Set preview evaluation if available
+        if (lineMove.evaluation) {
+          if (isCentipawnEval(lineMove.evaluation)) {
+            setPreviewEvaluation({ pawns: lineMove.evaluation.cp / 100 });
+          } else if (isMateEval(lineMove.evaluation)) {
+            setPreviewEvaluation({ mate: lineMove.evaluation.mate });
+          }
+        } else {
+          setPreviewEvaluation(null);
+        }
       } else {
         console.log("  ❌ No FEN in lineMove");
       }
@@ -240,6 +278,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     // Clear preview state and show the original move position
     setPreviewFen(null);
     setPreviewLastMove(undefined);
+    setPreviewEvaluation(null);
     setArrows([]);
 
     // Navigate to the move that's being explained
@@ -248,59 +287,59 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   // Auto-show arrows when navigating to a move with an explanation
   useEffect(() => {
-    // Don't show arrows if we're in preview mode (viewing a continuation move)
+    // Don't mess with arrows if we're in preview mode (viewing a continuation move)
     if (previewFen) {
       return;
     }
 
-    // Don't show arrows if we don't have a game or valid move index
-    if (!game || currentMoveIndex < 0 || !gameId) {
+    // or if we don't have a game or valid move index
+    if (!game || !gameId) {
       return;
     }
 
+    // or if we don't have a current move
     const currentMove = game.moves[currentMoveIndex];
     if (!currentMove) {
+      console.error(`No current move found for move index ${currentMoveIndex} (length: ${game.moves.length})`);
       return;
     }
 
-    const arrows: BoardArrow[] = [];
+    switch (currentMove.getQuality()) {
+      case "inaccuracy":
+      case "mistake":
+      case "blunder":
+        {
+          const bestVariation = currentMove.variations?.[0];
+          if (!bestVariation) {
+            setArrows([]);
+            return;
+          }
 
-    // Check if this move has a cached explanation
-    (async () => {
-      const cachedExplanation = await getExplanation({ gameId: gameId, moveIndex: currentMoveIndex });
-
-      if (!cachedExplanation || !cachedExplanation.bestContinuation) {
-        // No explanation for this move, clear arrows
-        setArrows([]);
-        return;
-      }
-
-      // Add red arrow for the bad move (the move that was played)
-      if (currentMove.from && currentMove.to) {
-        arrows.push({
-          orig: currentMove.from as Key,
-          dest: currentMove.to as Key,
-          brush: "red",
-        });
-      }
-
-      // Add green arrow for the best move (first move from PGN's variations)
-      if (currentMove.variations && currentMove.variations.length > 0) {
-        const bestVariation = currentMove.variations[0];
-        if (bestVariation.length > 0) {
           const bestMove = bestVariation[0];
-          if (bestMove.from && bestMove.to) {
-            arrows.push({
+          if (!bestMove) {
+            console.error(`No best move found for move index ${currentMoveIndex}`);
+            setArrows([]);
+            return;
+          }
+
+          setArrows([
+            {
+              orig: currentMove.from as Key,
+              dest: currentMove.to as Key,
+              brush: "red",
+            },
+            {
               orig: bestMove.from as Key,
               dest: bestMove.to as Key,
               brush: "green",
-            });
-          }
+            },
+          ]);
         }
-      }
-
-      setArrows(arrows);
-    })();
+        break;
+      default:
+        setArrows([]);
+        return;
+    }
   }, [currentMoveIndex, game, gameId, previewFen]);
 
   // Keyboard navigation for moves
@@ -308,6 +347,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
     const handleKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+
+      if (analysisProgress !== null) {
         return;
       }
 
@@ -351,9 +394,35 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const blackName = game?.headers.get("Black") || "";
   const whiteElo = game?.headers.get("WhiteElo") || game?.headers.get("WhiteELO") || "";
   const blackElo = game?.headers.get("BlackElo") || game?.headers.get("BlackELO") || "";
-  const event = game?.headers.get("Event") || "-";
+  const event = game?.headers.get("Event") || "";
   const site = game?.headers.get("Site") || "";
   const date = game?.headers.get("Date") || "";
+
+  // Determine user color by comparing usernames from headers with logged-in user
+  // This is more reliable than boardOrientation since the board can be flipped
+  const userColor: BlackOrWhite | undefined = (() => {
+    if (!user || !game) {
+      return;
+    }
+
+    const username = (user.chesscomId || user.lichessId || "").toLowerCase();
+    if (!username) {
+      return;
+    }
+
+    const whitePlayer = whiteName.toLowerCase();
+    const blackPlayer = blackName.toLowerCase();
+
+    if (username === whitePlayer) {
+      return "white";
+    }
+
+    if (username === blackPlayer) {
+      return "black";
+    }
+
+    return;
+  })();
 
   return (
     <div className="h-screen bg-neutral-800 text-white p-4 sm:p-6 flex flex-col overflow-hidden">
@@ -370,7 +439,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 previousMove={previousMove}
                 arrows={arrows}
                 orientation={boardOrientation}
-                evaluation={currentMove?.evaluation || { pawns: 0.0 }}
+                evaluation={previewEvaluation || currentMove?.evaluation || { pawns: 0.0 }}
                 players={{
                   white: { name: whiteName || "White", elo: whiteElo || "-" },
                   black: { name: blackName || "Black", elo: blackElo || "-" },
@@ -384,7 +453,16 @@ export const Analysis: React.FC<AnalysisProps> = ({
             {/* Tab Headers */}
             <div className="flex gap-2 mb-4 shrink-0">
               <button
-                onClick={() => setActiveTab("game")}
+                onClick={() => {
+                  if (activeTab === "game") {
+                    return;
+                  }
+
+                  setActiveTab("game");
+                  setPreviewFen(null);
+                  setPreviewLastMove(undefined);
+                  setPreviewEvaluation(null);
+                }}
                 className={`px-2 rounded-lg font-medium transition ${
                   activeTab === "game" ? "text-white" : " text-neutral-400 hover:text-neutral-300"
                 }`}
@@ -411,7 +489,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
             {/* Tab Content */}
             {activeTab === "game" ? (
-              <div className="bg-neutral-900/60 backdrop-blur-sm border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0">
+              <div className="bg-neutral-900/60 backdrop-blur-sm border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0 overflow-y-auto">
                 {/* Game Info Header */}
                 {(event || site || date || opening || eco) && (
                   <div className="mb-4 shrink-0 hidden lg:block">
@@ -422,7 +500,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
                         {isUrl(site) && (
                           <>
-                            {" • "}
+                            {(event || site || date) && " • "}
                             <a href={site} target="_black" className="underline">
                               {site}
                             </a>
@@ -442,12 +520,52 @@ export const Analysis: React.FC<AnalysisProps> = ({
                     )}
                   </div>
                 )}
-
-                {moves.length === 0 ? (
+                {moves.length === 0 && (
                   <div className="text-neutral-500 text-center py-12">
                     <p className="text-sm opacity-60">Load a PGN from Advanced tab to see moves</p>
                   </div>
-                ) : (
+                )}
+                {analysisProgress && (
+                  <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                    <div className="w-full max-w-md">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-neutral-400">Analyzing game...</span>
+                        <span className="text-sm text-neutral-400">
+                          {`${analysisProgress.currentMoveIndex + 1} / ${analysisProgress.totalMoves}`}
+                        </span>
+                      </div>
+                      <div className="w-full bg-neutral-700 rounded-full h-2">
+                        <div
+                          className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                          style={{
+                            width: `${((analysisProgress.currentMoveIndex + 1) / analysisProgress.totalMoves) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-neutral-500">
+                      {analysisProgress
+                        ? `Analyzing move ${analysisProgress.currentMoveIndex + 1}...`
+                        : "Preparing engine..."}
+                    </p>
+                  </div>
+                )}{" "}
+                {moves.length > 0 && !gameHasAnalysis && !analysisProgress && (
+                  <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                    <p className="text-sm text-neutral-400 text-center max-w-md">
+                      This game doesn't have analysis yet. Click below to start reviewing it.
+                    </p>
+                    <button
+                      onClick={handleStartReview}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2"
+                    >
+                      <SearchIcon className="w-4 h-4" />
+                      Start Review
+                    </button>
+                    <p className="text-xs text-neutral-500">Analysis may take up to ~2 minutes</p>
+                  </div>
+                )}
+                {moves.length > 0 && (
                   <>
                     <div className="space-y-1.5 flex-1 min-h-0 overflow-y-auto">
                       {(() => {
@@ -501,10 +619,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                   key={`ann-${whiteIndex}`}
                                   moves={moves}
                                   moveIndex={whiteIndex}
-                                  gameId={gameId}
-                                  opening={opening}
-                                  eco={eco}
-                                  onShowExplanation={handleShowExplanation}
+                                  explainDisabled={loadingExplanation}
+                                  explain={handleExplanation}
                                 />
                               );
                               i++;
@@ -532,10 +648,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                       key={`ann-${blackIndex}`}
                                       moves={moves}
                                       moveIndex={blackIndex}
-                                      gameId={gameId}
-                                      opening={opening}
-                                      eco={eco}
-                                      onShowExplanation={handleShowExplanation}
+                                      explainDisabled={loadingExplanation}
+                                      explain={handleExplanation}
                                     />
                                   );
                                 } else if (blackHasSimpleAnnotation) {
@@ -544,11 +658,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                       key={`ann-${blackIndex}`}
                                       moves={moves}
                                       moveIndex={blackIndex}
-                                      gameId={gameId}
-                                      opening={opening}
-                                      eco={eco}
                                       isSimple
-                                      onShowExplanation={handleShowExplanation}
+                                      explainDisabled={loadingExplanation}
+                                      explain={handleExplanation}
                                     />
                                   );
                                 }
@@ -577,11 +689,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                   key={`ann-${whiteIndex}`}
                                   moves={moves}
                                   moveIndex={whiteIndex}
-                                  gameId={gameId}
-                                  opening={opening}
-                                  eco={eco}
                                   isSimple
-                                  onShowExplanation={handleShowExplanation}
+                                  explainDisabled={loadingExplanation}
+                                  explain={handleExplanation}
                                 />
                               );
                               i++;
@@ -608,10 +718,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                       key={`ann-${blackIndex}`}
                                       moves={moves}
                                       moveIndex={blackIndex}
-                                      gameId={gameId}
-                                      opening={opening}
-                                      eco={eco}
-                                      onShowExplanation={handleShowExplanation}
+                                      explainDisabled={loadingExplanation}
+                                      explain={handleExplanation}
                                     />
                                   );
                                 } else if (blackHasSimpleAnnotation) {
@@ -620,11 +728,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                       key={`ann-${blackIndex}`}
                                       moves={moves}
                                       moveIndex={blackIndex}
-                                      gameId={gameId}
-                                      opening={opening}
-                                      eco={eco}
                                       isSimple
-                                      onShowExplanation={handleShowExplanation}
+                                      explainDisabled={loadingExplanation}
+                                      explain={handleExplanation}
                                     />
                                   );
                                 }
@@ -661,10 +767,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                     key={`ann-${blackIndex}`}
                                     moves={moves}
                                     moveIndex={blackIndex}
-                                    gameId={gameId}
-                                    opening={opening}
-                                    eco={eco}
-                                    onShowExplanation={handleShowExplanation}
+                                    explainDisabled={loadingExplanation}
+                                    explain={handleExplanation}
                                   />
                                 );
                               } else if (blackHasSimpleAnnotation) {
@@ -673,11 +777,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                     key={`ann-${blackIndex}`}
                                     moves={moves}
                                     moveIndex={blackIndex}
-                                    gameId={gameId}
-                                    opening={opening}
-                                    eco={eco}
                                     isSimple
-                                    onShowExplanation={handleShowExplanation}
+                                    explainDisabled={loadingExplanation}
+                                    explain={handleExplanation}
                                   />
                                 );
                               }
@@ -723,6 +825,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
                     {/* Move controls */}
                     <MoveControls
+                      disabled={analysisProgress !== null}
                       goToFirst={goToFirst}
                       goToLast={goToLast}
                       goToNext={goToNext}
@@ -733,22 +836,19 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 )}
               </div>
             ) : activeTab === "coach" ? (
-              <div className="bg-neutral-900/60 backdrop-blur-sm border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0">
+              <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0 overflow-y-auto">
                 {activeExplanation && (
                   <ExplanationViewer
-                    move={activeExplanation.move}
+                    move={moves[activeExplanation.moveIndex]}
                     explanation={activeExplanation.explanation}
-                    badContinuation={activeExplanation.badContinuation}
-                    bestContinuation={activeExplanation.bestContinuation}
-                    badLine={activeExplanation.badLine}
-                    bestLine={activeExplanation.bestLine}
+                    userColor={userColor}
                     onVisualize={handleVisualizeMove}
                     onNavigateToOriginalMove={handleNavigateToOriginalMove}
                   />
                 )}
                 {!activeExplanation && (
                   <div className="h-full flex items-center justify-center">
-                    <p className="text-neutral-400 leading-relaxed ">
+                    <p className="text-neutral-400 leading-relaxed text-center">
                       Click <span className="font-semibold text-neutral-300">"Tell Me Why"</span> on any of your
                       mistakes to get started!
                     </p>
@@ -757,8 +857,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
               </div>
             ) : (
               <div className="bg-neutral-900/60 backdrop-blur-sm border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0 overflow-y-auto">
-                <h2 className="text-lg font-semibold text-neutral-100 mb-4">Advanced</h2>
-
                 {/* FEN Display */}
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
@@ -780,6 +878,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   <textarea
                     value={pgn}
                     onChange={(e) => setPgn(e.target.value)}
+                    readOnly={!!pgnProp}
                     placeholder="Paste your PGN here (with or without headers)"
                     className="flex-1 w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 resize-none"
                   />

@@ -13,7 +13,7 @@ type Props = {
   className?: string;
 };
 
-const getAnnotationClasses = (moveQuality: MoveQuality) => {
+const getAnnotationClasses = (moveQuality?: MoveQuality) => {
   switch (moveQuality) {
     case "blunder":
       return "bg-red-500/50 border border-red-500 text-red-100";
@@ -57,7 +57,7 @@ export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, cl
     >
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-1 font-semibold text-white">
-          <MoveQualityIcon moveQuality={moveQuality} size="small" />
+          {moveQuality && <MoveQualityIcon moveQuality={moveQuality} size="small" />}
           <ChessPiece san={move.san} ply={move.ply} />
           <span>{move.san}</span>
         </div>
