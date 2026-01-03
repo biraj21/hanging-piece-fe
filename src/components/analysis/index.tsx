@@ -222,28 +222,35 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   // Handle explanation display
   const handleExplanation = async (moveIndex: number, annotationText: string) => {
-    setCurrentMoveIndex(moveIndex);
+    try {
+      setCurrentMoveIndex(moveIndex);
 
-    // reset all preview states
-    setLoadingExplanation(true);
-    setPreviewFen(null);
-    setPreviewLastMove(undefined);
-    setPreviewEvaluation(null);
-    setArrows([]);
+      // reset all preview states
+      setLoadingExplanation(true);
+      setPreviewFen(null);
+      setPreviewLastMove(undefined);
+      setPreviewEvaluation(null);
+      setArrows([]);
 
-    const explanation = await explain({
-      gameId: gameId,
-      moves: game?.moves || [],
-      moveIndex: moveIndex,
-      userColor: userColor,
-      opening: opening,
-      eco: eco,
-      annotationText: annotationText,
-    });
+      const explanation = await explain({
+        gameId: gameId,
+        moves: game?.moves || [],
+        moveIndex: moveIndex,
+        userColor: userColor,
+        opening: opening,
+        eco: eco,
+        annotationText: annotationText,
+      });
 
-    setActiveExplanation({ moveIndex, explanation });
-    setLoadingExplanation(false);
-    setActiveTab("coach"); // auto-switch to AI Coach tab
+      setActiveExplanation({ moveIndex, explanation });
+      setLoadingExplanation(false);
+      setActiveTab("coach"); // auto-switch to AI Coach tab
+    } catch (err) {
+      console.error("Failed to generate explanation:", err);
+      throw err;
+    } finally {
+      setLoadingExplanation(false);
+    }
   };
 
   const handleVisualizeMove = useCallback(
