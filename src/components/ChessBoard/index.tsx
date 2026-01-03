@@ -9,8 +9,11 @@ import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
 
 import { EvalBar } from "@/components/analysis/EvalBar";
+import { getMoveQualityColor, getMoveQualitySymbol } from "@/helpers/move-quality";
+import type { MoveQuality } from "@/helpers/pgn";
 import type { BlackOrWhite } from "@/types";
 
+import type { DrawShape } from "@lichess-org/chessground/draw";
 import "./style.css";
 
 export type ChessBoardTheme = "dark-gray" | "green";
@@ -21,6 +24,11 @@ export interface PlayerInfo {
 }
 
 export type BoardArrow = { orig: Key; dest: Key; brush?: string };
+
+export interface MoveAnnotation {
+  square: Key;
+  quality: MoveQuality;
+}
 
 export interface ChessBoardProps {
   fen: string;
@@ -34,6 +42,7 @@ export interface ChessBoardProps {
     white: PlayerInfo;
     black: PlayerInfo;
   };
+  moveAnnotations?: MoveAnnotation[];
 }
 
 interface PlayerInfoProps {
@@ -60,6 +69,29 @@ const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color }) => {
   );
 };
 
+const createMoveQualityBadgeSvg = (quality: MoveQuality): string => {
+  const colors = getMoveQualityColor(quality);
+  const symbol = getMoveQualitySymbol(quality);
+
+  // Position badge in top-right corner of the 100x100 viewBox
+  const cx = 90;
+  const cy = 10;
+  const radius = 20;
+
+  return `
+    <circle cx="${cx}" cy="${cy}" r="${radius}" fill="${colors.bg}" stroke="${colors.border}" stroke-width="2"/>
+    <text 
+      x="${cx}" 
+      y="${cy + 6}" 
+      text-anchor="middle" 
+      font-size="20" 
+      font-weight="bold" 
+      fill="white"
+      font-family="sans-serif"
+    >${symbol}</text>
+  `;
+};
+
 export const ChessBoard: React.FC<ChessBoardProps> = ({
   theme = "green",
   fen,
@@ -69,6 +101,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   orientation = "white",
   evaluation,
   players,
+  moveAnnotations = [],
 }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
@@ -79,8 +112,23 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       return;
     }
 
+    // Convert move annotations to Chessground autoShapes with customSvg
+    const autoShapes: DrawShape[] = moveAnnotations.map((annotation) => ({
+      orig: annotation.square,
+      dest: annotation.square,
+      customSvg: {
+        html: createMoveQualityBadgeSvg(annotation.quality),
+        center: "dest",
+      },
+    }));
+
     if (cgRef.current) {
-      cgRef.current.set({ fen, lastMove: previousMove, drawable: { shapes: arrows }, orientation });
+      cgRef.current.set({
+        fen,
+        lastMove: previousMove,
+        drawable: { shapes: arrows, autoShapes },
+        orientation,
+      });
     } else {
       const defaultConfig: Config = {
         orientation,
@@ -88,7 +136,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         lastMove: previousMove,
         drawable: {
           enabled: true,
+          visible: true,
           shapes: arrows,
+          autoShapes,
         },
         movable: {
           free: false,
@@ -109,7 +159,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
       cgRef.current = Chessground(boardRef.current, defaultConfig);
     }
-  }, [fen, previousMove, arrows, orientation]);
+  }, [fen, previousMove, arrows, orientation, moveAnnotations]);
 
   // destroy the board when the component unmounts
   useEffect(() => {
@@ -143,7 +193,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           <div
             id="hp-chessboard-wrapper"
             ref={boardRef}
-            className={`cg-wrap cg-theme-${theme} w-full aspect-square rounded-lg shadow-2xl overflow-hidden`}
+            className={`cg-wrap cg-theme-${theme} w-full aspect-square rounded-lg shadow-2xl`}
           />
         </div>
       </div>

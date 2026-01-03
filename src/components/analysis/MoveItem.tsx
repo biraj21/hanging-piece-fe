@@ -1,8 +1,10 @@
 import React from "react";
 
 import { ChessPiece } from "@/components/ChessBoard/ChessPiece";
-import type { GameMove, MoveQuality } from "@/helpers/pgn";
+import { getAnnotationClasses } from "@/helpers/move-quality";
+import type { GameMove } from "@/helpers/pgn";
 import { isPawnsEval } from "@/helpers/pgn";
+
 import { MoveQualityIcon } from "./MoveQualityIcon";
 
 type Props = {
@@ -11,21 +13,6 @@ type Props = {
   isSelected: boolean;
   onClick: (index: number) => void;
   className?: string;
-};
-
-const getAnnotationClasses = (moveQuality?: MoveQuality) => {
-  switch (moveQuality) {
-    case "blunder":
-      return "bg-red-500/50 border border-red-500 text-red-100";
-    case "mistake":
-      return "bg-amber-500/50 border border-amber-500 text-amber-100";
-    case "inaccuracy":
-      return "bg-blue-500/50 border border-blue-500 text-blue-100";
-    case "good":
-      return "bg-emerald-500/50 border border-emerald-500 text-emerald-100";
-    default:
-      return "bg-neutral-800 text-neutral-200 border border-neutral-700";
-  }
 };
 
 const formatEval = (move: GameMove) => {

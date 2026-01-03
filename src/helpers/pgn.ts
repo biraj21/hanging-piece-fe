@@ -278,43 +278,6 @@ export function parsePgnToGame(pgn: string): ParsedGame {
   return parsedGame;
 }
 
-export function getMoveQualitySymbol(moveQuality: MoveQuality): string {
-  switch (moveQuality) {
-    case "blunder":
-      return "??";
-    case "mistake":
-      return "?";
-    case "inaccuracy":
-      return "?!";
-    case "good":
-      return "!";
-    case "brilliant":
-      return "!!";
-  }
-}
-
-/**
- * Get NAG (Numeric Annotation Glyph) from move quality
- * @param quality - Move quality
- * @returns NAG number or undefined
- */
-export function getNagFromQuality(quality: MoveQuality): number | undefined {
-  switch (quality) {
-    case "blunder":
-      return 4; // ??
-    case "mistake":
-      return 2; // ?
-    case "inaccuracy":
-      return 6; // ?!
-    case "good":
-      return 1; // !
-    case "brilliant":
-      return 3; // !!
-    default:
-      return undefined;
-  }
-}
-
 /**
  * Check if a parsed game has analysis (evaluations or NAGs)
  * @param game - Parsed game

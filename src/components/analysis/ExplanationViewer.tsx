@@ -1,7 +1,8 @@
 import { GraduationCapIcon, RotateCcwIcon } from "lucide-react";
 import React, { useState } from "react";
 
-import type { GameMove, MoveQuality } from "@/helpers/pgn";
+import { getMoveQualityDisplay } from "@/helpers/move-quality";
+import type { GameMove } from "@/helpers/pgn";
 import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 
 import { MoveQualityIcon } from "./MoveQualityIcon";
@@ -12,23 +13,6 @@ type ExplanationViewerProps = {
   userColor?: BlackOrWhite; // Color the user is playing as
   onVisualize: (lineMove: EngineMove, brush: "red" | "green") => void;
   onNavigateToOriginalMove?: () => void;
-};
-
-const getMoveQualityDisplay = (quality?: MoveQuality) => {
-  switch (quality) {
-    case "blunder":
-      return { text: "BLUNDER", color: "text-red-400" };
-    case "mistake":
-      return { text: "MISTAKE", color: "text-amber-400" };
-    case "inaccuracy":
-      return { text: "INACCURACY", color: "text-blue-400" };
-    case "good":
-      return { text: "GOOD MOVE", color: "text-emerald-400" };
-    case "brilliant":
-      return { text: "BRILLIANT", color: "text-purple-400" };
-    default:
-      return { text: "MOVE", color: "text-neutral-400" };
-  }
 };
 
 export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({

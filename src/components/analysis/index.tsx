@@ -1,10 +1,10 @@
 import type { Key } from "@lichess-org/chessground/types";
 import type { Evaluation } from "chessops/pgn";
 import { SearchIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { ChessBoard, type BoardArrow } from "@/components/ChessBoard";
+import { ChessBoard, type BoardArrow, type MoveAnnotation } from "@/components/ChessBoard";
 import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { analyzeGame, type AnalysisProgress } from "@/helpers/game-analyzer";
@@ -64,6 +64,30 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const currentFen = analysisProgress?.currentFen || previewFen || currentMove?.fen || INITIAL_FEN;
   const previousMove: [Key, Key] | undefined =
     previewLastMove || (currentMove ? [currentMove.from as Key, currentMove.to as Key] : undefined);
+
+  // Compute move annotations for the board (show quality indicator badge on current move only)
+  const moveAnnotations = useMemo<MoveAnnotation[]>(() => {
+    if (!game) {
+      return [];
+    }
+
+    const currentMove = game.moves[currentMoveIndex];
+    if (!currentMove) {
+      return [];
+    }
+
+    const quality = currentMove.getQuality();
+    if (!quality) {
+      return [];
+    }
+
+    return [
+      {
+        square: currentMove.to as Key,
+        quality,
+      },
+    ];
+  }, [game, gameHasAnalysis, currentMoveIndex]);
 
   const parsePGN = (pgnText: string) => {
     try {
@@ -230,7 +254,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
       setPreviewFen(null);
       setPreviewLastMove(undefined);
       setPreviewEvaluation(null);
-      setArrows([]);
 
       const explanation = await explain({
         gameId: gameId,
@@ -451,6 +474,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   white: { name: whiteName || "White", elo: whiteElo || "-" },
                   black: { name: blackName || "Black", elo: blackElo || "-" },
                 }}
+                moveAnnotations={moveAnnotations}
               />
             </div>
           </div>

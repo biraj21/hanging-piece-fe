@@ -3,8 +3,9 @@ import { startingPosition, type Evaluation } from "chessops/pgn";
 import { parseUci } from "chessops/util";
 
 import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
+import { getNagFromQuality } from "@/helpers/move-quality";
 import type { MoveQuality, ParsedGame, Variation } from "@/helpers/pgn";
-import { GameMove, getNagFromQuality } from "@/helpers/pgn";
+import { GameMove } from "@/helpers/pgn";
 import { isCentipawnEval, isMateEval, Stockfish } from "@/helpers/stockfish";
 import type { EngineEvaluation } from "@/types";
 import { parseUciContinuation } from "@/utils/chess";

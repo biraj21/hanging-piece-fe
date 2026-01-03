@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
-import type { GameMove, MoveQuality, Variation } from "@/helpers/pgn";
+import { getAnnotationClasses } from "@/helpers/move-quality";
+import type { GameMove, Variation } from "@/helpers/pgn";
 
 import { MoveQualityIcon } from "./MoveQualityIcon";
 import { TellMeWhyButton } from "./TellMeWhy";
@@ -11,21 +12,6 @@ type AnnotationBlockProps = {
   isSimple?: boolean; // simple annotation without best line
   explain: (moveIndex: number, annotationText: string) => Promise<void>;
   explainDisabled?: boolean;
-};
-
-const getAnnotationClasses = (moveQuality?: MoveQuality) => {
-  switch (moveQuality) {
-    case "blunder":
-      return "bg-red-500/50 border border-red-500 text-red-100";
-    case "mistake":
-      return "bg-amber-500/50 border border-amber-500 text-amber-100";
-    case "inaccuracy":
-      return "bg-blue-500/50 border border-blue-500 text-blue-100";
-    case "good":
-      return "bg-emerald-500/50 border border-emerald-500 text-emerald-100";
-    default:
-      return "bg-neutral-700/50 border border-neutral-500 text-neutral-300";
-  }
 };
 
 export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
