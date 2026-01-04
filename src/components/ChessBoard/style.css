@@ -21,6 +21,11 @@
   flex-flow: column-reverse;
 }
 
+/* flip when the board is flipped, i.e black's perspective */
+#hp-chessboard-wrapper.cg-wrap coords.ranks.black {
+  flex-flow: column;
+}
+
 #hp-chessboard-wrapper.cg-wrap coords.files {
   width: 100%;
   height: 1em;
@@ -29,6 +34,11 @@
   flex-flow: row;
   text-transform: uppercase;
   text-align: center;
+}
+
+/* flip when the board is flipped, i.e black's perspective */
+#hp-chessboard-wrapper.cg-wrap coords.files.black {
+  flex-flow: row-reverse;
 }
 
 #hp-chessboard-wrapper.cg-wrap coords.ranks coord {
