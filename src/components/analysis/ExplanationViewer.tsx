@@ -105,19 +105,19 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
             </div>
           )}
 
-          {/* Bad Line Section - Collapsible */}
+          {/* Bad Line Section */}
           {badContinuation.length > 0 && (
-            <div className="border border-red-500/30 rounded-lg overflow-hidden">
-              <div className="w-full px-3 py-2 bg-red-950/20 hover:bg-red-950/30 flex items-center justify-between">
+            <div className="bg-neutral-800/50 border border-neutral-600/50 rounded-lg overflow-hidden">
+              <div className="w-full px-3 py-2.5 bg-neutral-700/40 border-b border-neutral-600/50">
                 <div className="flex items-center gap-2">
-                  <span className="text-red-400">☠️</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                   <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wide">
                     {`What goes wrong for ${playerLabel}`}
                   </h4>
                 </div>
               </div>
 
-              <div className="px-3 py-2 space-y-1 bg-red-950/10">
+              <div className="px-3 py-2.5 space-y-1.5">
                 {badContinuation.map((cont, idx) => {
                   return (
                     <MoveCard
@@ -138,19 +138,19 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
             </div>
           )}
 
-          {/* Best Line Section - Collapsible */}
+          {/* Best Line Section */}
           {bestContinuation.length > 0 && (
-            <div className="border border-emerald-500/30 rounded-lg overflow-hidden">
-              <div className="w-full px-3 py-2 bg-emerald-950/20 hover:bg-emerald-950/30 flex items-center justify-between">
+            <div className="bg-neutral-800/50 border border-neutral-600/50 rounded-lg overflow-hidden">
+              <div className="w-full px-3 py-2.5 bg-neutral-700/40 border-b border-neutral-600/50">
                 <div className="flex items-center gap-2">
-                  <span className="text-emerald-400">✅</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                   <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
-                    {`Best line for ${playerLabel}`}
+                    {`What ${playerLabel} should have done`}
                   </h4>
                 </div>
               </div>
 
-              <div className="px-3 py-2 space-y-1 bg-emerald-950/10">
+              <div className="px-3 py-2.5 space-y-1.5">
                 {bestContinuation.map((cont, idx) => {
                   return (
                     <MoveCard
@@ -193,27 +193,32 @@ const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, onClic
   const isWhite = ply % 2 === 1;
   const isBest = type === "best";
 
-  // Use static Tailwind classes based on type
-  const baseClasses = isBest ? "hover:bg-emerald-950/30" : "hover:bg-red-950/30";
+  // Game-like styling with subtle colors
+  const baseClasses = "hover:bg-neutral-700/50 transition-colors";
 
   const selectedClasses = isSelected
     ? isBest
-      ? "bg-emerald-950/40 border border-emerald-500/50 shadow-lg"
-      : "bg-red-950/40 border border-red-500/50 shadow-lg"
-    : "border border-transparent";
+      ? "bg-emerald-500/10 border-l-2 border-l-emerald-500"
+      : "bg-red-500/10 border-l-2 border-l-red-500"
+    : "border-l-2 border-l-transparent";
 
-  const textColorClass = isBest ? "text-emerald-400" : "text-red-400";
+  // Move notation styling - more like chess notation
+  const moveNotationClass = isSelected
+    ? isBest
+      ? "text-emerald-400 font-semibold"
+      : "text-red-400 font-semibold"
+    : "text-neutral-200 font-medium";
 
   return (
     <button
       onClick={onClick}
-      className={`w-full flex flex-col items-start gap-2 text-sm px-2 py-1.5 rounded ${baseClasses} text-left cursor-pointer ${selectedClasses}`}
+      className={`w-full flex flex-col text-sm px-3 py-2 rounded ${baseClasses} text-left cursor-pointer ${selectedClasses}`}
       title="Click to visualize this position"
     >
-      <span className={`${textColorClass} font-mono font-semibold shrink-0 min-w-[60px]`}>
+      <span className={`${moveNotationClass} font-mono shrink-0 min-w-[70px] text-sm`}>
         {isWhite ? `${moveNum}. ${cont.move}` : `${moveNum}... ${cont.move}`}
       </span>
-      <p className="text-xs text-neutral-300 leading-relaxed">{cont.reason}</p>
+      <p className="text-xs text-neutral-400 leading-relaxed flex-1 pt-0.5">{cont.reason}</p>
     </button>
   );
 };
