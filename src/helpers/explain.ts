@@ -17,7 +17,7 @@ interface ExplainOptions {
   opening?: string;
   eco?: string;
   annotationText?: string;
-  engine?: Stockfish;
+  engine?: Stockfish | null;
 }
 
 let cachedEngine: Stockfish | undefined;

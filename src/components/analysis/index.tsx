@@ -1,20 +1,21 @@
 import type { Key } from "@lichess-org/chessground/types";
 import type { Evaluation } from "chessops/pgn";
-import { SearchIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { BarChart3Icon, SearchIcon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ChessBoard, type BoardArrow } from "@/components/ChessBoard";
 import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
+import { explain } from "@/helpers/explain";
 import { analyzeGame, type AnalysisProgress } from "@/helpers/game-analyzer";
 import { hasAnalysis, isMateEval, parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
-import { isCentipawnEval } from "@/helpers/stockfish";
+import { isCentipawnEval, Stockfish } from "@/helpers/stockfish";
 import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 import { generateGameHash } from "@/utils/chess";
 import { isUrl } from "@/utils/string";
 
-import { explain } from "@/helpers/explain";
+import { AnalysisSummaryModal } from "./AnalysisSummaryModal";
 import { AnnotationBlock } from "./AnnotationBlock";
 import { ExplanationViewer } from "./ExplanationViewer";
 import { MoveControls } from "./MoveControls";
@@ -33,6 +34,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
   boardOrientation: boardOrientationProp = "white",
   source = "pgn",
 }) => {
+  const engineRef = useRef<Stockfish | null>(null);
   const { user } = useAuth();
   const [pgn, setPgn] = useState(pgnProp);
   const [boardOrientation, setBoardOrientation] = useState<BlackOrWhite>(boardOrientationProp);
@@ -56,6 +58,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
   // Analysis state
   const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgress | null>(null);
   const [gameHasAnalysis, setGameHasAnalysis] = useState(false);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [showSummaryAfterAnalysis, setShowSummaryAfterAnalysis] = useState(false);
 
   // Get current move data
   const currentMove = currentMoveIndex >= 0 ? game?.moves[currentMoveIndex] : null;
@@ -64,6 +68,46 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const currentFen = analysisProgress?.currentFen || previewFen || currentMove?.fen || INITIAL_FEN;
   const previousMove: [Key, Key] | undefined =
     previewLastMove || (currentMove ? [currentMove.from as Key, currentMove.to as Key] : undefined);
+
+  // Derived values from game headers
+  const opening = game?.headers.get("Opening") || "";
+  const eco = game?.headers.get("ECO") || "";
+  const moves = game?.moves || [];
+
+  // Player and event metadata
+  const whiteName = game?.headers.get("White") || "";
+  const blackName = game?.headers.get("Black") || "";
+  const whiteElo = game?.headers.get("WhiteElo") || game?.headers.get("WhiteELO") || "";
+  const blackElo = game?.headers.get("BlackElo") || game?.headers.get("BlackELO") || "";
+  const event = game?.headers.get("Event") || "";
+  const site = game?.headers.get("Site") || "";
+  const date = game?.headers.get("Date") || "";
+
+  // Determine user color by comparing usernames from headers with logged-in user
+  // This is more reliable than boardOrientation since the board can be flipped
+  const userColor: BlackOrWhite | undefined = (() => {
+    if (!user || !game) {
+      return;
+    }
+
+    const username = (user.chesscomId || user.lichessId || "").toLowerCase();
+    if (!username) {
+      return;
+    }
+
+    const whitePlayer = whiteName.toLowerCase();
+    const blackPlayer = blackName.toLowerCase();
+
+    if (username === whitePlayer) {
+      return "white";
+    }
+
+    if (username === blackPlayer) {
+      return "black";
+    }
+
+    return;
+  })();
 
   const parsePGN = (pgnText: string) => {
     try {
@@ -112,6 +156,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
       setGame(analyzedGame);
       setGameHasAnalysis(true);
       setCurrentMoveIndex(0);
+      setShowSummaryAfterAnalysis(true); // Flag to show footer
+      setShowSummaryModal(true); // Show summary modal first
       toast.success("Analysis complete!");
     } catch (err) {
       console.error("Analysis failed:", err);
@@ -221,37 +267,95 @@ export const Analysis: React.FC<AnalysisProps> = ({
   // Note: Arrows and previews are cleared in navigation handlers when explanation closes
 
   // Handle explanation display
-  const handleExplanation = async (moveIndex: number, annotationText: string) => {
-    try {
-      setCurrentMoveIndex(moveIndex);
+  const handleExplanation = useCallback(
+    async (moveIndex: number, annotationText: string) => {
+      try {
+        setCurrentMoveIndex(moveIndex);
 
-      // reset all preview states
-      setLoadingExplanation(true);
-      setPreviewFen(null);
-      setPreviewLastMove(undefined);
-      setPreviewEvaluation(null);
-      setArrows([]);
+        // reset all preview states
+        setLoadingExplanation(true);
+        setPreviewFen(null);
+        setPreviewLastMove(undefined);
+        setPreviewEvaluation(null);
+        setArrows([]);
 
-      const explanation = await explain({
-        gameId: gameId,
-        moves: game?.moves || [],
-        moveIndex: moveIndex,
-        userColor: userColor,
-        opening: opening,
-        eco: eco,
-        annotationText: annotationText,
-      });
+        const explanation = await explain({
+          gameId: gameId,
+          moves: game?.moves || [],
+          moveIndex: moveIndex,
+          userColor: userColor,
+          opening: opening,
+          eco: eco,
+          annotationText: annotationText,
+          engine: engineRef.current,
+        });
 
-      setActiveExplanation({ moveIndex, explanation });
-      setLoadingExplanation(false);
-      setActiveTab("coach"); // auto-switch to AI Coach tab
-    } catch (err) {
-      console.error("Failed to generate explanation:", err);
-      throw err;
-    } finally {
-      setLoadingExplanation(false);
+        setActiveExplanation({ moveIndex, explanation });
+        setLoadingExplanation(false);
+        setActiveTab("coach"); // auto-switch to AI Coach tab
+      } catch (err) {
+        console.error("Failed to generate explanation:", err);
+        throw err;
+      } finally {
+        setLoadingExplanation(false);
+      }
+    },
+    [gameId, game, userColor, opening, eco]
+  );
+
+  useEffect(() => {
+    if (!engineRef.current) {
+      engineRef.current = Stockfish.create();
     }
-  };
+
+    return () => {
+      if (engineRef.current) {
+        engineRef.current.terminate();
+        engineRef.current = null;
+      }
+    };
+  }, []);
+
+  // Find first mistake/blunder for user
+  const findFirstBadMove = useCallback(() => {
+    if (!game || !userColor || !user) {
+      return null;
+    }
+
+    const firstBadMove = game.moves.find((move) => {
+      const moveColor = move.ply % 2 === 1 ? "white" : "black";
+      const quality = move.getQuality();
+      return (
+        moveColor === userColor && (quality === "mistake" || quality === "blunder") && move.variations?.[0]?.length
+      );
+    });
+
+    if (!firstBadMove) {
+      return null;
+    }
+
+    const moveIndex = game.moves.indexOf(firstBadMove);
+    const quality = firstBadMove.getQuality();
+    const bestLine = firstBadMove.variations?.[0] || [];
+    const annotationText =
+      firstBadMove.textComments.join(" ").trim() ||
+      `${quality ? quality.charAt(0).toUpperCase() + quality.slice(1) : ""}. Best: ${bestLine
+        .map((v) => v.san)
+        .join(" ")}`;
+
+    return { moveIndex, annotationText };
+  }, [game, userColor, user]);
+
+  // Handle start review from summary modal
+  const handleStartExplanation = useCallback(() => {
+    setShowSummaryModal(false);
+    const badMove = findFirstBadMove();
+    if (badMove) {
+      handleExplanation(badMove.moveIndex, badMove.annotationText).catch((err) => {
+        console.error("Auto-explanation failed:", err);
+      });
+    }
+  }, [findFirstBadMove, handleExplanation]);
 
   const handleVisualizeMove = useCallback(
     (lineMove: EngineMove, brush: "red" | "green") => {
@@ -391,51 +495,11 @@ export const Analysis: React.FC<AnalysisProps> = ({
     return () => window.removeEventListener("keydown", handleKey);
   }, [goToFirst, goToLast, goToNext, goToPrevious]);
 
-  // Derived values from game headers
-  const opening = game?.headers.get("Opening") || "";
-  const eco = game?.headers.get("ECO") || "";
-  const moves = game?.moves || [];
-
-  // Player and event metadata
-  const whiteName = game?.headers.get("White") || "";
-  const blackName = game?.headers.get("Black") || "";
-  const whiteElo = game?.headers.get("WhiteElo") || game?.headers.get("WhiteELO") || "";
-  const blackElo = game?.headers.get("BlackElo") || game?.headers.get("BlackELO") || "";
-  const event = game?.headers.get("Event") || "";
-  const site = game?.headers.get("Site") || "";
-  const date = game?.headers.get("Date") || "";
-
-  // Determine user color by comparing usernames from headers with logged-in user
-  // This is more reliable than boardOrientation since the board can be flipped
-  const userColor: BlackOrWhite | undefined = (() => {
-    if (!user || !game) {
-      return;
-    }
-
-    const username = (user.chesscomId || user.lichessId || "").toLowerCase();
-    if (!username) {
-      return;
-    }
-
-    const whitePlayer = whiteName.toLowerCase();
-    const blackPlayer = blackName.toLowerCase();
-
-    if (username === whitePlayer) {
-      return "white";
-    }
-
-    if (username === blackPlayer) {
-      return "black";
-    }
-
-    return;
-  })();
-
   return (
     <div className="h-screen bg-neutral-800 text-white p-4 sm:p-6 flex flex-col overflow-hidden">
       <div className="mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* <div className="grid grid-cols-1 grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1 gap-6 flex-1 min-h-0"> */}
-        <div className="grid grid-cols-1 grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1 landscape:grid-cols-2 landscape:grid-rows-1 gap-6 flex-1 min-h-0">
+        <div className="grid grid-cols-1 grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1 landscape:grid-cols-2 landscape:grid-rows-1 gap-4 lg:gap-6 flex-1 min-h-0">
           {/* Left Column: Board */}
           <div className="flex flex-col gap-3 min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-3 max-w-[52vh] max-lg:landscape:max-w-[72vh] lg:max-w-[82vh] mx-auto w-full">
@@ -456,7 +520,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
           </div>
 
           {/* Right Column: Tabbed Panel */}
-          <div className="min-h-0 flex flex-col text-xs lg:text-sm">
+          <div className="min-h-72 flex flex-col text-xs lg:text-sm">
             {/* Tab Headers */}
             <div className="flex gap-2 mb-4 shrink-0">
               <button
@@ -498,35 +562,51 @@ export const Analysis: React.FC<AnalysisProps> = ({
             {activeTab === "game" ? (
               <div className="bg-neutral-900/60 backdrop-blur-sm border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0 overflow-y-auto">
                 {/* Game Info Header */}
-                {(event || site || date || opening || eco) && (
-                  <div className="mb-4 shrink-0 hidden lg:block">
-                    {/* Event, Site, Date */}
-                    {(event || site || date) && (
-                      <div className="text-xs text-neutral-200 mb-1.5 truncate">
-                        {[event, date].filter(Boolean).join(" • ")}
+                <div className="mb-4 shrink-0 flex items-start justify-between gap-3">
+                  {(event || site || date || opening || eco) && (
+                    <div className="hidden lg:block flex-1">
+                      {/* Event, Site, Date */}
+                      {(event || site || date) && (
+                        <div className="text-xs text-neutral-200 mb-1.5 truncate">
+                          {[event, date].filter(Boolean).join(" • ")}
 
-                        {isUrl(site) && (
-                          <>
-                            {(event || site || date) && " • "}
-                            <a href={site} target="_black" className="underline">
-                              {site}
-                            </a>
-                          </>
-                        )}
-                      </div>
-                    )}
+                          {isUrl(site) && (
+                            <>
+                              {(event || site || date) && " • "}
+                              <a href={site} target="_black" className="underline">
+                                {site}
+                              </a>
+                            </>
+                          )}
+                        </div>
+                      )}
 
-                    {/* Opening */}
-                    {(opening || eco) && (
-                      <div className="text-xs text-neutral-300 truncate">
-                        <span className="text-neutral-400">Opening: </span>
-                        {opening && <span>{opening}</span>}
-                        {opening && eco && <span> • </span>}
-                        {eco && <span className="text-neutral-300">ECO: {eco}</span>}
-                      </div>
-                    )}
-                  </div>
-                )}
+                      {/* Opening */}
+                      {(opening || eco) && (
+                        <div className="text-xs text-neutral-300 truncate">
+                          <span className="text-neutral-400">Opening: </span>
+                          {opening && <span>{opening}</span>}
+                          {opening && eco && <span> • </span>}
+                          {eco && <span className="text-neutral-300">ECO: {eco}</span>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Summary Button */}
+                  {gameHasAnalysis && game && (
+                    <button
+                      onClick={() => {
+                        setShowSummaryAfterAnalysis(false); // Reset flag when opening via Summary button
+                        setShowSummaryModal(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-300 bg-neutral-700/50 hover:bg-neutral-700 rounded-md transition-colors border border-neutral-600/50 hover:border-neutral-500 shrink-0"
+                      title="View analysis summary"
+                    >
+                      <BarChart3Icon size={14} />
+                      <span className="hidden sm:inline">Summary</span>
+                    </button>
+                  )}
+                </div>
                 {moves.length === 0 && (
                   <div className="text-neutral-500 text-center py-12">
                     <p className="text-sm opacity-60">Load a PGN from Advanced tab to see moves</p>
@@ -904,6 +984,22 @@ export const Analysis: React.FC<AnalysisProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Analysis Summary Modal */}
+      {showSummaryModal && game && (
+        <AnalysisSummaryModal
+          game={game}
+          whiteName={whiteName}
+          blackName={blackName}
+          userColor={userColor}
+          onStart={handleStartExplanation}
+          onClose={() => {
+            setShowSummaryModal(false);
+            setShowSummaryAfterAnalysis(false); // Reset flag when closed
+          }}
+          afterAnalysis={showSummaryAfterAnalysis}
+        />
+      )}
     </div>
   );
 };
