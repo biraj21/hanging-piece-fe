@@ -8,7 +8,9 @@ import GamesPage from "@/pages/games";
 import IndexPage from "@/pages/index";
 import LoginPage from "@/pages/login";
 import OnboardingPage from "@/pages/onboarding";
+import PrivacyPage from "@/pages/privacy";
 import ProfilePage from "@/pages/profile";
+import TermsPage from "@/pages/terms";
 
 import { ROUTES } from "./routes";
 
@@ -16,6 +18,8 @@ export default function AppRouter() {
   return (
     <Routes>
       <Route path={ROUTES.INDEX} element={<IndexPage />} />
+      <Route path={ROUTES.PRIVACY} element={<PrivacyPage />} />
+      <Route path={ROUTES.TERMS} element={<TermsPage />} />
 
       <Route element={<StrictlyPublicRoutes redirectTo={ROUTES.DASHBOARD} />}>
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />

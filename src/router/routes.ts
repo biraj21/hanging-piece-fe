@@ -11,4 +11,7 @@ export const ROUTES = {
   ANALYSIS: "/analysis",
   ONBOARDING: "/onboarding",
   PROFILE: "/profile",
+
+  PRIVACY: "/privacy",
+  TERMS: "/terms",
 };
