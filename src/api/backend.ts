@@ -12,6 +12,7 @@ interface UpdateProfilePayload {
 
 type Continuation = Array<{
   san: string;
+  uci: string;
   beforeFen: string;
   afterFen: string;
   color: string;

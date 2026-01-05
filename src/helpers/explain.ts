@@ -157,9 +157,7 @@ function formatContinuation(continuation: ContinuationMove[], moverColor: BlackO
   return continuation.map((item, idx) => {
     const color: BlackOrWhite = idx % 2 === 0 ? moverColor : moverColor === "white" ? "black" : "white";
     return {
-      san: item.san,
-      beforeFen: item.beforeFen,
-      afterFen: item.afterFen,
+      ...item,
       color,
     };
   });
