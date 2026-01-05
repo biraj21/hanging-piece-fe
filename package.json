@@ -16,6 +16,7 @@
     "better-auth": "^1.4.3",
     "chessops": "^0.15.0",
     "lucide-react": "^0.555.0",
+    "posthog-js": "^1.313.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router": "^7.9.6",

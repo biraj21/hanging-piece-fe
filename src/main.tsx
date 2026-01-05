@@ -6,7 +6,9 @@ import { Toaster } from "sonner";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import AppRouter from "@/router";
+import { PostHogProvider } from "posthog-js/react";
 
+import { env } from "./config/env";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -19,15 +21,22 @@ const queryClient = new QueryClient({
   },
 });
 
+const posthogOptions = {
+  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+  defaults: "2025-11-30",
+} as const;
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <Toaster position="top-right" theme="dark" richColors closeButton />
-          <AppRouter />
-        </AuthProvider>
-      </BrowserRouter>
+      <PostHogProvider apiKey={env.VITE_PUBLIC_POSTHOG_KEY} options={posthogOptions}>
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster position="top-right" theme="dark" richColors closeButton />
+            <AppRouter />
+          </AuthProvider>
+        </BrowserRouter>
+      </PostHogProvider>
     </QueryClientProvider>
   </StrictMode>
 );

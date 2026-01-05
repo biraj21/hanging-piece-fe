@@ -1,7 +1,7 @@
 import type { Key } from "@lichess-org/chessground/types";
 import type { Evaluation } from "chessops/pgn";
 import { BarChart3Icon, SearchIcon } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ChessBoard, type BoardArrow } from "@/components/ChessBoard";
@@ -167,10 +167,12 @@ export const Analysis: React.FC<AnalysisProps> = ({
     }
   };
 
+  const onPGNChange = useEffectEvent(parsePGN);
+
   // Auto-parse PGN when provided as prop
   useEffect(() => {
     if (pgnProp && pgnProp.trim()) {
-      parsePGN(pgnProp);
+      onPGNChange(pgnProp);
     }
   }, [pgnProp]);
 
@@ -357,31 +359,28 @@ export const Analysis: React.FC<AnalysisProps> = ({
     }
   }, [findFirstBadMove, handleExplanation]);
 
-  const handleVisualizeMove = useCallback(
-    (lineMove: EngineMove, brush: "red" | "green") => {
-      if (lineMove.fen) {
-        setPreviewFen(lineMove.fen);
-        setPreviewLastMove([lineMove.from as Key, lineMove.to as Key]);
+  const handleVisualizeMove = useCallback((lineMove: EngineMove, brush: "red" | "green") => {
+    if (lineMove.fen) {
+      setPreviewFen(lineMove.fen);
+      setPreviewLastMove([lineMove.from as Key, lineMove.to as Key]);
 
-        // Show arrow for this move
-        setArrows([{ orig: lineMove.from as Key, dest: lineMove.to as Key, brush }]);
+      // Show arrow for this move
+      setArrows([{ orig: lineMove.from as Key, dest: lineMove.to as Key, brush }]);
 
-        // Set preview evaluation if available
-        if (lineMove.evaluation) {
-          if (isCentipawnEval(lineMove.evaluation)) {
-            setPreviewEvaluation({ pawns: lineMove.evaluation.cp / 100 });
-          } else if (isMateEval(lineMove.evaluation)) {
-            setPreviewEvaluation({ mate: lineMove.evaluation.mate });
-          }
-        } else {
-          setPreviewEvaluation(null);
+      // Set preview evaluation if available
+      if (lineMove.evaluation) {
+        if (isCentipawnEval(lineMove.evaluation)) {
+          setPreviewEvaluation({ pawns: lineMove.evaluation.cp / 100 });
+        } else if (isMateEval(lineMove.evaluation)) {
+          setPreviewEvaluation({ mate: lineMove.evaluation.mate });
         }
       } else {
-        console.log("  ❌ No FEN in lineMove");
+        setPreviewEvaluation(null);
       }
-    },
-    [activeExplanation]
-  );
+    } else {
+      console.log("  ❌ No FEN in lineMove");
+    }
+  }, []);
 
   const handleNavigateToOriginalMove = useCallback(() => {
     if (!activeExplanation) return;
@@ -455,13 +454,13 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   // Keyboard navigation for moves
   useEffect(() => {
+    if (analysisProgress !== null) {
+      return;
+    }
+
     const handleKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-        return;
-      }
-
-      if (analysisProgress !== null) {
         return;
       }
 
@@ -493,7 +492,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [goToFirst, goToLast, goToNext, goToPrevious]);
+  }, [goToFirst, goToLast, goToNext, goToPrevious, analysisProgress]);
 
   return (
     <div className="h-screen bg-neutral-800 text-white p-4 sm:p-6 flex flex-col overflow-hidden">

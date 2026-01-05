@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Creates a debounced version of the provided function.
  * The function will only be called after the specified delay has passed
@@ -20,3 +21,4 @@ export function debounce<T extends (...args: any[]) => any>(
     }, delay);
   };
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */

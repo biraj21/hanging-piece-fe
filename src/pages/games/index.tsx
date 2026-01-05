@@ -216,7 +216,7 @@ export default function GamesPage() {
       .slice(1) // Remove empty first element
       .join(" ")
       .split(/\s+/)
-      .filter((move) => move && move.length > 0 && !move.match(/^[\d\-\/\*]+$/));
+      .filter((move) => move && move.length > 0 && !move.match(/^[\d\-/*]+$/));
 
     return moves.length;
   };

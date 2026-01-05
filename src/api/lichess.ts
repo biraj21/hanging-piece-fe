@@ -53,7 +53,7 @@ export const lichessApi = {
     // Get the highest rating from perfs (prefer non-provisional ratings)
     const perfs = data.perfs || {};
     const ratings = Object.values(perfs)
-      .map((perf: any) => (perf.prov ? null : perf.rating))
+      .map((perf: any) => (perf.prov ? null : perf.rating)) // eslint-disable-line @typescript-eslint/no-explicit-any
       .filter((rating): rating is number => rating !== null && rating !== undefined);
     const highestRating = ratings.length > 0 ? Math.max(...ratings) : undefined;
 

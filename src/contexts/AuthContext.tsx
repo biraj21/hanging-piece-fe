@@ -1,6 +1,7 @@
 import { Loader } from "@/components/Loader";
 import { authClient, signInWithGoogle as signInWithGoogleFn } from "@/config/auth";
 import { ROUTES } from "@/router/routes";
+import { usePostHog } from "posthog-js/react";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 
@@ -35,6 +36,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
+  const posthog = usePostHog();
+
   const checkSession = async (refresh = false) => {
     try {
       setIsLoading(true);
@@ -64,6 +67,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return;
     }
 
+    if (user) {
+      // Identify sends an event, so you may want to limit how often you call it
+      posthog.identify(user.id, {
+        email: user.email,
+      });
+    }
+
     // Check if user needs onboarding (neither chesscomId nor lichessId is set)
     const needsOnboarding = !user.chesscomId && !user.lichessId;
     if (needsOnboarding && pathname !== ROUTES.ONBOARDING) {
@@ -76,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } else if (!needsOnboarding && pathname === ROUTES.ONBOARDING) {
       navigate(ROUTES.DASHBOARD);
     }
-  }, [user]);
+  }, [user, posthog, navigate, pathname]);
 
   if (isLoading) {
     return <Loader fullScreen />;
