@@ -85,7 +85,7 @@ export function useChesscomGamesInfinite(
   username: string | undefined | null,
   archives: string[],
   options?: Omit<
-    UseInfiniteQueryOptions<UnifiedGame[], Error, InfiniteData<UnifiedGame[]>, any, number>,
+    UseInfiniteQueryOptions<UnifiedGame[], Error, InfiniteData<UnifiedGame[]>, any, number>, // eslint-disable-line @typescript-eslint/no-explicit-any
     "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
   >
 ) {
@@ -115,7 +115,7 @@ export function useLichessGamesInfinite(
   username: string | undefined | null,
   gamesPerBatch: number,
   options?: Omit<
-    UseInfiniteQueryOptions<UnifiedGame[], Error, InfiniteData<UnifiedGame[]>, any, number | null>,
+    UseInfiniteQueryOptions<UnifiedGame[], Error, InfiniteData<UnifiedGame[]>, any, number | null>, // eslint-disable-line @typescript-eslint/no-explicit-any
     "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
   >
 ) {

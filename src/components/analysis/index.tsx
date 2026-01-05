@@ -162,20 +162,32 @@ export const Analysis: React.FC<AnalysisProps> = ({
   };
 
   const handleStartReview = async () => {
-    if (!game) {
+    if (!game || analysisProgress) {
       return;
     }
 
+    const initialAnalysisProgress: AnalysisProgress = {
+      currentMoveIndex: -1,
+      totalMoves: game.moves.length,
+      currentFen: INITIAL_FEN,
+    };
+
+    setAnalysisProgress(initialAnalysisProgress);
     setCurrentMoveIndex(0);
 
     try {
-      const analyzedGame = await analyzeGame(game, STOCKFISH_DEFAULT_DEPTH, {
-        onProgress: (progress) => {
-          setAnalysisProgress(progress);
-          // Update board to show current position being analyzed
-          setCurrentMoveIndex(progress.currentMoveIndex);
+      const analyzedGame = await analyzeGame(
+        game,
+        STOCKFISH_DEFAULT_DEPTH,
+        {
+          onProgress: (progress) => {
+            setAnalysisProgress(progress);
+            // Update board to show current position being analyzed
+            setCurrentMoveIndex(progress.currentMoveIndex);
+          },
         },
-      });
+        engineRef.current
+      );
 
       setGame(analyzedGame);
       setGameHasAnalysis(true);

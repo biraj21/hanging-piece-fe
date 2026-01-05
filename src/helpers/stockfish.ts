@@ -8,6 +8,8 @@ export function isCentipawnEval(ev: EngineEvaluation): ev is EngineCentipawnEval
   return "cp" in ev;
 }
 
+const ALWAYS_SINGLE_LITE = true;
+
 /**
  * Minimal Stockfish.js integration for testing
  * Provides engine initialization and continuation generation
@@ -28,14 +30,14 @@ const STOCKFISH_ENGINE: Record<EngineVariantKey, EngineVariant> = {
     path: "/stockfish/stockfish-17.1-lite-51f59da.js",
     variant: "lite",
     sizeMb: 7,
-    name: "Multi-threaded Lite (Analysis)",
+    name: "Multi-threaded Lite",
     threads: Math.min(navigator.hardwareConcurrency || 2, 4),
   },
   LITE_SINGLE: {
     path: "/stockfish/stockfish-17.1-lite-single-03e3232.js",
     variant: "lite",
     sizeMb: 7,
-    name: "Single-threaded Lite (Analysis)",
+    name: "Single-threaded Lite",
     threads: 1,
   },
   FULL_MULTI: {
@@ -328,6 +330,10 @@ export class Stockfish {
    * - Mobile: Lite engine (7MB, fast & battery-friendly)
    */
   static create(): Stockfish {
+    if (ALWAYS_SINGLE_LITE) {
+      return new Stockfish(STOCKFISH_ENGINE.LITE_SINGLE);
+    }
+
     const isMobile = isMobileDevice();
     if (isMobile) {
       return this.createLite();
@@ -340,7 +346,7 @@ export class Stockfish {
    * Create a Lite engine instance (fast, battery-friendly, 7MB)
    * Best for full-game analysis where speed matters
    */
-  static createLite(): Stockfish {
+  private static createLite(): Stockfish {
     const variant = getEngineVariant(true);
     return new Stockfish(variant);
   }
@@ -349,7 +355,7 @@ export class Stockfish {
    * Create a Full engine instance (strongest, 75MB)
    * Best for single-position deep analysis
    */
-  static createFull(): Stockfish {
+  private static createFull(): Stockfish {
     const variant = getEngineVariant(false);
     return new Stockfish(variant);
   }

@@ -30,12 +30,17 @@ export type AnalysisCallbacks = {
 export async function analyzeGame(
   game: ParsedGame,
   depth: number = STOCKFISH_DEFAULT_DEPTH,
-  callbacks: AnalysisCallbacks = {}
+  callbacks: AnalysisCallbacks = {},
+  engine?: Stockfish | null
 ): Promise<ParsedGame> {
   const { onProgress } = callbacks;
 
   const startTime = performance.now();
-  const engine = Stockfish.create();
+
+  const isLocalEngine = !engine;
+  if (!engine) {
+    engine = Stockfish.create();
+  }
 
   // Get starting position from game headers (handles FEN header if present)
   // startingPosition returns a Position directly, just clone it for mutation
@@ -202,6 +207,10 @@ export async function analyzeGame(
   const endTime = performance.now();
   const duration = endTime - startTime;
   console.debug(`Analysis complete in ${(duration / 1000).toFixed(2)}s`);
+
+  if (isLocalEngine) {
+    engine.terminate();
+  }
 
   // Return new ParsedGame with analyzed moves
   return {
