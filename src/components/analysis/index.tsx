@@ -109,6 +109,30 @@ export const Analysis: React.FC<AnalysisProps> = ({
     return;
   })();
 
+  // Compute move annotations for the board (show quality indicator badge on current move only)
+  const moveAnnotations = (() => {
+    if (!game) {
+      return [];
+    }
+
+    const currentMove = game.moves[currentMoveIndex];
+    if (!currentMove) {
+      return [];
+    }
+
+    const quality = currentMove.getQuality();
+    if (!quality) {
+      return [];
+    }
+
+    return [
+      {
+        square: currentMove.to as Key,
+        quality,
+      },
+    ];
+  })();
+
   const parsePGN = (pgnText: string) => {
     try {
       console.debug("parsing PGN from source:", source);
@@ -514,6 +538,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   white: { name: whiteName || "White", elo: whiteElo || "-" },
                   black: { name: blackName || "Black", elo: blackElo || "-" },
                 }}
+                moveAnnotations={moveAnnotations}
               />
             </div>
           </div>
