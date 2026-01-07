@@ -55,7 +55,7 @@ export const AnalysisSummaryModal: React.FC<AnalysisSummaryModalProps> = ({
       <div className="bg-neutral-800 border border-neutral-600 rounded-xl shadow-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-neutral-800 border-b border-neutral-600 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">Game Report</h2>
+          <h2 className="text-lg font-bold text-white">Game Summary</h2>
           <button
             onClick={onClose}
             className="text-neutral-400 hover:text-white transition-colors p-1 hover:bg-neutral-700 rounded"

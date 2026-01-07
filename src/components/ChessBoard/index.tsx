@@ -181,19 +181,19 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       {topPlayer && <BoardPlayerInfo name={topPlayer.name} elo={topPlayer.elo} color={topColor} />}
 
       {/* Chessboard with optional Eval Bar */}
-      <div className="flex gap-2 items-stretch">
+      <div className="grid grid-cols-[auto_1fr] gap-2">
         {evaluation && (
           <EvalBar
             evaluation={evaluation}
             orientation={orientation}
-            className="h-full rounded-md overflow-hidden shadow-lg border border-neutral-600/50"
+            className="rounded-md overflow-hidden shadow-lg border border-neutral-600/50"
           />
         )}
         <div className="flex-1">
           <div
             id="hp-chessboard-wrapper"
             ref={boardRef}
-            className={`cg-wrap cg-theme-${theme} w-full aspect-square rounded-lg shadow-2xl`}
+            className={`cg-wrap cg-theme-${theme} aspect-square rounded-lg shadow-2xl overflow-hidden`}
           />
         </div>
       </div>

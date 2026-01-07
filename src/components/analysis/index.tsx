@@ -54,7 +54,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const [activeTab, setActiveTab] = useState<Tab>("game");
 
   // Explanation state
-  const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [loadingExplanation, setLoadingExplanation] = useState<false | number>(false);
   const [activeExplanation, setActiveExplanation] = useState<{ moveIndex: number; explanation: Explanation } | null>(
     null
   );
@@ -315,7 +315,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setCurrentMoveIndex(moveIndex);
 
         // reset all preview states
-        setLoadingExplanation(true);
+        setLoadingExplanation(moveIndex);
         setPreviewFen(null);
         setPreviewLastMove(undefined);
         setPreviewEvaluation(null);
@@ -566,58 +566,57 @@ export const Analysis: React.FC<AnalysisProps> = ({
   ];
 
   return (
-    <div className="h-screen bg-neutral-800 text-white p-4 sm:p-6 flex flex-col overflow-hidden">
-      <div className="mx-auto w-full flex flex-col flex-1 min-h-0">
-        {/* <div className="grid grid-cols-1 grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1 gap-6 flex-1 min-h-0"> */}
-        <div className="grid grid-cols-1 grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1 landscape:grid-cols-2 landscape:grid-rows-1 gap-4 lg:gap-6 flex-1 min-h-0">
-          {/* Left Column: Board */}
-          <div className="flex flex-col gap-3 min-h-0 overflow-y-auto">
-            <div className="flex flex-col gap-3 max-w-[52vh] max-lg:landscape:max-w-[72vh] lg:max-w-[82vh] mx-auto w-full">
-              {/* Chessboard */}
-              <ChessBoard
-                theme="green"
-                fen={currentFen}
-                previousMove={previousMove}
-                arrows={arrows}
-                orientation={boardOrientation}
-                evaluation={previewEvaluation || currentMove?.evaluation || { pawns: 0.0 }}
-                players={{
-                  white: { name: whiteName || "White", elo: whiteElo || "-" },
-                  black: { name: blackName || "Black", elo: blackElo || "-" },
-                }}
-                moveAnnotations={moveAnnotations}
-              />
-            </div>
+    <div className="h-screen w-full p-4 sm:p-6 overflow-scroll">
+      <div className="h-full lg:grid lg:grid-cols-2 lg:grid-rows-1 lg:gap-6 landscape:grid landscape:grid-cols-2 landscape:grid-rows-1 landscape:gap-6">
+        {/* Left Column: Board */}
+        <div className="flex flex-col gap-3 overflow-y-auto min-h-0">
+          <div className="flex flex-col gap-3 max-w-[52vh]  max-lg:landscape:max-w-[72vh] lg:max-w-[82vh] mx-auto w-full">
+            {/* Chessboard */}
+            <ChessBoard
+              theme="green"
+              fen={currentFen}
+              previousMove={previousMove}
+              arrows={arrows}
+              orientation={boardOrientation}
+              evaluation={previewEvaluation || currentMove?.evaluation || { pawns: 0.0 }}
+              players={{
+                white: { name: whiteName || "White", elo: whiteElo || "-" },
+                black: { name: blackName || "Black", elo: blackElo || "-" },
+              }}
+              moveAnnotations={moveAnnotations}
+            />
+          </div>
+        </div>
+
+        {/* Right Column: Tabbed Panel */}
+        <div className="mt-4 flex flex-col text-xs lg:text-sm h-96 lg:h-full lg:mt-0 landscape:h-full landscape:mt-0">
+          {/* Tab Headers */}
+          <div className="flex gap-2 mb-2 shrink-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => tab.onClick()}
+                className={clsx("px-2 font-medium transition pb-1 border-b-2", {
+                  "text-white border-emerald-500": activeTab === tab.value,
+                  "text-neutral-400 border-transparent hover:text-neutral-300": activeTab !== tab.value,
+                })}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {/* Right Column: Tabbed Panel */}
-          <div className="min-h-72 flex flex-col text-xs lg:text-sm">
-            {/* Tab Headers */}
-            <div className="flex gap-2 mb-2 shrink-0">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.value}
-                  onClick={() => tab.onClick()}
-                  className={clsx("px-2 font-medium transition pb-1 border-b-2", {
-                    "text-white border-emerald-500": activeTab === tab.value,
-                    "text-neutral-400 border-transparent hover:text-neutral-300": activeTab !== tab.value,
-                  })}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab Content */}
+          {/* Tab Content */}
+          <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 overflow-y-auto">
             {activeTab === "game" ? (
-              <div className="bg-neutral-900/60 backdrop-blur-sm border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0 overflow-y-auto">
+              <>
                 {/* Game Info Header */}
                 <div className="mb-4 shrink-0 flex items-start justify-between gap-3">
                   {(event || site || date || opening || eco) && (
-                    <div className="hidden lg:block flex-1">
+                    <div className="lg:block flex-1">
                       {/* Event, Site, Date */}
                       {(event || site || date) && (
-                        <div className="text-xs text-neutral-200 mb-1.5 truncate">
+                        <div className="text-xs text-neutral-200 mb-1 truncate">
                           {[event, date].filter(Boolean).join(" • ")}
 
                           {isUrl(site) && (
@@ -633,7 +632,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
                       {/* Opening */}
                       {(opening || eco) && (
-                        <div className="text-xs text-neutral-300 truncate">
+                        <div className="text-xs text-neutral-300 truncate leading-none">
                           <span className="text-neutral-400">Opening: </span>
                           {opening && <span>{opening}</span>}
                           {opening && eco && <span> • </span>}
@@ -649,11 +648,11 @@ export const Analysis: React.FC<AnalysisProps> = ({
                         setShowSummaryAfterAnalysis(false); // Reset flag when opening via Summary button
                         setShowSummaryModal(true);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-300 bg-neutral-700/50 hover:bg-neutral-700 rounded-md transition-colors border border-neutral-600/50 hover:border-neutral-500 shrink-0"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-300 bg-neutral-700/50 hover:bg-neutral-700 rounded-md transition-colors border border-neutral-600/50 hover:border-neutral-500 shrink-0 ml-auto"
                       title="View analysis summary"
                     >
                       <BarChart3Icon size={14} />
-                      <span className="hidden sm:inline">Summary</span>
+                      <span>Summary</span>
                     </button>
                   )}
                 </div>
@@ -690,7 +689,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 {moves.length > 0 && !gameHasAnalysis && !analysisProgress && (
                   <div className="flex flex-col items-center justify-center py-4 space-y-4">
                     <p className="text-sm text-neutral-400 text-center max-w-md">
-                      This game doesn't have analysis yet. Click below to start reviewing it.
+                      This game does not have analysis yet.
                     </p>
                     <button
                       onClick={handleStartReview}
@@ -756,7 +755,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                   key={`ann-${whiteIndex}`}
                                   moves={moves}
                                   moveIndex={whiteIndex}
-                                  explanationLoading={loadingExplanation}
+                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== whiteIndex}
+                                  explanationLoading={loadingExplanation === whiteIndex}
                                   explain={handleExplanation}
                                 />
                               );
@@ -785,7 +785,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                       key={`ann-${blackIndex}`}
                                       moves={moves}
                                       moveIndex={blackIndex}
-                                      explainDisabled={loadingExplanation}
+                                      explainDisabled={
+                                        loadingExplanation !== false && loadingExplanation !== blackIndex
+                                      }
+                                      explanationLoading={loadingExplanation === blackIndex}
                                       explain={handleExplanation}
                                     />
                                   );
@@ -796,7 +799,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                       moves={moves}
                                       moveIndex={blackIndex}
                                       isSimple
-                                      explainDisabled={loadingExplanation}
+                                      explainDisabled={
+                                        loadingExplanation !== false && loadingExplanation !== blackIndex
+                                      }
+                                      explanationLoading={loadingExplanation === blackIndex}
                                       explain={handleExplanation}
                                     />
                                   );
@@ -827,7 +833,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                   moves={moves}
                                   moveIndex={whiteIndex}
                                   isSimple
-                                  explainDisabled={loadingExplanation}
+                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== whiteIndex}
+                                  explanationLoading={loadingExplanation === whiteIndex}
                                   explain={handleExplanation}
                                 />
                               );
@@ -855,7 +862,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                       key={`ann-${blackIndex}`}
                                       moves={moves}
                                       moveIndex={blackIndex}
-                                      explainDisabled={loadingExplanation}
+                                      explainDisabled={
+                                        loadingExplanation !== false && loadingExplanation !== blackIndex
+                                      }
+                                      explanationLoading={loadingExplanation === blackIndex}
                                       explain={handleExplanation}
                                     />
                                   );
@@ -866,7 +876,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                       moves={moves}
                                       moveIndex={blackIndex}
                                       isSimple
-                                      explainDisabled={loadingExplanation}
+                                      explainDisabled={
+                                        loadingExplanation !== false && loadingExplanation !== blackIndex
+                                      }
+                                      explanationLoading={loadingExplanation === blackIndex}
                                       explain={handleExplanation}
                                     />
                                   );
@@ -904,7 +917,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                     key={`ann-${blackIndex}`}
                                     moves={moves}
                                     moveIndex={blackIndex}
-                                    explainDisabled={loadingExplanation}
+                                    explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
+                                    explanationLoading={loadingExplanation === blackIndex}
                                     explain={handleExplanation}
                                   />
                                 );
@@ -915,7 +929,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                     moves={moves}
                                     moveIndex={blackIndex}
                                     isSimple
-                                    explainDisabled={loadingExplanation}
+                                    explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
+                                    explanationLoading={loadingExplanation === blackIndex}
                                     explain={handleExplanation}
                                   />
                                 );
@@ -971,9 +986,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
                     />
                   </>
                 )}
-              </div>
+              </>
             ) : activeTab === "coach" ? (
-              <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0 overflow-y-auto">
+              <>
                 {activeExplanation && (
                   <ExplanationViewer
                     move={moves[activeExplanation.moveIndex]}
@@ -985,15 +1000,15 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 )}
                 {!activeExplanation && (
                   <div className="h-full flex items-center justify-center">
-                    <div className="text-neutral-400 leading-relaxed text-center flex items-center justify-center">
-                      <span>Click &nbsp;</span> <TellMeWhyButton onClick={() => setActiveTab("game")} />{" "}
+                    <div className="text-neutral-400 leading-relaxed text-center flex items-center justify-center flex-wrap">
+                      <span>Click the &nbsp;</span> <TellMeWhyButton onClick={() => setActiveTab("game")} />{" "}
                       <span>&nbsp;on any of your mistakes to get started!</span>
                     </div>
                   </div>
                 )}
-              </div>
+              </>
             ) : (
-              <div className="bg-neutral-900/60 backdrop-blur-sm border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 min-h-0 overflow-y-auto">
+              <>
                 {/* FEN Display */}
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
@@ -1029,7 +1044,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                     Load PGN
                   </button>
                 )}
-              </div>
+              </>
             )}
           </div>
         </div>
