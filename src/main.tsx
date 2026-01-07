@@ -24,6 +24,7 @@ const queryClient = new QueryClient({
 const posthogOptions = {
   api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
   defaults: "2025-11-30",
+  disable_session_recording: window.location.hostname === "localhost",
 } as const;
 
 createRoot(document.getElementById("root")!).render(
