@@ -1,8 +1,10 @@
 import { Chessground } from "@lichess-org/chessground";
 import type { Api } from "@lichess-org/chessground/api";
 import type { Config } from "@lichess-org/chessground/config";
+import type { DrawShape } from "@lichess-org/chessground/draw";
 import type { Key } from "@lichess-org/chessground/types";
 import type { Evaluation } from "chessops/pgn";
+import clsx from "clsx";
 import { useEffect, useRef } from "react";
 
 import "@lichess-org/chessground/assets/chessground.base.css";
@@ -13,7 +15,6 @@ import { getMoveQualityColor, getMoveQualitySymbol } from "@/helpers/move-qualit
 import type { MoveQuality } from "@/helpers/pgn";
 import type { BlackOrWhite } from "@/types";
 
-import type { DrawShape } from "@lichess-org/chessground/draw";
 import "./style.css";
 
 export type ChessBoardTheme = "dark-gray" | "green";
@@ -49,19 +50,33 @@ interface PlayerInfoProps {
   name: string;
   elo: string;
   color: BlackOrWhite;
+  position: "left" | "right" | "stacked"; // where this player appears on mobile
 }
 
-const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color }) => {
+const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position }) => {
+  // On mobile: left player has [Avatar, Name], right player has [Name, Avatar]
+  // On desktop (stacked): always [Avatar, Name]
+  const isRightSide = position === "right";
+
   return (
-    <div className="flex items-center gap-3 shrink-0">
+    <div
+      className={clsx("flex items-center gap-3 lg:flex-row", {
+        "flex-row-reverse": isRightSide,
+        "flex-row": !isRightSide,
+      })}
+    >
       <div
-        className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center lg:text-lg font-semibold ${
-          color === "black" ? "bg-neutral-950 text-neutral-300" : "bg-neutral-50 text-neutral-950"
-        }`}
+        className={clsx(
+          "w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center lg:text-lg font-semibold",
+          {
+            "bg-neutral-950 text-neutral-300": color === "black",
+            "bg-neutral-50 text-neutral-950": color !== "black",
+          }
+        )}
       >
         {name.charAt(0).toUpperCase()}
       </div>
-      <div className="flex-1">
+      <div className={clsx({ "text-right lg:text-left": isRightSide })}>
         <div className="text-sm font-semibold text-neutral-100">{name}</div>
         <div className="text-xs text-neutral-400">{elo}</div>
       </div>
@@ -106,13 +121,11 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
 
-  // handle the board creation and updates
   useEffect(() => {
     if (!boardRef.current) {
       return;
     }
 
-    // Convert move annotations to Chessground autoShapes with customSvg
     const autoShapes: DrawShape[] = moveAnnotations.map((annotation) => ({
       orig: annotation.square,
       dest: annotation.square,
@@ -130,7 +143,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         orientation,
       });
     } else {
-      const defaultConfig: Config = {
+      const config: Config = {
         orientation,
         fen,
         lastMove: previousMove,
@@ -157,11 +170,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         coordinates: true,
       };
 
-      cgRef.current = Chessground(boardRef.current, defaultConfig);
+      cgRef.current = Chessground(boardRef.current, config);
     }
   }, [fen, previousMove, arrows, orientation, moveAnnotations]);
 
-  // destroy the board when the component unmounts
   useEffect(() => {
     return () => {
       cgRef.current?.destroy();
@@ -177,8 +189,28 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <div className={`w-full mx-auto flex flex-col gap-3 ${className}`}>
-      {/* Top Player */}
-      {topPlayer && <BoardPlayerInfo name={topPlayer.name} elo={topPlayer.elo} color={topColor} />}
+      {/* Mobile: both players side by side above board */}
+      {players && (
+        <div className="flex w-full justify-between gap-3 lg:hidden">
+          <BoardPlayerInfo
+            name={orientation === "white" ? players.white.name : players.black.name}
+            elo={orientation === "white" ? players.white.elo : players.black.elo}
+            color={orientation === "white" ? "white" : "black"}
+            position="left"
+          />
+          <BoardPlayerInfo
+            name={orientation === "white" ? players.black.name : players.white.name}
+            elo={orientation === "white" ? players.black.elo : players.white.elo}
+            color={orientation === "white" ? "black" : "white"}
+            position="right"
+          />
+        </div>
+      )}
+
+      {/* Desktop: top player */}
+      <div className="hidden lg:block">
+        {topPlayer && <BoardPlayerInfo name={topPlayer.name} elo={topPlayer.elo} color={topColor} position="stacked" />}
+      </div>
 
       {/* Chessboard with optional Eval Bar */}
       <div className="grid grid-cols-[auto_1fr] gap-2">
@@ -186,20 +218,23 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           <EvalBar
             evaluation={evaluation}
             orientation={orientation}
-            className="rounded-md overflow-hidden shadow-lg border border-neutral-600/50"
+            className="rounded-md overflow-hidden border border-neutral-600/50"
           />
         )}
-        <div className="flex-1">
-          <div
-            id="hp-chessboard-wrapper"
-            ref={boardRef}
-            className={`cg-wrap cg-theme-${theme} aspect-square rounded-lg shadow-2xl overflow-hidden`}
-          />
-        </div>
+
+        <div
+          id="hp-chessboard-wrapper"
+          ref={boardRef}
+          className={`cg-wrap cg-theme-${theme} aspect-square rounded-lg shadow-2xl overflow-hidden`}
+        />
       </div>
 
-      {/* Bottom Player */}
-      {bottomPlayer && <BoardPlayerInfo name={bottomPlayer.name} elo={bottomPlayer.elo} color={bottomColor} />}
+      {/* Desktop: bottom player */}
+      <div className="hidden lg:block">
+        {bottomPlayer && (
+          <BoardPlayerInfo name={bottomPlayer.name} elo={bottomPlayer.elo} color={bottomColor} position="stacked" />
+        )}
+      </div>
     </div>
   );
 };

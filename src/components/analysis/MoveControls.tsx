@@ -19,7 +19,7 @@ export const MoveControls: React.FC<MoveControlsProps> = ({
 }) => {
   return (
     <fieldset disabled={disabled}>
-      <div className="mt-4 flex gap-2 shrink-0">
+      <div className="flex gap-2 shrink-0">
         <button
           onClick={goToFirst}
           className="flex-1 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 rounded text-sm font-medium transition flex items-center justify-center"

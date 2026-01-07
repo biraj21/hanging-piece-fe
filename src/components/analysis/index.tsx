@@ -443,7 +443,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     }
 
     // or if we don't have a game or valid move index
-    if (!game || !gameId) {
+    if (!game || !gameId || currentMoveIndex < 0) {
       return;
     }
 
@@ -586,6 +586,17 @@ export const Analysis: React.FC<AnalysisProps> = ({
               moveAnnotations={moveAnnotations}
             />
           </div>
+
+          {moves.length > 0 && (
+            <MoveControls
+              disabled={analysisProgress !== null}
+              goToFirst={goToFirst}
+              goToLast={goToLast}
+              goToNext={goToNext}
+              goToPrevious={goToPrevious}
+              flipBoard={flipBoard}
+            />
+          )}
         </div>
 
         {/* Right Column: Tabbed Panel */}
@@ -974,16 +985,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
                         return rows;
                       })()}
                     </div>
-
-                    {/* Move controls */}
-                    <MoveControls
-                      disabled={analysisProgress !== null}
-                      goToFirst={goToFirst}
-                      goToLast={goToLast}
-                      goToNext={goToNext}
-                      goToPrevious={goToPrevious}
-                      flipBoard={flipBoard}
-                    />
                   </>
                 )}
               </>

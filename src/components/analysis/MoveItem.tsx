@@ -5,6 +5,7 @@ import { getAnnotationClasses } from "@/helpers/move-quality";
 import type { GameMove } from "@/helpers/pgn";
 import { isPawnsEval } from "@/helpers/pgn";
 
+import { scrollIntoViewCentered } from "@/utils/dom";
 import { MoveQualityIcon } from "./MoveQualityIcon";
 
 type Props = {
@@ -40,7 +41,7 @@ export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, cl
 
   useEffect(() => {
     if (isSelected && elementRef.current) {
-      elementRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      scrollIntoViewCentered(elementRef.current);
     }
   }, [isSelected]);
 
@@ -48,7 +49,6 @@ export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, cl
     <div
       className={`flex-1 px-1.5 py-1 rounded text-xs sm:text-sm leading-tight cursor-pointer transition flex items-center ${tileClasses} ${className}`}
       onClick={() => onClick(index)}
-      // id={isSelected ? "selected-move" : undefined}
       ref={elementRef}
     >
       <div className="flex items-center justify-between w-full">
