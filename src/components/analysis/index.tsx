@@ -16,6 +16,7 @@ import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 import { generateGameHash } from "@/utils/chess";
 import { isUrl } from "@/utils/string";
 
+import { getChessAccountUsername } from "@/helpers/chess-username";
 import { AnalysisSummary } from "./AnalysisSummary";
 import { AnalysisSummaryModal } from "./AnalysisSummaryModal";
 import { AnnotationBlock } from "./AnnotationBlock";
@@ -106,7 +107,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       return;
     }
 
-    const username = (user.chesscomId || user.lichessId || "").toLowerCase();
+    const username = getChessAccountUsername(user!, source);
     if (!username) {
       return;
     }
@@ -994,13 +995,13 @@ export const Analysis: React.FC<AnalysisProps> = ({
                       <div className="space-y-2">
                         {event && (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-[80px]">Event:</span>
+                            <span className="text-sm text-neutral-400 min-w-20">Event:</span>
                             <span className="text-sm text-white">{event}</span>
                           </div>
                         )}
                         {site && (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-[80px]">Site:</span>
+                            <span className="text-sm text-neutral-400 min-w-20">Site:</span>
                             <span className="text-sm text-white">
                               {isUrl(site) ? (
                                 <a href={site} target="_blank" rel="noopener noreferrer" className="underline">
@@ -1014,13 +1015,13 @@ export const Analysis: React.FC<AnalysisProps> = ({
                         )}
                         {date && (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-[80px]">Date:</span>
+                            <span className="text-sm text-neutral-400 min-w-20">Date:</span>
                             <span className="text-sm text-white">{date}</span>
                           </div>
                         )}
                         {(opening || eco) && (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-[80px]">Opening:</span>
+                            <span className="text-sm text-neutral-400 min-w-20">Opening:</span>
                             <span className="text-sm text-white">
                               {opening}
                               {opening && eco && <span className="text-neutral-400 mx-2">•</span>}
@@ -1030,7 +1031,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                         )}
                         {result && (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-[80px]">Result:</span>
+                            <span className="text-sm text-neutral-400 min-w-20">Result:</span>
                             <span className="text-sm text-white flex items-center gap-2">
                               {result}
                               {winner === "white" && <Crown className="inline w-4 h-4 text-amber-400" />}
@@ -1041,7 +1042,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                         )}
                         {gameHasAnalysis && game && (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-[80px]">Status:</span>
+                            <span className="text-sm text-neutral-400 min-w-20">Status:</span>
                             <span className="text-sm text-emerald-400">Analyzed</span>
                           </div>
                         )}

@@ -7,6 +7,7 @@ import {
 } from "@/api/queries";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
+import { getChessAccountUsername } from "@/helpers/chess-username";
 import { parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
 import { ROUTES } from "@/router/routes";
 import type { BlackOrWhite, UnifiedGame } from "@/types";
@@ -96,17 +97,9 @@ export default function GamesPage() {
     }
   };
 
-  const getChessUsername = () => {
-    if (activeSource === "chesscom") {
-      return user?.chesscomId?.toLowerCase() || "";
-    } else {
-      return user?.lichessId?.toLowerCase() || "";
-    }
-  };
-
   const handleAnalyzeGame = (game: UnifiedGame) => {
     // Determine which color the user played
-    const userUsername = getChessUsername();
+    const userUsername = getChessAccountUsername(user!, activeSource);
     const isUserWhite = game.white.username.toLowerCase() === userUsername;
     const boardOrientation = isUserWhite ? "white" : "black";
 
@@ -310,7 +303,11 @@ export default function GamesPage() {
               {filteredGames.map((game) => (
                 <Game
                   key={game.id}
-                  userColor={game.white.username.toLowerCase() === getChessUsername() ? "white" : "black"}
+                  userColor={
+                    game.white.username.toLowerCase() === getChessAccountUsername(user!, activeSource)
+                      ? "white"
+                      : "black"
+                  }
                   game={game}
                   onAnalyze={handleAnalyzeGame}
                 />
