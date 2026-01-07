@@ -1,7 +1,7 @@
 import type { Key } from "@lichess-org/chessground/types";
 import type { Evaluation } from "chessops/pgn";
 import clsx from "clsx";
-import { BarChart3Icon, SearchIcon } from "lucide-react";
+import { Crown, Handshake, SearchIcon } from "lucide-react";
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 import { generateGameHash } from "@/utils/chess";
 import { isUrl } from "@/utils/string";
 
+import { AnalysisSummary } from "./AnalysisSummary";
 import { AnalysisSummaryModal } from "./AnalysisSummaryModal";
 import { AnnotationBlock } from "./AnnotationBlock";
 import { ExplanationViewer } from "./ExplanationViewer";
@@ -30,7 +31,7 @@ interface AnalysisProps {
   source?: "chesscom" | "lichess" | "pgn";
 }
 
-type Tab = "game" | "coach" | "advanced";
+type Tab = "game" | "coach" | "advanced" | "summary";
 
 export const Analysis: React.FC<AnalysisProps> = ({
   gameId: gameIdProp,
@@ -79,13 +80,24 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const moves = game?.moves || [];
 
   // Player and event metadata
-  const whiteName = game?.headers.get("White") || "";
-  const blackName = game?.headers.get("Black") || "";
+  let whiteName = game?.headers.get("White") || "";
+  let blackName = game?.headers.get("Black") || "";
   const whiteElo = game?.headers.get("WhiteElo") || game?.headers.get("WhiteELO") || "";
   const blackElo = game?.headers.get("BlackElo") || game?.headers.get("BlackELO") || "";
   const event = game?.headers.get("Event") || "";
   const site = game?.headers.get("Site") || "";
   const date = game?.headers.get("Date") || "";
+  const result = game?.headers.get("Result") || "";
+
+  // Determine winner from result string
+  let winner: "white" | "black" | "draw" | undefined;
+  if (result === "1-0") {
+    winner = "white";
+  } else if (result === "0-1") {
+    winner = "black";
+  } else if (result === "1/2-1/2" || result === "0.5-0.5") {
+    winner = "draw";
+  }
 
   // Determine user color by comparing usernames from headers with logged-in user
   // This is more reliable than boardOrientation since the board can be flipped
@@ -423,13 +435,14 @@ export const Analysis: React.FC<AnalysisProps> = ({
   }, []);
 
   const handleNavigateToOriginalMove = useCallback(() => {
-    if (!activeExplanation) return;
+    if (!activeExplanation) {
+      return;
+    }
 
     // Clear preview state and show the original move position
     setPreviewFen(null);
     setPreviewLastMove(undefined);
     setPreviewEvaluation(null);
-    setArrows([]);
 
     // Navigate to the move that's being explained
     setCurrentMoveIndex(activeExplanation.moveIndex);
@@ -563,6 +576,13 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setActiveTab(this.value);
       },
     },
+    {
+      label: "Summary",
+      value: "summary",
+      onClick() {
+        setActiveTab(this.value);
+      },
+    },
   ];
 
   return (
@@ -583,6 +603,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 white: { name: whiteName || "White", elo: whiteElo || "-" },
                 black: { name: blackName || "Black", elo: blackElo || "-" },
               }}
+              userColor={userColor}
+              winner={winner}
               moveAnnotations={moveAnnotations}
             />
           </div>
@@ -621,52 +643,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
           <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 overflow-y-auto">
             {activeTab === "game" ? (
               <>
-                {/* Game Info Header */}
-                <div className="mb-4 shrink-0 flex items-start justify-between gap-3">
-                  {(event || site || date || opening || eco) && (
-                    <div className="lg:block flex-1">
-                      {/* Event, Site, Date */}
-                      {(event || site || date) && (
-                        <div className="text-xs text-neutral-200 mb-1 truncate">
-                          {[event, date].filter(Boolean).join(" • ")}
-
-                          {isUrl(site) && (
-                            <>
-                              {(event || site || date) && " • "}
-                              <a href={site} target="_black" className="underline">
-                                {site}
-                              </a>
-                            </>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Opening */}
-                      {(opening || eco) && (
-                        <div className="text-xs text-neutral-300 truncate leading-none">
-                          <span className="text-neutral-400">Opening: </span>
-                          {opening && <span>{opening}</span>}
-                          {opening && eco && <span> • </span>}
-                          {eco && <span className="text-neutral-300">ECO: {eco}</span>}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {/* Summary Button */}
-                  {gameHasAnalysis && game && (
-                    <button
-                      onClick={() => {
-                        setShowSummaryAfterAnalysis(false); // Reset flag when opening via Summary button
-                        setShowSummaryModal(true);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-300 bg-neutral-700/50 hover:bg-neutral-700 rounded-md transition-colors border border-neutral-600/50 hover:border-neutral-500 shrink-0 ml-auto"
-                      title="View analysis summary"
-                    >
-                      <BarChart3Icon size={14} />
-                      <span>Summary</span>
-                    </button>
-                  )}
-                </div>
                 {moves.length === 0 && (
                   <div className="text-neutral-500 text-center py-12">
                     <p className="text-sm opacity-60">Load a PGN from Advanced tab to see moves</p>
@@ -1005,6 +981,96 @@ export const Analysis: React.FC<AnalysisProps> = ({
                       <span>Click the &nbsp;</span> <TellMeWhyButton onClick={() => setActiveTab("game")} />{" "}
                       <span>&nbsp;on any of your mistakes to get started!</span>
                     </div>
+                  </div>
+                )}
+              </>
+            ) : activeTab === "summary" ? (
+              <>
+                {/* Game Summary */}
+                {game && (
+                  <div className="space-y-6">
+                    {/* Game Info */}
+                    <div>
+                      <div className="space-y-2">
+                        {event && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-400 min-w-[80px]">Event:</span>
+                            <span className="text-sm text-white">{event}</span>
+                          </div>
+                        )}
+                        {site && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-400 min-w-[80px]">Site:</span>
+                            <span className="text-sm text-white">
+                              {isUrl(site) ? (
+                                <a href={site} target="_blank" rel="noopener noreferrer" className="underline">
+                                  {site}
+                                </a>
+                              ) : (
+                                site
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {date && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-400 min-w-[80px]">Date:</span>
+                            <span className="text-sm text-white">{date}</span>
+                          </div>
+                        )}
+                        {(opening || eco) && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-400 min-w-[80px]">Opening:</span>
+                            <span className="text-sm text-white">
+                              {opening}
+                              {opening && eco && <span className="text-neutral-400 mx-2">•</span>}
+                              {eco && <span className="text-neutral-300">ECO: {eco}</span>}
+                            </span>
+                          </div>
+                        )}
+                        {result && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-400 min-w-[80px]">Result:</span>
+                            <span className="text-sm text-white flex items-center gap-2">
+                              {result}
+                              {winner === "white" && <Crown className="inline w-4 h-4 text-amber-400" />}
+                              {winner === "black" && <Crown className="inline w-4 h-4 text-amber-400" />}
+                              {winner === "draw" && <Handshake className="inline w-4 h-4 text-neutral-400" />}
+                            </span>
+                          </div>
+                        )}
+                        {gameHasAnalysis && game && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-neutral-400 min-w-[80px]">Status:</span>
+                            <span className="text-sm text-emerald-400">Analyzed</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Analysis Summary Table */}
+                    {gameHasAnalysis && game && (
+                      <AnalysisSummary game={game} whiteName={whiteName} blackName={blackName} userColor={userColor} />
+                    )}
+
+                    {!gameHasAnalysis && game && (
+                      <div>
+                        <div className="text-center py-8">
+                          <p className="text-sm text-neutral-400 mb-4">This game hasn't been analyzed yet.</p>
+                          <button
+                            onClick={handleStartReview}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors"
+                          >
+                            Start Review
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!game && (
+                  <div className="text-neutral-500 text-center py-12">
+                    <p className="text-sm opacity-60">Load a PGN from Advanced tab to see game summary</p>
                   </div>
                 )}
               </>

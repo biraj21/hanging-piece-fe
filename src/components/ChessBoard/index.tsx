@@ -43,17 +43,23 @@ export interface ChessBoardProps {
     white: PlayerInfo;
     black: PlayerInfo;
   };
+  userColor?: BlackOrWhite;
+  winner?: BlackOrWhite | "draw";
   moveAnnotations?: MoveAnnotation[];
 }
+
+import { Crown, Handshake } from "lucide-react";
 
 interface PlayerInfoProps {
   name: string;
   elo: string;
   color: BlackOrWhite;
-  position: "left" | "right" | "stacked"; // where this player appears on mobile
+  position: "left" | "right" | "stacked";
+  userColor?: BlackOrWhite;
+  winner?: BlackOrWhite | "draw";
 }
 
-const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position }) => {
+const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position, userColor, winner }) => {
   // On mobile: left player has [Avatar, Name], right player has [Name, Avatar]
   // On desktop (stacked): always [Avatar, Name]
   const isRightSide = position === "right";
@@ -77,7 +83,12 @@ const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position
         {name.charAt(0).toUpperCase()}
       </div>
       <div className={clsx({ "text-right lg:text-left": isRightSide })}>
-        <div className="text-sm font-semibold text-neutral-100">{name}</div>
+        <div className="flex items-center gap-1 text-sm font-semibold text-neutral-100">
+          {name}
+          {color && userColor === color && <span className="text-neutral-400">(you)</span>}
+          {winner === color && <Crown className="inline w-4 h-4 text-amber-400" />}
+          {winner === "draw" && <Handshake className="inline w-4 h-4 text-neutral-400" />}
+        </div>
         <div className="text-xs text-neutral-400">{elo}</div>
       </div>
     </div>
@@ -116,6 +127,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   orientation = "white",
   evaluation,
   players,
+  userColor,
+  winner,
   moveAnnotations = [],
 }) => {
   const boardRef = useRef<HTMLDivElement>(null);
@@ -197,19 +210,32 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             elo={orientation === "white" ? players.white.elo : players.black.elo}
             color={orientation === "white" ? "white" : "black"}
             position="left"
+            userColor={userColor}
+            winner={winner}
           />
           <BoardPlayerInfo
             name={orientation === "white" ? players.black.name : players.white.name}
             elo={orientation === "white" ? players.black.elo : players.white.elo}
             color={orientation === "white" ? "black" : "white"}
             position="right"
+            userColor={userColor}
+            winner={winner}
           />
         </div>
       )}
 
       {/* Desktop: top player */}
       <div className="hidden lg:block">
-        {topPlayer && <BoardPlayerInfo name={topPlayer.name} elo={topPlayer.elo} color={topColor} position="stacked" />}
+        {topPlayer && (
+          <BoardPlayerInfo
+            name={topPlayer.name}
+            elo={topPlayer.elo}
+            color={topColor}
+            position="stacked"
+            userColor={userColor}
+            winner={winner}
+          />
+        )}
       </div>
 
       {/* Chessboard with optional Eval Bar */}
@@ -232,7 +258,14 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       {/* Desktop: bottom player */}
       <div className="hidden lg:block">
         {bottomPlayer && (
-          <BoardPlayerInfo name={bottomPlayer.name} elo={bottomPlayer.elo} color={bottomColor} position="stacked" />
+          <BoardPlayerInfo
+            name={bottomPlayer.name}
+            elo={bottomPlayer.elo}
+            color={bottomColor}
+            position="stacked"
+            userColor={userColor}
+            winner={winner}
+          />
         )}
       </div>
     </div>
