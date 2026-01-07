@@ -7,10 +7,11 @@ import {
 } from "@/api/queries";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
+import { parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
 import { ROUTES } from "@/router/routes";
-import type { UnifiedGame } from "@/types";
+import type { BlackOrWhite, UnifiedGame } from "@/types";
 import { BarChart3Icon, ClockIcon, FilterIcon, MinusIcon, SwordsIcon, TrophyIcon, XIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
 const GAMES_PER_BATCH = 20;
@@ -95,9 +96,17 @@ export default function GamesPage() {
     }
   };
 
+  const getChessUsername = () => {
+    if (activeSource === "chesscom") {
+      return user?.chesscomId?.toLowerCase() || "";
+    } else {
+      return user?.lichessId?.toLowerCase() || "";
+    }
+  };
+
   const handleAnalyzeGame = (game: UnifiedGame) => {
     // Determine which color the user played
-    const userUsername = (user?.chesscomId || user?.lichessId || "").toLowerCase();
+    const userUsername = getChessUsername();
     const isUserWhite = game.white.username.toLowerCase() === userUsername;
     const boardOrientation = isUserWhite ? "white" : "black";
 
@@ -125,101 +134,6 @@ export default function GamesPage() {
 
     return true;
   });
-
-  const getResultBadgeColor = (result: string) => {
-    switch (result) {
-      case "win":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "loss":
-        return "bg-red-500/20 text-red-400 border-red-500/30";
-      case "draw":
-        return "bg-neutral-500/20 text-neutral-400 border-neutral-500/30";
-      default:
-        return "bg-neutral-600/20 text-neutral-400 border-neutral-600/30";
-    }
-  };
-
-  const formatDate = (timestamp: number) => {
-    // Lichess uses milliseconds, Chess.com uses seconds
-    const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const extractOpeningFromPGN = (pgn: string): string => {
-    // Try standard Opening tag first
-    const openingMatch = pgn.match(/\[Opening "([^"]+)"\]/);
-    if (openingMatch) return openingMatch[1];
-
-    // Try Chess.com's ECOUrl format
-    const ecoUrlMatch = pgn.match(/\[ECOUrl "https:\/\/www\.chess\.com\/openings\/([^"]+)"\]/);
-    if (ecoUrlMatch) {
-      // Convert URL format to readable name
-      // e.g., "Reti-Opening-1...d5" -> "Reti Opening"
-      const urlPath = ecoUrlMatch[1];
-      const openingName = urlPath
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-        .replace(/\s+\d+\.+.*$/, "") // Remove move notation like "1...d5"
-        .trim();
-      return openingName;
-    }
-
-    // Fallback to ECO code
-    const ecoMatch = pgn.match(/\[ECO "([^"]+)"\]/);
-    if (ecoMatch) return ecoMatch[1];
-
-    return "Unknown";
-  };
-
-  const extractTimeControlFromPGN = (pgn: string): string => {
-    const timeControlMatch = pgn.match(/\[TimeControl "([^"]+)"\]/);
-    if (timeControlMatch) {
-      const tc = timeControlMatch[1];
-      // Convert seconds to minutes format (e.g., "600+0" -> "10+0")
-      if (tc.includes("+")) {
-        const [base, increment] = tc.split("+");
-        const baseMinutes = Math.floor(parseInt(base) / 60);
-        return `${baseMinutes}+${increment}`;
-      }
-      return tc;
-    }
-    return "";
-  };
-
-  const countMovesFromPGN = (pgn: string): number => {
-    if (!pgn) return 0;
-
-    // Extract the moves part (after the headers)
-    const parts = pgn.split(/\n\n/);
-    const movesSection = parts[parts.length - 1] || "";
-
-    // Remove game result notation
-    const cleanMoves = movesSection.replace(/\s+(1-0|0-1|1\/2-1\/2|\*)\s*$/, "");
-
-    // Count all individual moves (both white and black)
-    // Remove annotations, comments, and variations
-    const withoutAnnotations = cleanMoves
-      .replace(/\{[^}]*\}/g, "") // Remove comments
-      .replace(/\([^)]*\)/g, "") // Remove variations
-      .replace(/[!?]+/g, ""); // Remove annotations
-
-    // Split by move numbers and count actual moves
-    const moves = withoutAnnotations
-      .split(/\d+\.+/)
-      .slice(1) // Remove empty first element
-      .join(" ")
-      .split(/\s+/)
-      .filter((move) => move && move.length > 0 && !move.match(/^[\d\-/*]+$/));
-
-    return moves.length;
-  };
 
   return (
     <div className="min-h-screen w-full text-white">
@@ -393,107 +307,14 @@ export default function GamesPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredGames.map((game) => {
-                const isUserWhite =
-                  game.white.username.toLowerCase() ===
-                  (user?.chesscomId?.toLowerCase() || user?.lichessId?.toLowerCase());
-                const userColor = isUserWhite ? "white" : "black";
-
-                // Use opening field if available (Lichess), otherwise parse PGN (Chess.com)
-                const opening = game.opening?.name || extractOpeningFromPGN(game.pgn);
-                const moveCount = countMovesFromPGN(game.pgn);
-                const timeControl = extractTimeControlFromPGN(game.pgn);
-
-                return (
-                  <div
-                    key={game.id}
-                    className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-3 hover:border-neutral-600 transition-all hover:shadow-lg hover:shadow-black/20 group"
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div className="flex items-center gap-1 text-xs text-neutral-500">
-                          <ClockIcon className="w-3 h-3" />
-                          <span>{game.timeControl}</span>
-                        </div>
-                        {timeControl && (
-                          <>
-                            <span className="text-xs text-neutral-600">•</span>
-                            <span className="text-xs text-neutral-500">{timeControl}</span>
-                          </>
-                        )}
-                        <span className="text-xs text-neutral-600">•</span>
-                        <div className="flex items-center gap-1 text-xs text-neutral-500">
-                          <SwordsIcon className="w-3 h-3" />
-                          <span>{moveCount}</span>
-                        </div>
-                      </div>
-                      <span
-                        className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getResultBadgeColor(
-                          game.result
-                        )}`}
-                      >
-                        {game.result.toUpperCase()}
-                      </span>
-                    </div>
-
-                    {/* Players */}
-                    <div className="space-y-1.5 mb-4 px-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 bg-white rounded-full" />
-                          <span
-                            className={`text-sm ${
-                              userColor === "white" ? "font-semibold text-white" : "text-neutral-300"
-                            }`}
-                          >
-                            {game.white.username}
-                            {userColor === "white" && (
-                              <span className="text-neutral-500 font-normal text-xs ml-1">(you)</span>
-                            )}
-                          </span>
-                        </div>
-                        <span className="text-xs text-neutral-400">{game.white.rating}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 bg-neutral-900 rounded-full border border-neutral-500" />
-                          <span
-                            className={`text-sm ${
-                              userColor === "black" ? "font-semibold text-white" : "text-neutral-300"
-                            }`}
-                          >
-                            {game.black.username}
-                            {userColor === "black" && (
-                              <span className="text-neutral-500 font-normal text-xs ml-1">(you)</span>
-                            )}
-                          </span>
-                        </div>
-                        <span className="text-xs text-neutral-400">{game.black.rating}</span>
-                      </div>
-                    </div>
-
-                    {/* Opening */}
-                    <div className="my-3 px-1">
-                      <p className="text-xs text-neutral-400 truncate">{opening}</p>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-3 border-t border-neutral-700/50">
-                      <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-                        <div>{formatDate(game.timestamp)}</div>
-                      </div>
-                      <button
-                        onClick={() => handleAnalyzeGame(game)}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition group-hover:bg-neutral-600"
-                      >
-                        <BarChart3Icon className="w-3.5 h-3.5" />
-                        <span>Analyze</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+              {filteredGames.map((game) => (
+                <Game
+                  key={game.id}
+                  userColor={game.white.username.toLowerCase() === getChessUsername() ? "white" : "black"}
+                  game={game}
+                  onAnalyze={handleAnalyzeGame}
+                />
+              ))}
             </div>
 
             {/* Load More Button */}
@@ -514,3 +335,161 @@ export default function GamesPage() {
     </div>
   );
 }
+
+const formatDate = (timestamp: number) => {
+  // Lichess uses milliseconds, Chess.com uses seconds
+  const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const getResultBadgeColor = (result: string) => {
+  switch (result) {
+    case "win":
+      return "bg-green-500/20 text-green-400 border-green-500/30";
+    case "loss":
+      return "bg-red-500/20 text-red-400 border-red-500/30";
+    case "draw":
+      return "bg-neutral-500/20 text-neutral-400 border-neutral-500/30";
+    default:
+      return "bg-neutral-600/20 text-neutral-400 border-neutral-600/30";
+  }
+};
+
+interface GameProps {
+  userColor: BlackOrWhite;
+  game: UnifiedGame;
+  onAnalyze: (game: UnifiedGame) => void;
+}
+
+const Game: React.FC<GameProps> = ({ userColor, game, onAnalyze }) => {
+  // Use opening field if available (Lichess), otherwise parse PGN (Chess.com)
+
+  const infoFromPgn = useMemo(() => {
+    let parsedGame: ParsedGame;
+    let openingName: string | undefined;
+    try {
+      parsedGame = parsePgnToGame(game.pgn);
+
+      const ECOUrl = parsedGame.headers.get("ECOUrl") || "";
+
+      const openingsIndex = ECOUrl.lastIndexOf("/");
+
+      if (openingsIndex > -1) {
+        // Convert URL format to readable name
+        // e.g., "Reti-Opening-1...d5" -> "Reti Opening"
+        const urlPath = ECOUrl.substring(openingsIndex + 1);
+        openingName = urlPath
+          .split("-")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+          .replace(/\s+\d+\.+.*$/, "") // Remove move notation like "1...d5"
+          .trim();
+      }
+    } catch (e) {
+      console.error("error parsing PGN:", e);
+      return {
+        moveCount: 0,
+        opening: undefined,
+        timeControl: undefined,
+      };
+    }
+
+    let timeControl = parsedGame.headers.get("TimeControl");
+    const tcParts = (timeControl ? timeControl.split("+") : []).map((part) => parseInt(part, 10));
+    if (tcParts.length === 2 && !isNaN(tcParts[0]) && !isNaN(tcParts[1])) {
+      timeControl = `${Math.floor(tcParts[0] / 60)}+${tcParts[1]}`;
+    } else {
+      timeControl = undefined;
+    }
+
+    return {
+      moveCount: Math.ceil(parsedGame.moves.length / 2),
+      opening: openingName || parsedGame.headers.get("Opening"),
+      timeControl: timeControl,
+    };
+  }, [game.pgn]);
+
+  const opening = infoFromPgn.opening || game.opening?.name;
+  const moveCount = infoFromPgn.moveCount;
+  const timeControl = infoFromPgn.timeControl;
+
+  return (
+    <div
+      key={game.id}
+      className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-3 hover:border-neutral-600 transition-all hover:shadow-lg hover:shadow-black/20 group"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 text-xs text-neutral-500">
+            <ClockIcon className="w-3 h-3" />
+            <span>{game.timeControl}</span>
+          </div>
+          {timeControl && (
+            <>
+              <span className="text-xs text-neutral-600">•</span>
+              <span className="text-xs text-neutral-500">{timeControl}</span>
+            </>
+          )}
+          <span className="text-xs text-neutral-600">•</span>
+          <div className="flex items-center gap-1 text-xs text-neutral-500">
+            <SwordsIcon className="w-3 h-3" />
+            <span>{moveCount}</span>
+          </div>
+        </div>
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getResultBadgeColor(game.result)}`}>
+          {game.result.toUpperCase()}
+        </span>
+      </div>
+
+      {/* Players */}
+      <div className="space-y-1.5 mb-4 px-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 bg-white rounded-full" />
+            <span className={`text-sm ${userColor === "white" ? "font-semibold text-white" : "text-neutral-300"}`}>
+              {game.white.username}
+              {userColor === "white" && <span className="text-neutral-500 font-normal text-xs ml-1">(you)</span>}
+            </span>
+          </div>
+          <span className="text-xs text-neutral-400">{game.white.rating}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 bg-neutral-900 rounded-full border border-neutral-500" />
+            <span className={`text-sm ${userColor === "black" ? "font-semibold text-white" : "text-neutral-300"}`}>
+              {game.black.username}
+              {userColor === "black" && <span className="text-neutral-500 font-normal text-xs ml-1">(you)</span>}
+            </span>
+          </div>
+          <span className="text-xs text-neutral-400">{game.black.rating}</span>
+        </div>
+      </div>
+
+      {/* Opening */}
+      <div className="my-3 px-1">
+        <p className="text-xs text-neutral-400 truncate">{opening}</p>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-3 border-t border-neutral-700/50">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+          <div>{formatDate(game.timestamp)}</div>
+        </div>
+        <button
+          onClick={() => onAnalyze(game)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition group-hover:bg-neutral-600"
+        >
+          <BarChart3Icon className="w-3.5 h-3.5" />
+          <span>Analyze</span>
+        </button>
+      </div>
+    </div>
+  );
+};

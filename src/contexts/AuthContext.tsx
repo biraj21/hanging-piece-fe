@@ -5,7 +5,7 @@ import { usePostHog } from "posthog-js/react";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name?: string;
