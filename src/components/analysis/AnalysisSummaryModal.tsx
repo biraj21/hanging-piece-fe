@@ -52,7 +52,7 @@ export const AnalysisSummaryModal: React.FC<AnalysisSummaryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-neutral-800 border border-neutral-600 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-neutral-800 border border-neutral-600 rounded-xl shadow-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-neutral-800 border-b border-neutral-600 px-6 py-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">Game Report</h2>
@@ -132,16 +132,10 @@ export const AnalysisSummaryModal: React.FC<AnalysisSummaryModalProps> = ({
 
         {/* Footer - Only show when opened right after analysis */}
         {afterAnalysis && (
-          <div className="sticky bottom-0 bg-neutral-800 border-t border-neutral-600 px-6 py-4 flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-semibold text-sm text-white transition-colors"
-            >
-              Close
-            </button>
+          <div className="sticky bottom-0 bg-neutral-800 border-t border-neutral-600 px-6 py-4 3">
             <button
               onClick={onStart}
-              className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm text-white transition-colors shadow-lg hover:shadow-xl"
+              className="w-full flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm text-white transition-colors shadow-lg hover:shadow-xl"
             >
               Start Review
             </button>
