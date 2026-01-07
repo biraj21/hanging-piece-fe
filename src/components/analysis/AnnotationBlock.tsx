@@ -12,6 +12,7 @@ type AnnotationBlockProps = {
   isSimple?: boolean; // simple annotation without best line
   explain: (moveIndex: number, annotationText: string) => Promise<void>;
   explainDisabled?: boolean;
+  explanationLoading?: boolean;
 };
 
 export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
@@ -20,8 +21,8 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
   isSimple = false,
   explain: showExplanation,
   explainDisabled = false,
+  explanationLoading = false,
 }) => {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const move = moves[moveIndex];
@@ -32,17 +33,13 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
 
   const handleExplain = async () => {
     try {
-      if (explainDisabled || loading || !hasBestLine) {
+      if (explainDisabled || explanationLoading || !hasBestLine) {
         return;
       }
 
-      setLoading(true);
       await showExplanation(moveIndex, annotationText);
-      setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate explanation");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -69,8 +66,8 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
         <div className="flex justify-end">
           <TellMeWhyButton
             onClick={handleExplain}
-            disabled={explainDisabled || loading || !hasBestLine}
-            loading={loading}
+            disabled={explainDisabled || explanationLoading || !hasBestLine}
+            loading={explanationLoading}
           />
         </div>
       </div>

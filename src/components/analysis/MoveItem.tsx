@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 import { ChessPiece } from "@/components/ChessBoard/ChessPiece";
 import { getAnnotationClasses } from "@/helpers/move-quality";
@@ -31,16 +31,25 @@ const getEvalTextColor = (isSelected: boolean) => (isSelected ? "text-white" : "
 
 export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, className = "" }) => {
   const moveQuality = move.getQuality();
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   let tileClasses = getAnnotationClasses(moveQuality);
   if (isSelected) {
     tileClasses = "bg-neutral-500/60 border text-neutral-300";
   }
 
+  useEffect(() => {
+    if (isSelected && elementRef.current) {
+      elementRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isSelected]);
+
   return (
     <div
       className={`flex-1 px-1.5 py-1 rounded text-xs sm:text-sm leading-tight cursor-pointer transition flex items-center ${tileClasses} ${className}`}
       onClick={() => onClick(index)}
+      // id={isSelected ? "selected-move" : undefined}
+      ref={elementRef}
     >
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-1 font-semibold text-white">

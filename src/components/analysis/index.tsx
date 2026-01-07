@@ -1,5 +1,6 @@
 import type { Key } from "@lichess-org/chessground/types";
 import type { Evaluation } from "chessops/pgn";
+import clsx from "clsx";
 import { BarChart3Icon, SearchIcon } from "lucide-react";
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ import { AnnotationBlock } from "./AnnotationBlock";
 import { ExplanationViewer } from "./ExplanationViewer";
 import { MoveControls } from "./MoveControls";
 import { MoveItem } from "./MoveItem";
+import { TellMeWhyButton } from "./TellMeWhy";
 
 interface AnalysisProps {
   gameId?: string;
@@ -27,6 +29,8 @@ interface AnalysisProps {
   boardOrientation?: BlackOrWhite;
   source?: "chesscom" | "lichess" | "pgn";
 }
+
+type Tab = "game" | "coach" | "advanced";
 
 export const Analysis: React.FC<AnalysisProps> = ({
   gameId: gameIdProp,
@@ -47,7 +51,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const [previewEvaluation, setPreviewEvaluation] = useState<Evaluation | null>(null);
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<"game" | "coach" | "advanced">("game");
+  const [activeTab, setActiveTab] = useState<Tab>("game");
 
   // Explanation state
   const [loadingExplanation, setLoadingExplanation] = useState(false);
@@ -122,6 +126,11 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
     const quality = currentMove.getQuality();
     if (!quality) {
+      return [];
+    }
+
+    // if we're previewing some other move for explanation, then don't show current move quality annotation
+    if (previewFen && previewFen !== currentMove.fen) {
       return [];
     }
 
@@ -227,7 +236,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
     setCurrentMoveIndex(index);
     // Close explanation when navigating to different move
     if (activeExplanation && activeExplanation.moveIndex !== index) {
-      setActiveExplanation(null);
       setArrows([]);
       setPreviewFen(null);
       setPreviewLastMove(undefined);
@@ -243,7 +251,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
     setCurrentMoveIndex(0);
     // Close explanation when jumping to first
     if (activeExplanation && activeExplanation.moveIndex !== 0) {
-      setActiveExplanation(null);
       setArrows([]);
       setPreviewFen(null);
       setPreviewLastMove(undefined);
@@ -260,7 +267,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
     setCurrentMoveIndex(lastIndex);
     // Close explanation when jumping to last
     if (activeExplanation && activeExplanation.moveIndex !== lastIndex) {
-      setActiveExplanation(null);
       setArrows([]);
       setPreviewFen(null);
       setPreviewLastMove(undefined);
@@ -283,8 +289,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
       // Close explanation when navigating
       if (activeExplanation && activeExplanation.moveIndex !== newIndex) {
-        setActiveExplanation(null);
-
         setArrows([]);
         setPreviewFen(null);
         setPreviewLastMove(undefined);
@@ -389,8 +393,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
     setShowSummaryModal(false);
     const badMove = findFirstBadMove();
     if (badMove) {
-      handleExplanation(badMove.moveIndex, badMove.annotationText).catch((err) => {
-        console.error("Auto-explanation failed:", err);
+      handleExplanation(badMove.moveIndex, badMove.annotationText).catch(() => {
+        toast.error("Failed to generate explanation. Please try again.");
       });
     }
   }, [findFirstBadMove, handleExplanation]);
@@ -530,6 +534,37 @@ export const Analysis: React.FC<AnalysisProps> = ({
     return () => window.removeEventListener("keydown", handleKey);
   }, [goToFirst, goToLast, goToNext, goToPrevious, analysisProgress]);
 
+  const tabs: { label: string; value: Tab; onClick: () => void }[] = [
+    {
+      label: "Game",
+      value: "game",
+      onClick() {
+        if (activeTab === this.value) {
+          return;
+        }
+
+        setActiveTab(this.value);
+        setPreviewFen(null);
+        setPreviewLastMove(undefined);
+        setPreviewEvaluation(null);
+      },
+    },
+    {
+      label: "AI Coach",
+      value: "coach",
+      onClick() {
+        setActiveTab(this.value);
+      },
+    },
+    {
+      label: "Advanced",
+      value: "advanced",
+      onClick() {
+        setActiveTab(this.value);
+      },
+    },
+  ];
+
   return (
     <div className="h-screen bg-neutral-800 text-white p-4 sm:p-6 flex flex-col overflow-hidden">
       <div className="mx-auto w-full flex flex-col flex-1 min-h-0">
@@ -558,40 +593,19 @@ export const Analysis: React.FC<AnalysisProps> = ({
           {/* Right Column: Tabbed Panel */}
           <div className="min-h-72 flex flex-col text-xs lg:text-sm">
             {/* Tab Headers */}
-            <div className="flex gap-2 mb-4 shrink-0">
-              <button
-                onClick={() => {
-                  if (activeTab === "game") {
-                    return;
-                  }
-
-                  setActiveTab("game");
-                  setPreviewFen(null);
-                  setPreviewLastMove(undefined);
-                  setPreviewEvaluation(null);
-                }}
-                className={`px-2 rounded-lg font-medium transition ${
-                  activeTab === "game" ? "text-white" : " text-neutral-400 hover:text-neutral-300"
-                }`}
-              >
-                Game
-              </button>
-              <button
-                onClick={() => setActiveTab("coach")}
-                className={`px-2 rounded-lg font-medium transition ${
-                  activeTab === "coach" ? "text-white" : "text-neutral-400 hover:text-neutral-300"
-                }`}
-              >
-                AI Coach
-              </button>
-              <button
-                onClick={() => setActiveTab("advanced")}
-                className={`px-2 rounded-lg font-medium transition ${
-                  activeTab === "advanced" ? "text-white" : "text-neutral-400 hover:text-neutral-300"
-                }`}
-              >
-                Advanced
-              </button>
+            <div className="flex gap-2 mb-2 shrink-0">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => tab.onClick()}
+                  className={clsx("px-2 font-medium transition pb-1 border-b-2", {
+                    "text-white border-emerald-500": activeTab === tab.value,
+                    "text-neutral-400 border-transparent hover:text-neutral-300": activeTab !== tab.value,
+                  })}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
             {/* Tab Content */}
@@ -742,7 +756,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                                   key={`ann-${whiteIndex}`}
                                   moves={moves}
                                   moveIndex={whiteIndex}
-                                  explainDisabled={loadingExplanation}
+                                  explanationLoading={loadingExplanation}
                                   explain={handleExplanation}
                                 />
                               );
@@ -971,10 +985,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 )}
                 {!activeExplanation && (
                   <div className="h-full flex items-center justify-center">
-                    <p className="text-neutral-400 leading-relaxed text-center">
-                      Click <span className="font-semibold text-neutral-300">"Tell Me Why"</span> on any of your
-                      mistakes to get started!
-                    </p>
+                    <div className="text-neutral-400 leading-relaxed text-center flex items-center justify-center">
+                      <span>Click &nbsp;</span> <TellMeWhyButton onClick={() => setActiveTab("game")} />{" "}
+                      <span>&nbsp;on any of your mistakes to get started!</span>
+                    </div>
                   </div>
                 )}
               </div>
