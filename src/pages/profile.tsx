@@ -4,10 +4,10 @@ import { useNavigate } from "react-router";
 
 import { backendApi } from "@/api/backend";
 import { useChesscomProfile, useLichessProfile } from "@/api/queries";
+import { useDebounced } from "@/components/hooks/use-debounced";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
-import { debounce } from "@/utils/function";
 
 export default function ProfilePage() {
   const { user, signOut, refreshSession } = useAuth();
@@ -23,8 +23,8 @@ export default function ProfilePage() {
   const [imageError, setImageError] = useState(false);
 
   // Debounced setters for API queries
-  const debouncedSetChesscomId = debounce((value: string) => setChesscomIdForQuery(value), 500);
-  const debouncedSetLichessId = debounce((value: string) => setLichessIdForQuery(value), 500);
+  const debouncedSetChesscomId = useDebounced(setChesscomIdForQuery, 500);
+  const debouncedSetLichessId = useDebounced(setLichessIdForQuery, 500);
 
   // Fetch Chess.com profile with centralized hook (debounced)
   const {
@@ -324,7 +324,7 @@ export default function ProfilePage() {
                 className="flex items-center gap-1.5 flex-1 justify-center px-4 py-2 bg-white hover:bg-neutral-100 disabled:bg-neutral-600 disabled:cursor-not-allowed text-neutral-900 text-sm font-medium rounded-lg transition"
               >
                 <SaveIcon className="w-3.5 h-3.5" />
-                <span>{isSubmitting ? "Saving..." : "SaveIcon Changes"}</span>
+                <span>{isSubmitting ? "Saving..." : "Save Changes"}</span>
               </button>
               <button
                 onClick={handleCancel}

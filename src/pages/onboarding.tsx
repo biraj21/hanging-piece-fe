@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from "react-router";
 
 import { backendApi } from "@/api/backend";
 import { useChesscomProfile, useLichessProfile } from "@/api/queries";
+import { useDebounced } from "@/components/hooks/use-debounced";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
-import { debounce } from "@/utils/function";
 
 export default function OnboardingPage() {
   const { user, refreshSession } = useAuth();
@@ -21,8 +21,8 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Debounced setters for API queries
-  const debouncedSetChesscomId = debounce((value: string) => setChesscomIdForQuery(value), 500);
-  const debouncedSetLichessId = debounce((value: string) => setLichessIdForQuery(value), 500);
+  const debouncedSetChesscomId = useDebounced(setChesscomIdForQuery, 500);
+  const debouncedSetLichessId = useDebounced(setLichessIdForQuery, 500);
 
   // Fetch Chess.com profile with centralized hook (debounced)
   const {
