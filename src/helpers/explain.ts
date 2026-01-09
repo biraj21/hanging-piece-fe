@@ -18,6 +18,7 @@ interface ExplainOptions {
   eco?: string;
   annotationText?: string;
   engine?: Stockfish | null;
+  depth?: number;
 }
 
 let cachedEngine: Stockfish | undefined;
@@ -31,10 +32,13 @@ export async function explain({
   eco,
   annotationText,
   engine,
+  depth = STOCKFISH_DEFAULT_DEPTH,
 }: ExplainOptions): Promise<Explanation> {
   if (moveIndex < 0 || moveIndex >= moves.length) {
     throw new Error("Invalid move index.");
   }
+
+  console.log("birajlog depth", depth);
 
   const move = moves[moveIndex];
   const bestLine = move.variations?.[0];
@@ -73,7 +77,7 @@ export async function explain({
 
   // 1. Continuation after the BAD move (the move that was played)
   console.debug("  → Analyzing bad move:", move.san);
-  const badUciMoves = await engine.getContinuation(move.fen, 5, STOCKFISH_DEFAULT_DEPTH);
+  const badUciMoves = await engine.getContinuation(move.fen, 5, depth);
   const badContinuationParsed = parseUciContinuation(badUciMoves, move.fen);
 
   // 2. Best continuation - use PGN variation and supplement if needed
@@ -101,12 +105,12 @@ export async function explain({
 
     // Continue from the last position in the PGN line
     const lastMove = bestLine[bestLine.length - 1];
-    const continuationUciMoves = await engine.getContinuation(lastMove.fen, remaining, STOCKFISH_DEFAULT_DEPTH);
+    const continuationUciMoves = await engine.getContinuation(lastMove.fen, remaining, depth);
     const continuationParsed = parseUciContinuation(continuationUciMoves, lastMove.fen);
 
     bestContinuationParsed = [...pgnMoves, ...continuationParsed];
   } else {
-    const bestUciMoves = await engine.getContinuation(beforeFen, targetLength, STOCKFISH_DEFAULT_DEPTH);
+    const bestUciMoves = await engine.getContinuation(beforeFen, targetLength, depth);
     bestContinuationParsed = parseUciContinuation(bestUciMoves, beforeFen);
   }
 
@@ -134,8 +138,8 @@ export async function explain({
   const data = await backendApi.explainMove(body);
 
   // Calculate evaluations for each position in the continuations
-  const badLineFormatted: EngineMove[] = await getContinuationWithEvaluations(engine, badContinuationParsed);
-  const bestLineFormatted: EngineMove[] = await getContinuationWithEvaluations(engine, bestContinuationParsed);
+  const badLineFormatted: EngineMove[] = await getContinuationWithEvaluations(engine, badContinuationParsed, depth);
+  const bestLineFormatted: EngineMove[] = await getContinuationWithEvaluations(engine, bestContinuationParsed, depth);
 
   const explanation: Explanation = {
     explanation: data.explanation,
@@ -187,12 +191,12 @@ function normalizeToWhitePerspective(ev: EngineEvaluation, fen: string): EngineE
   return ev;
 }
 
-async function getContinuationWithEvaluations(engine: Stockfish, moves: ContinuationMove[]) {
+async function getContinuationWithEvaluations(engine: Stockfish, moves: ContinuationMove[], depth: number) {
   const continuation: EngineMove[] = [];
   for (const move of moves) {
     let ev: EngineEvaluation | undefined;
     try {
-      ev = await engine.getEvaluation(move.afterFen, STOCKFISH_DEFAULT_DEPTH);
+      ev = await engine.getEvaluation(move.afterFen, depth);
       ev = normalizeToWhitePerspective(ev, move.afterFen);
     } catch (err) {
       console.error("Failed to evaluate move:", move, err);

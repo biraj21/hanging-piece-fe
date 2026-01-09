@@ -52,6 +52,12 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const [previewLastMove, setPreviewLastMove] = useState<[Key, Key] | undefined>(undefined);
   const [previewEvaluation, setPreviewEvaluation] = useState<Evaluation | null>(null);
 
+  // Advanced settings
+  const [stockfishDepth, setStockfishDepth] = useState<number>(() => {
+    const saved = localStorage.getItem("stockfish-depth");
+    return saved ? parseInt(saved, 10) : STOCKFISH_DEFAULT_DEPTH;
+  });
+
   // Tab state
   const [activeTab, setActiveTab] = useState<Tab>("game");
 
@@ -81,8 +87,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const moves = game?.moves || [];
 
   // Player and event metadata
-  let whiteName = game?.headers.get("White") || "";
-  let blackName = game?.headers.get("Black") || "";
+  const whiteName = game?.headers.get("White") || "";
+  const blackName = game?.headers.get("Black") || "";
   const whiteElo = game?.headers.get("WhiteElo") || game?.headers.get("WhiteELO") || "";
   const blackElo = game?.headers.get("BlackElo") || game?.headers.get("BlackELO") || "";
   const event = game?.headers.get("Event") || "";
@@ -200,7 +206,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     try {
       const analyzedGame = await analyzeGame(
         game,
-        STOCKFISH_DEFAULT_DEPTH,
+        stockfishDepth,
         {
           onProgress: (progress) => {
             setAnalysisProgress(progress);
@@ -343,6 +349,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
           eco: eco,
           annotationText: annotationText,
           engine: engineRef.current,
+          depth: stockfishDepth,
         });
 
         setActiveExplanation({ moveIndex, explanation });
@@ -355,7 +362,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setLoadingExplanation(false);
       }
     },
-    [gameId, game, userColor, opening, eco]
+    [gameId, game, userColor, opening, eco, stockfishDepth]
   );
 
   useEffect(() => {
@@ -370,6 +377,11 @@ export const Analysis: React.FC<AnalysisProps> = ({
       }
     };
   }, []);
+
+  // Persist depth to localStorage
+  useEffect(() => {
+    localStorage.setItem("stockfish-depth", stockfishDepth.toString());
+  }, [stockfishDepth]);
 
   // Find first mistake/blunder for user
   const findFirstBadMove = useCallback(() => {
@@ -676,9 +688,14 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 )}{" "}
                 {moves.length > 0 && !gameHasAnalysis && !analysisProgress && (
                   <div className="flex flex-col items-center justify-center py-4 space-y-4">
-                    <p className="text-sm text-neutral-400 text-center max-w-md">
-                      This game does not have analysis yet.
-                    </p>
+                    <div className="text-center">
+                      <p className="text-sm text-neutral-400 text-center max-w-md">
+                        This game does not have analysis yet.
+                      </p>
+                      <p className="text-xs text-neutral-400 mt-2">
+                        Depth: {stockfishDepth} (you can change it in Advanced)
+                      </p>
+                    </div>
                     <button
                       onClick={handleStartReview}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2"
@@ -686,7 +703,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
                       <SearchIcon className="w-4 h-4" />
                       Start Review
                     </button>
-                    <p className="text-xs text-neutral-500">Analysis may take up to ~2 minutes</p>
                   </div>
                 )}
                 {moves.length > 0 && (
@@ -1090,6 +1106,30 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   />
                 </div>
 
+                {/* Stockfish Depth Control */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
+                    Stockfish Analysis Depth
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="10"
+                      max="25"
+                      step="1"
+                      value={stockfishDepth}
+                      onChange={(e) => setStockfishDepth(parseInt(e.target.value))}
+                      className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer stockfish-depth-slider"
+                    />
+                    <div className="flex items-center gap-2 min-w-[60px]">
+                      <span className="text-sm text-neutral-300 font-mono">{stockfishDepth}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-1">
+                    Higher depth = more accurate analysis but slower explanations
+                  </p>
+                </div>
+
                 {/* PGN Input */}
                 <div className="mb-4 flex-1 min-h-30 flex flex-col">
                   <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
@@ -1133,6 +1173,35 @@ export const Analysis: React.FC<AnalysisProps> = ({
           afterAnalysis={showSummaryAfterAnalysis}
         />
       )}
+
+      <style>{`
+        .stockfish-depth-slider::-webkit-slider-thumb {
+          appearance: none;
+          height: 16px;
+          width: 16px;
+          border-radius: 50%;
+          background: #10b981;
+          cursor: pointer;
+          border: 2px solid #374151;
+        }
+
+        .stockfish-depth-slider::-webkit-slider-thumb:hover {
+          background: #059669;
+        }
+
+        .stockfish-depth-slider::-moz-range-thumb {
+          height: 16px;
+          width: 16px;
+          border-radius: 50%;
+          background: #10b981;
+          cursor: pointer;
+          border: 2px solid #374151;
+        }
+
+        .stockfish-depth-slider::-moz-range-thumb:hover {
+          background: #059669;
+        }
+      `}</style>
     </div>
   );
 };
