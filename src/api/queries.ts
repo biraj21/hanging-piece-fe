@@ -32,6 +32,29 @@ export const queryKeys = {
   },
 } as const;
 
+// Session storage key for tracking empty archives
+const EMPTY_ARCHIVES_KEY = "chesscom_empty_archives";
+
+// Helper functions for session storage management
+function getEmptyArchives(username: string): Set<string> {
+  try {
+    const stored = sessionStorage.getItem(`${EMPTY_ARCHIVES_KEY}_${username}`);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function addEmptyArchive(username: string, archive: string): void {
+  try {
+    const emptyArchives = getEmptyArchives(username);
+    emptyArchives.add(archive);
+    sessionStorage.setItem(`${EMPTY_ARCHIVES_KEY}_${username}`, JSON.stringify([...emptyArchives]));
+  } catch {
+    // Ignore session storage errors
+  }
+}
+
 /**
  * Centralized React Query hooks for consistent data fetching
  */
@@ -80,32 +103,67 @@ export function useChesscomArchives(
   });
 }
 
+// Type for the data returned by the query function
+type ChesscomGamesPage = {
+  games: UnifiedGame[];
+  archiveIndex: number; // The actual archive index that was loaded
+};
+
 // Chess.com games infinite query hook
 export function useChesscomGamesInfinite(
   username: string | undefined | null,
   archives: string[],
   options?: Omit<
-    UseInfiniteQueryOptions<UnifiedGame[], Error, InfiniteData<UnifiedGame[]>, any, number>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    UseInfiniteQueryOptions<ChesscomGamesPage, Error, InfiniteData<ChesscomGamesPage>, any, number>, // eslint-disable-line @typescript-eslint/no-explicit-any
     "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
   >
 ) {
   return useInfiniteQuery({
     queryKey: [...queryKeys.chesscom.games(username || "", "infinite"), archives],
-    queryFn: async ({ pageParam }) => {
-      if (!archives.length || !username || pageParam < 0 || pageParam >= archives.length) return [];
-      const archive = archives[pageParam];
-      const games = await chesscomApi.getArchiveGames(archive, username);
-      // Sort by timestamp descending (newest first)
-      return games.sort((a, b) => b.timestamp - a.timestamp);
+    queryFn: async ({ pageParam }): Promise<ChesscomGamesPage> => {
+      if (!archives.length || !username || pageParam < 0 || pageParam >= archives.length) {
+        return { games: [], archiveIndex: -1 };
+      }
+
+      const emptyArchives = getEmptyArchives(username);
+
+      // Try archives starting from the current pageParam, working backwards until we find games
+      // Skip over known empty archives
+      let currentIndex = pageParam;
+      while (currentIndex >= 0) {
+        const archive = archives[currentIndex];
+
+        // Skip this archive if we know it's empty from session storage
+        if (emptyArchives.has(archive)) {
+          currentIndex--;
+          continue;
+        }
+
+        const games = await chesscomApi.getArchiveGames(archive, username);
+        if (games.length > 0) {
+          // Found games! Return them sorted by timestamp descending (newest first)
+          return {
+            games: games.sort((a, b) => b.timestamp - a.timestamp),
+            archiveIndex: currentIndex,
+          };
+        }
+
+        // Archive was empty, remember it and try the next older one
+        addEmptyArchive(username, archive);
+        currentIndex--;
+      }
+
+      // All archives from this point backwards were empty
+      return { games: [], archiveIndex: -1 };
     },
-    getNextPageParam: (_lastPage, _allPages, lastPageParam) => {
-      // Move to previous archive (older games)
-      const nextIndex = lastPageParam - 1;
+    getNextPageParam: (lastPage, _allPages, _lastPageParam) => {
+      // Use the actual archive index that was loaded, not the pageParam
+      const nextIndex = lastPage.archiveIndex - 1;
       return nextIndex >= 0 ? nextIndex : undefined;
     },
     initialPageParam: archives.length - 1,
     enabled: !!username && archives.length > 0 && (options?.enabled ?? true),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 15, // 15 minutes
     ...options,
   });
 }

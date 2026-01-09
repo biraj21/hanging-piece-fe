@@ -77,7 +77,7 @@ export default function GamesPage() {
   });
 
   // Flatten all pages into a single array
-  const chesscomGames: UnifiedGame[] = chesscomGamesData?.pages.flat() ?? [];
+  const chesscomGames: UnifiedGame[] = chesscomGamesData?.pages.flatMap(page => page.games) ?? [];
   const lichessGames: UnifiedGame[] = lichessGamesData?.pages.flat() ?? [];
 
   // Show games based on selected source
