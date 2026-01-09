@@ -1,4 +1,4 @@
-import { ChessKnightIcon, Crown, Handshake, SearchIcon } from "lucide-react";
+import { ChessKnightIcon, Crown, Handshake, InfoIcon, SearchIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { MoveQualityIcon } from "@/components/analysis/MoveQualityIcon";
@@ -23,9 +23,9 @@ export default function IndexPage() {
           {/* Logo + Badge */}
           <div className="mb-6 sm:mb-8 flex flex-col justify-center items-center">
             <Logo />
-            <span className="mt-3 inline-block bg-white text-neutral-900 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-widest">
-              Coming Soon
-            </span>
+            <div className="mt-3 bg-white text-black px-3 py-1 rounded-full text-xs font-semibold shadow-sm flex items-center gap-2">
+              <InfoIcon className="w-3 h-3" /> We're in beta and are actively improving!
+            </div>
           </div>
 
           {/* Headline */}
@@ -62,7 +62,7 @@ export default function IndexPage() {
             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 border border-emerald-500/50 rounded-lg text-sm font-semibold text-white shadow-md hover:shadow-lg hover:bg-emerald-700 active:bg-emerald-800 transition-all duration-200 mx-auto mb-6"
           >
             <ChessKnightIcon />
-            {isAuthenticated ? "Go to Dashboard" : "Get Early Access"}
+            {isAuthenticated ? "Go to Dashboard" : "Try it for free"}
           </button>
 
           {/* Features Grid */}
