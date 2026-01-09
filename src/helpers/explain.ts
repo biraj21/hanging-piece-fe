@@ -1,7 +1,7 @@
 import { parseFen } from "chessops/fen";
 
 import { backendApi, type ExplainMovePayload } from "@/api/backend";
-import { INITIAL_FEN, NUM_MOVES, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
+import { CONTINUATION_LENGTH, INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
 import type { BlackOrWhite, EngineEvaluation, EngineMove, Explanation } from "@/types";
 import { parseUciContinuation, type ContinuationMove } from "@/utils/chess";
 
@@ -79,7 +79,7 @@ export async function explain({
   console.debug("  → Analyzing bad move:", move.san);
 
   const moveQuality = move.getQuality();
-  const numMoves = moveQuality ? NUM_MOVES[moveQuality] : 5;
+  const numMoves = moveQuality ? CONTINUATION_LENGTH[moveQuality] : 5;
 
   const badUciMoves = await engine.getContinuation(move.fen, numMoves, depth);
   const badContinuationParsed = parseUciContinuation(badUciMoves, move.fen);

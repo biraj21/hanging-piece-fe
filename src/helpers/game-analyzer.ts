@@ -2,7 +2,7 @@ import { makeFen } from "chessops/fen";
 import { startingPosition, type Evaluation } from "chessops/pgn";
 import { parseUci } from "chessops/util";
 
-import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
+import { CONTINUATION_LENGTH, INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
 import { getNagFromQuality } from "@/helpers/move-quality";
 import type { MoveQuality, ParsedGame, Variation } from "@/helpers/pgn";
 import { GameMove } from "@/helpers/pgn";
@@ -146,7 +146,7 @@ export async function analyzeGame(
             try {
               // Get best continuation from the position before the move
               const beforeFen = i === 0 ? INITIAL_FEN : game.moves[i - 1].fen;
-              const bestUciMoves = await engine.getContinuation(beforeFen, 6, depth);
+              const bestUciMoves = await engine.getContinuation(beforeFen, CONTINUATION_LENGTH[quality], depth);
 
               // Only create variation if we got moves back
               if (bestUciMoves.length > 0) {
