@@ -29,7 +29,7 @@ export type VariationMove = {
 /** Best continuation (array of moves with FENs) if this move was suboptimal */
 export type Variation = VariationMove[];
 
-export type MoveQuality = "blunder" | "mistake" | "inaccuracy" | "good" | "brilliant";
+export type MoveQuality = "blunder" | "mistake" | "inaccuracy" | "good" | "great" | "brilliant";
 
 /** Named args for GameMove construction */
 export interface GameMoveInit {

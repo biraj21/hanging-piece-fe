@@ -9,17 +9,17 @@ type AnalysisSummary = {
   black: Record<MoveQuality, number>;
 };
 
-type AnalysisSummaryProps = {
+export interface AnalysisSummaryProps {
   game: ParsedGame;
   whiteName: string;
   blackName: string;
   userColor?: BlackOrWhite;
-};
+}
 
 function calculateSummary(game: ParsedGame): AnalysisSummary {
   const summary: AnalysisSummary = {
-    white: { blunder: 0, mistake: 0, inaccuracy: 0, good: 0, brilliant: 0 },
-    black: { blunder: 0, mistake: 0, inaccuracy: 0, good: 0, brilliant: 0 },
+    white: { blunder: 0, mistake: 0, inaccuracy: 0, good: 0, great: 0, brilliant: 0 },
+    black: { blunder: 0, mistake: 0, inaccuracy: 0, good: 0, great: 0, brilliant: 0 },
   };
 
   for (const move of game.moves) {
@@ -34,6 +34,8 @@ function calculateSummary(game: ParsedGame): AnalysisSummary {
 
   return summary;
 }
+
+const moveQualities: MoveQuality[] = ["blunder", "mistake", "inaccuracy"]; // , "good", "great", "brilliant"];
 
 export const AnalysisSummary: React.FC<AnalysisSummaryProps> = ({ game, whiteName, blackName, userColor }) => {
   const summary = calculateSummary(game);
@@ -65,7 +67,7 @@ export const AnalysisSummary: React.FC<AnalysisSummaryProps> = ({ game, whiteNam
           </tr>
         </thead>
         <tbody>
-          {(["blunder", "mistake", "inaccuracy", "good", "brilliant"] as MoveQuality[]).map((quality) => {
+          {moveQualities.map((quality) => {
             const getCount = (player: "white" | "black"): number => {
               const playerSummary = player === "white" ? summary.white : summary.black;
               switch (quality) {
@@ -77,8 +79,12 @@ export const AnalysisSummary: React.FC<AnalysisSummaryProps> = ({ game, whiteNam
                   return playerSummary.inaccuracy;
                 case "good":
                   return playerSummary.good;
+                case "great":
+                  return playerSummary.great;
                 case "brilliant":
                   return playerSummary.brilliant;
+                default:
+                  return 0;
               }
             };
 

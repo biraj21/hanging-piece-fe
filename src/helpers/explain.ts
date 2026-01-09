@@ -1,7 +1,7 @@
 import { parseFen } from "chessops/fen";
 
 import { backendApi, type ExplainMovePayload } from "@/api/backend";
-import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
+import { INITIAL_FEN, NUM_MOVES, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
 import type { BlackOrWhite, EngineEvaluation, EngineMove, Explanation } from "@/types";
 import { parseUciContinuation, type ContinuationMove } from "@/utils/chess";
 
@@ -77,12 +77,16 @@ export async function explain({
 
   // 1. Continuation after the BAD move (the move that was played)
   console.debug("  → Analyzing bad move:", move.san);
-  const badUciMoves = await engine.getContinuation(move.fen, 5, depth);
+
+  const moveQuality = move.getQuality();
+  const numMoves = moveQuality ? NUM_MOVES[moveQuality] : 5;
+
+  const badUciMoves = await engine.getContinuation(move.fen, numMoves, depth);
   const badContinuationParsed = parseUciContinuation(badUciMoves, move.fen);
 
   // 2. Best continuation - use PGN variation and supplement if needed
   let bestContinuationParsed: ContinuationMove[];
-  const targetLength = 6;
+  const targetLength = numMoves;
 
   if (bestLine.length >= targetLength) {
     // Convert PGN variation to the ContinuationMove format

@@ -679,21 +679,13 @@ export const Analysis: React.FC<AnalysisProps> = ({
                         />
                       </div>
                     </div>
-                    <p className="text-xs text-neutral-500">
-                      {analysisProgress
-                        ? `Analyzing move ${analysisProgress.currentMoveIndex + 1}...`
-                        : "Preparing engine..."}
-                    </p>
                   </div>
-                )}{" "}
+                )}
                 {moves.length > 0 && !gameHasAnalysis && !analysisProgress && (
                   <div className="flex flex-col items-center justify-center py-4 space-y-4">
                     <div className="text-center">
                       <p className="text-sm text-neutral-400 text-center max-w-md">
                         This game does not have analysis yet.
-                      </p>
-                      <p className="text-xs text-neutral-400 mt-2">
-                        Depth: {stockfishDepth} (you can change it in Advanced)
                       </p>
                     </div>
                     <button

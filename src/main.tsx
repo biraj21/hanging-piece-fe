@@ -29,15 +29,15 @@ const posthogOptions = {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <PostHogProvider apiKey={env.VITE_PUBLIC_POSTHOG_KEY} options={posthogOptions}>
+    <PostHogProvider apiKey={env.VITE_PUBLIC_POSTHOG_KEY} options={posthogOptions}>
+      <QueryClientProvider client={queryClient}>
+        <Toaster position="top-right" theme="dark" richColors closeButton />
         <BrowserRouter>
           <AuthProvider>
-            <Toaster position="top-right" theme="dark" richColors closeButton />
             <AppRouter />
           </AuthProvider>
         </BrowserRouter>
-      </PostHogProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </PostHogProvider>
   </StrictMode>
 );

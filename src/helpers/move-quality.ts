@@ -13,6 +13,8 @@ export function getMoveQualitySymbol(quality: MoveQuality): string {
       return "?!";
     case "good":
       return "!";
+    case "great":
+      return "!¡";
     case "brilliant":
       return "!!";
   }
@@ -33,6 +35,8 @@ export function getNagFromQuality(quality: MoveQuality): number | undefined {
       return 6; // ?!
     case "good":
       return 1; // !
+    case "great":
+      return 69; // custom NAG for "Great" move
     case "brilliant":
       return 3; // !!
     default:
@@ -53,6 +57,8 @@ export function getMoveQualityColor(quality: MoveQuality): { bg: string; border:
       return { bg: "#3b82f6", border: "#2563eb" };
     case "good":
       return { bg: "#22c55e", border: "#16a34a" };
+    case "great":
+      return { bg: "#06b6d4", border: "#0891b2" };
     case "brilliant":
       return { bg: "#a855f7", border: "#9333ea" };
     default:
@@ -73,6 +79,8 @@ export function getAnnotationClasses(moveQuality?: MoveQuality): string {
       return "bg-blue-500/50 border border-blue-500 text-blue-100";
     case "good":
       return "bg-emerald-500/50 border border-emerald-500 text-emerald-100";
+    case "great":
+      return "bg-cyan-500/50 border border-cyan-500 text-cyan-100";
     case "brilliant":
       return "bg-purple-500/50 border border-purple-500 text-purple-100";
     default:
@@ -93,6 +101,8 @@ export function getIconColorClasses(moveQuality: MoveQuality): string {
       return "bg-blue-500 text-white border-blue-500";
     case "good":
       return "bg-emerald-500 text-white border-emerald-500";
+    case "great":
+      return "bg-cyan-500 text-white border-cyan-500";
     case "brilliant":
       return "bg-purple-500 text-white border-purple-500";
     default:
@@ -113,6 +123,8 @@ export function getMoveQualityDisplay(quality?: MoveQuality): { text: string; co
       return { text: "INACCURACY", color: "text-blue-400" };
     case "good":
       return { text: "GOOD MOVE", color: "text-emerald-400" };
+    case "great":
+      return { text: "GREAT", color: "text-cyan-400" };
     case "brilliant":
       return { text: "BRILLIANT", color: "text-purple-400" };
     default:

@@ -1,9 +1,11 @@
-import { Loader } from "@/components/Loader";
-import { authClient, signInWithGoogle as signInWithGoogleFn } from "@/config/auth";
-import { ROUTES } from "@/router/routes";
 import { usePostHog } from "posthog-js/react";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { toast } from "sonner";
+
+import { Loader } from "@/components/Loader";
+import { authClient, signInWithGoogle as signInWithGoogleFn } from "@/config/auth";
+import { ROUTES } from "@/router/routes";
 
 export interface User {
   id: string;
@@ -44,12 +46,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const session = await authClient.getSession({
         ...(refresh && { query: { disableCookieCache: refresh } }),
       });
+      if (session.error) {
+        setUser(null);
+        console.error("Session error:", session.error);
+        toast.error("Something went wrong while verifying your session. Please refresh the page & try again.");
+        return;
+      }
+
       if (session.data?.user) {
         setUser(session.data.user as User);
       } else {
         setUser(null);
       }
     } catch (error) {
+      toast.error("Failed to verify session. Please refresh the page & try again.");
       console.error("Session check failed:", error);
       setUser(null);
     } finally {
