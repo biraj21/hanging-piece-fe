@@ -4,6 +4,7 @@ import { ProtectedRoutes, StrictlyPublicRoutes } from "@/components/route-protec
 import { DashboardLayout } from "@/layouts/dashboard";
 import AnalysisPage from "@/pages/analysis";
 import DashboardPage from "@/pages/dashboard";
+import GamePage from "@/pages/game";
 import GamesPage from "@/pages/games";
 import IndexPage from "@/pages/index";
 import LoginPage from "@/pages/login";
@@ -29,6 +30,7 @@ export default function AppRouter() {
         <Route element={<DashboardLayout />}>
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
           <Route path={ROUTES.GAMES} element={<GamesPage />} />
+          <Route path={`${ROUTES.CHESSCOM_GAME}/:gameId`} element={<GamePage />} />
           <Route path={ROUTES.ANALYSIS} element={<AnalysisPage />} />
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
         </Route>

@@ -1,14 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PostHogProvider } from "posthog-js/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { Toaster } from "sonner";
 
-import { AuthProvider } from "@/contexts/AuthContext";
 import AppRouter from "@/router";
-import { PostHogProvider } from "posthog-js/react";
 
 import { env } from "./config/env";
+import { AuthProvider } from "./contexts/AuthContext";
+
 import "./index.css";
 
 const queryClient = new QueryClient({

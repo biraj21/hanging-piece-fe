@@ -1,4 +1,4 @@
-import { isNormal, makeSquare, makeUci, type Position } from "chessops";
+import { isNormal, makeSquare, makeUci, parseUci, type Position } from "chessops";
 import { makeFen } from "chessops/fen";
 import {
   parseComment,
@@ -10,7 +10,7 @@ import {
   type EvaluationPawns,
   type PgnNodeData,
 } from "chessops/pgn";
-import { parseSan } from "chessops/san";
+import { makeSan, parseSan } from "chessops/san";
 
 export type VariationMove = {
   san: string;
@@ -287,4 +287,84 @@ export function hasAnalysis(game: ParsedGame): boolean {
   return game.moves.some((move) => {
     return (move.nags && move.nags.length > 0) || move.evaluation !== undefined;
   });
+}
+
+export interface PgnHeader {
+  Event?: string;
+  Site?: string;
+  Date?: string;
+  White?: string;
+  Black?: string;
+  Result?: string;
+  ECO?: string;
+  WhiteElo?: string;
+  BlackElo?: string;
+  TimeControl?: string;
+  EndTime?: string;
+  Termination?: string;
+  SetUp?: string;
+  FEN?: string;
+}
+
+export interface UciMove {
+  from?: string;
+  to: string;
+  promotion?: string;
+}
+
+export interface ChessComGameData {
+  gameId: string;
+  pgnHeaders: PgnHeader;
+  moves: UciMove[];
+}
+
+/**
+ * Constructs a PGN string from decoded Chess.com game data
+ */
+export function constructPgnFromChessComGame(data: ChessComGameData): string {
+  const { pgnHeaders, moves } = data;
+
+  // Build headers
+  const headersMap = new Map<string, string>();
+  for (const [key, value] of Object.entries(pgnHeaders)) {
+    if (value !== undefined && value !== null) {
+      headersMap.set(key, value);
+    }
+  }
+
+  const position = startingPosition(headersMap).unwrap();
+
+  // Play moves and collect SANs
+  const sans: string[] = [];
+  for (const move of moves) {
+    const uciMove = parseUci(`${move.from || ""}${move.to}${move.promotion || ""}`);
+    if (uciMove) {
+      const san = makeSan(position, uciMove);
+      sans.push(san);
+      position.play(uciMove);
+    }
+  }
+
+  // Format moves with move numbers
+  let moveText = "";
+  for (let i = 0; i < sans.length; i++) {
+    const isWhite = i % 2 === 0;
+    const moveNum = Math.floor(i / 2) + 1;
+
+    if (isWhite) {
+      moveText += `${moveNum}. ${sans[i]}`;
+    } else {
+      moveText += ` ${sans[i]} `;
+    }
+
+    // Add new line every 6 moves (3 complete pairs)
+    if ((i + 1) % 6 === 0 && i < sans.length - 1) {
+      moveText += "\n";
+    }
+  }
+
+  const result = pgnHeaders.Result || "*";
+  const headerLines = Array.from(headersMap.entries()).map(([key, value]) => `[${key} "${value}"]`);
+
+  return `${headerLines.join("\n")}\n\n${moveText} ${result}`;
 }

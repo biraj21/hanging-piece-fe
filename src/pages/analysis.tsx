@@ -1,5 +1,6 @@
-import { Analysis } from "@/components/analysis";
 import { useLocation } from "react-router";
+
+import { Analysis } from "@/components/analysis";
 
 export default function AnalysisPage() {
   const location = useLocation();

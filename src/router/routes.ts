@@ -8,6 +8,7 @@ export const ROUTES = {
 
   DASHBOARD: "/dashboard",
   GAMES: "/games",
+  CHESSCOM_GAME: "/game/live",
   ANALYSIS: "/analysis",
   ONBOARDING: "/onboarding",
   PROFILE: "/profile",

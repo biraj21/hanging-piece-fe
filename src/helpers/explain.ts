@@ -58,7 +58,7 @@ export async function explain({
   };
 
   // Try to load from cache first
-  const cached = await ExplanationCache.get({ gameId: gameId, moveIndex });
+  const cached = await ExplanationCache.get({ gameId, moveIndex });
   if (cached) {
     return cached;
   }
@@ -154,7 +154,7 @@ export async function explain({
   };
 
   // Store in cache for future use
-  ExplanationCache.store({ gameId: gameId, moveIndex }, explanation).catch((err) => {
+  ExplanationCache.store({ gameId, moveIndex }, explanation).catch((err) => {
     console.error("Failed to store explanation in cache:", err);
   });
 

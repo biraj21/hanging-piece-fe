@@ -179,6 +179,23 @@ export const Analysis: React.FC<AnalysisProps> = ({
         throw new Error("No valid moves found in PGN");
       }
 
+      const whitePlayer = parsed.headers.get("White")?.toLowerCase() || "";
+      const blackPlayer = parsed.headers.get("Black")?.toLowerCase() || "";
+      const username = getChessAccountUsername(user!, source);
+      const userColor: BlackOrWhite | undefined = (() => {
+        if (username === whitePlayer) {
+          return "white";
+        }
+
+        if (username === blackPlayer) {
+          return "black";
+        }
+      })();
+
+      if (userColor && boardOrientation !== userColor) {
+        setBoardOrientation(userColor);
+      }
+
       setGame(parsed);
       setCurrentMoveIndex(0);
       setGameHasAnalysis(hasAnalysis(parsed));

@@ -41,7 +41,32 @@ interface ExplainMoveResponse {
   bestContinuation: Array<{ move: string; color: BlackOrWhite; reason: string }>;
 }
 
+interface ChessComGameResponse {
+  gameId: string;
+  pgnHeaders: Record<string, string>;
+  moves: Array<{
+    from?: string;
+    to: string;
+    promotion?: string;
+  }>;
+}
+
 export const backendApi = {
+  /**
+   * Fetch Chess.com game data
+   */
+  async getChessComGame(gameId: string): Promise<ChessComGameResponse> {
+    const response = await fetch(`${env.VITE_API_BASE_URL}chesscom/${gameId}`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch game: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
   /**
    * Update user profile (chess accounts)
    */
