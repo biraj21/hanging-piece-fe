@@ -38,7 +38,7 @@ export default function GamesPage() {
   }, [activeSource, setSearchParams]);
 
   // Fetch Chess.com archives with centralized hook
-  const { data: chesscomArchives = [] } = useChesscomArchives(user?.chesscomId, {
+  const { data: chesscomArchives = [], isLoading: isLoadingChesscomArchives } = useChesscomArchives(user?.chesscomId, {
     enabled: !!user?.chesscomId && activeSource === "chesscom",
   });
 
@@ -77,7 +77,7 @@ export default function GamesPage() {
   });
 
   // Flatten all pages into a single array
-  const chesscomGames: UnifiedGame[] = chesscomGamesData?.pages.flatMap(page => page.games) ?? [];
+  const chesscomGames: UnifiedGame[] = chesscomGamesData?.pages.flatMap((page) => page.games) ?? [];
   const lichessGames: UnifiedGame[] = lichessGamesData?.pages.flat() ?? [];
 
   // Show games based on selected source
@@ -85,7 +85,7 @@ export default function GamesPage() {
     (a: UnifiedGame, b: UnifiedGame) => b.timestamp - a.timestamp
   );
 
-  const isLoading = activeSource === "chesscom" ? isLoadingChesscom : isLoadingLichess;
+  const isLoading = isLoadingChesscomArchives || isLoadingChesscom || isLoadingLichess;
   const hasMore = activeSource === "chesscom" ? hasMoreChesscom : hasMoreLichess;
   const isFetchingMore = activeSource === "chesscom" ? isFetchingMoreChesscom : isFetchingMoreLichess;
 
@@ -142,35 +142,37 @@ export default function GamesPage() {
       {/* Stats and Filters */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
         {/* Profile Preview */}
-        {!isLoading && (
-          <div className="mb-6">
-            {activeSource === "chesscom" && chesscomProfile && user?.chesscomId && (
+        {
+          <div className="mb-4">
+            {activeSource === "chesscom" && user?.chesscomId && (
               <ProfilePreview
                 platform="chesscom"
-                avatar={chesscomProfile.avatar}
-                username={chesscomProfile.username || user.chesscomId}
-                name={chesscomProfile.name}
-                country={chesscomProfile.country}
-                league={chesscomProfile.league}
-                url={chesscomProfile.url}
+                avatar={chesscomProfile?.avatar}
+                username={chesscomProfile?.username || user.chesscomId}
+                name={chesscomProfile?.name}
+                country={chesscomProfile?.country}
+                league={chesscomProfile?.league}
+                url={chesscomProfile?.url}
+                loading={!chesscomProfile && isLoading}
               />
             )}
-            {activeSource === "lichess" && lichessProfile && user?.lichessId && (
+            {activeSource === "lichess" && user?.lichessId && (
               <ProfilePreview
                 platform="lichess"
-                username={lichessProfile.username || user.lichessId}
-                name={lichessProfile.name}
-                title={lichessProfile.title}
-                rating={lichessProfile.rating}
-                country={lichessProfile.country}
-                url={lichessProfile.url}
+                username={lichessProfile?.username || user.lichessId}
+                name={lichessProfile?.name}
+                title={lichessProfile?.title}
+                rating={lichessProfile?.rating}
+                country={lichessProfile?.country}
+                url={lichessProfile?.url}
+                loading={!lichessProfile && isLoading}
               />
             )}
           </div>
-        )}
+        }
 
         {/* Stats Summary */}
-        {!isLoading && (
+        {
           <div className="mb-6 grid grid-cols-3 gap-3">
             <div className="bg-neutral-900/60 border border-green-500/20 rounded-lg p-3">
               <div className="flex items-center gap-1.5 text-xs text-green-400/70 font-medium mb-1">
@@ -200,7 +202,7 @@ export default function GamesPage() {
               </div>
             </div>
           </div>
-        )}
+        }
 
         <div className="flex flex-wrap gap-3 mb-6">
           {/* Top Row: Source Dropdown and Search */}

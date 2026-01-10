@@ -1,7 +1,17 @@
 import type { Key } from "@lichess-org/chessground/types";
 import type { Evaluation } from "chessops/pgn";
 import clsx from "clsx";
-import { Crown, Handshake, SearchIcon } from "lucide-react";
+import {
+  BrainIcon,
+  ChessKnightIcon,
+  CrownIcon,
+  FileTextIcon,
+  HandshakeIcon,
+  Loader2Icon,
+  SearchIcon,
+  SettingsIcon,
+  type LucideProps,
+} from "lucide-react";
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -237,6 +247,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
   useEffect(() => {
     if (pgnProp && pgnProp.trim()) {
       onPGNChange(pgnProp);
+    } else {
+      setActiveTab("advanced");
     }
   }, [pgnProp]);
 
@@ -560,10 +572,17 @@ export const Analysis: React.FC<AnalysisProps> = ({
     return () => window.removeEventListener("keydown", handleKey);
   }, [goToFirst, goToLast, goToNext, goToPrevious, analysisProgress]);
 
-  const tabs: { label: string; value: Tab; onClick: () => void }[] = [
+  const tabs: {
+    label: string;
+    value: Tab;
+    onClick: () => void;
+    Icon: React.ForwardRefExoticComponent<Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>>;
+    isLoading?: boolean;
+  }[] = [
     {
       label: "Game",
       value: "game",
+      Icon: ChessKnightIcon,
       onClick() {
         if (activeTab === this.value) {
           return;
@@ -578,13 +597,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
     {
       label: "AI Coach",
       value: "coach",
-      onClick() {
-        setActiveTab(this.value);
-      },
-    },
-    {
-      label: "Advanced",
-      value: "advanced",
+      Icon: BrainIcon,
+      isLoading: loadingExplanation !== false,
       onClick() {
         setActiveTab(this.value);
       },
@@ -592,6 +606,15 @@ export const Analysis: React.FC<AnalysisProps> = ({
     {
       label: "Summary",
       value: "summary",
+      Icon: FileTextIcon,
+      onClick() {
+        setActiveTab(this.value);
+      },
+    },
+    {
+      label: "Advanced",
+      value: "advanced",
+      Icon: SettingsIcon,
       onClick() {
         setActiveTab(this.value);
       },
@@ -600,9 +623,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   return (
     <div className="h-screen w-full p-4 sm:p-6 overflow-scroll">
-      <div className="h-full lg:grid lg:grid-cols-2 lg:grid-rows-1 lg:gap-6 landscape:grid landscape:grid-cols-2 landscape:grid-rows-1 landscape:gap-6">
+      <div className="h-full flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-1 lg:gap-6 landscape:grid landscape:grid-cols-2 landscape:grid-rows-1 landscape:gap-6">
         {/* Left Column: Board */}
-        <div className="flex flex-col gap-3 overflow-y-auto min-h-0">
+        <div className="shrink-0 flex flex-col gap-3 overflow-y-auto min-h-0">
           <div className="flex flex-col gap-3 max-w-[52vh]  max-lg:landscape:max-w-[72vh] lg:max-w-[82vh] mx-auto w-full">
             {/* Chessboard */}
             <ChessBoard
@@ -635,19 +658,24 @@ export const Analysis: React.FC<AnalysisProps> = ({
         </div>
 
         {/* Right Column: Tabbed Panel */}
-        <div className="mt-4 flex flex-col text-xs lg:text-sm h-96 lg:h-full lg:mt-0 landscape:h-full landscape:mt-0">
+        <div className="grow mt-4 flex flex-col text-xs lg:text-sm min-h-96 lg:h-full lg:mt-0 landscape:h-full landscape:mt-0">
           {/* Tab Headers */}
-          <div className="flex gap-2 mb-2 shrink-0">
+          <div className="flex gap-1 mb-2 shrink-0 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => tab.onClick()}
-                className={clsx("px-2 font-medium transition pb-1 border-b-2", {
-                  "text-white border-emerald-500": activeTab === tab.value,
-                  "text-neutral-400 border-transparent hover:text-neutral-300": activeTab !== tab.value,
-                })}
+                className={clsx(
+                  "px-2 font-medium transition pb-1 border-b-2 flex items-center gap-1 text-xs shrink-0",
+                  {
+                    "text-white border-emerald-500": activeTab === tab.value,
+                    "text-neutral-400 border-transparent hover:text-neutral-300": activeTab !== tab.value,
+                  }
+                )}
               >
-                {tab.label}
+                {!tab.isLoading && <tab.Icon className="w-3 h-3 lg:w-4 lg:h-4" />}
+                {tab.isLoading && <Loader2Icon className="w-3 h-3 lg:w-4 lg:h-4 animate-spin" />}
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -662,7 +690,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   </div>
                 )}
                 {analysisProgress && (
-                  <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                  <div className="flex flex-col items-center justify-center py-4 space-y-4 mb-4">
                     <div className="w-full max-w-md">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-neutral-400">Analyzing game...</span>
@@ -682,7 +710,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   </div>
                 )}
                 {moves.length > 0 && !gameHasAnalysis && !analysisProgress && (
-                  <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                  <div className="flex flex-col items-center justify-center py-4 space-y-4 mb-4">
                     <div className="text-center">
                       <p className="text-sm text-neutral-400 text-center max-w-md">
                         This game does not have analysis yet.
@@ -1042,9 +1070,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
                             <span className="text-sm text-neutral-400 min-w-20">Result:</span>
                             <span className="text-sm text-white flex items-center gap-2">
                               {result}
-                              {winner === "white" && <Crown className="inline w-4 h-4 text-amber-400" />}
-                              {winner === "black" && <Crown className="inline w-4 h-4 text-amber-400" />}
-                              {winner === "draw" && <Handshake className="inline w-4 h-4 text-neutral-400" />}
+                              {winner === "white" && <CrownIcon className="inline w-4 h-4 text-amber-400" />}
+                              {winner === "black" && <CrownIcon className="inline w-4 h-4 text-amber-400" />}
+                              {winner === "draw" && <HandshakeIcon className="inline w-4 h-4 text-neutral-400" />}
                             </span>
                           </div>
                         )}
@@ -1111,7 +1139,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                       step="1"
                       value={stockfishDepth}
                       onChange={(e) => setStockfishDepth(parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer stockfish-depth-slider"
+                      className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer  accent-emerald-600"
                     />
                     <div className="flex items-center gap-2 min-w-[60px]">
                       <span className="text-sm text-neutral-300 font-mono">{stockfishDepth}</span>
@@ -1165,35 +1193,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
           afterAnalysis={showSummaryAfterAnalysis}
         />
       )}
-
-      <style>{`
-        .stockfish-depth-slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #10b981;
-          cursor: pointer;
-          border: 2px solid #374151;
-        }
-
-        .stockfish-depth-slider::-webkit-slider-thumb:hover {
-          background: #059669;
-        }
-
-        .stockfish-depth-slider::-moz-range-thumb {
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #10b981;
-          cursor: pointer;
-          border: 2px solid #374151;
-        }
-
-        .stockfish-depth-slider::-moz-range-thumb:hover {
-          background: #059669;
-        }
-      `}</style>
     </div>
   );
 };
