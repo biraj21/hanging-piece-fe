@@ -47,7 +47,7 @@ export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, cl
 
   return (
     <div
-      className={`flex-1 px-1.5 py-1 rounded text-xs sm:text-sm leading-tight cursor-pointer transition flex items-center ${tileClasses} ${className}`}
+      className={`flex-1 px-1.5 py-1 rounded-md text-xs sm:text-sm leading-tight cursor-pointer transition flex items-center ${tileClasses} ${className}`}
       onClick={() => onClick(index)}
       ref={elementRef}
     >

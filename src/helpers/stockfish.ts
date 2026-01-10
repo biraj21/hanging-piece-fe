@@ -59,6 +59,7 @@ const STOCKFISH_ENGINE: Record<EngineVariantKey, EngineVariant> = {
 class StockfishEngine {
   private worker: Worker | null = null;
   private messageQueue: Set<(data: string) => void> = new Set();
+  private uciSent = false;
   private isReady = false;
   private variant: EngineVariant | null = null;
 
@@ -78,22 +79,21 @@ class StockfishEngine {
         console.debug(`Loading ${variant.name}`);
         console.debug(`Threads: ${variant.threads}`);
 
-        this.worker = new Worker(variant.path, { type: "classic" });
+        this.worker = new Worker(variant.path);
 
-        this.worker.onmessage = (e) => {
-          const message = e.data;
-
+        const handleMsgLine = (msg: string) => {
           // Notify all listeners
-          this.messageQueue.forEach((callback) => callback(message));
+          this.messageQueue.forEach((callback) => callback(msg));
 
           // Check if ready
-          if (message === "readyok") {
+          if (msg === "readyok") {
             this.isReady = true;
             console.debug(`✅ ${variant.name} engine ready!`);
             resolve();
+            return;
           }
 
-          if (message === "uciok") {
+          if (msg === "uciok") {
             console.debug("✅ UCI protocol confirmed");
             // Configure threads if multi-threaded
             if (variant.threads > 1) {
@@ -103,17 +103,30 @@ class StockfishEngine {
             }
             // Request ready status
             this.send("isready");
+            return;
           }
+        };
+
+        this.worker.onmessage = (e) => {
+          if (!this.uciSent) {
+            // Initialize UCI protocol
+            console.debug("Sending UCI command...");
+            this.send("uci");
+            this.uciSent = true;
+          }
+
+          const lines = String(e.data).split("\n");
+          lines.forEach((line) => handleMsgLine(line.trim()));
+        };
+
+        this.worker.onmessageerror = (e) => {
+          console.error("Stockfish worker message error:", e);
         };
 
         this.worker.onerror = (err) => {
           console.error("Worker error:", err);
           reject(err);
         };
-
-        // Initialize UCI protocol
-        console.debug("Sending UCI command...");
-        this.send("uci");
       } catch (err) {
         console.error("Failed to load Stockfish:", err);
         reject(err);
@@ -268,6 +281,7 @@ class StockfishEngine {
       console.debug("Terminating engine...");
       this.worker.terminate();
       this.worker = null;
+      this.uciSent = false;
       this.isReady = false;
       this.messageQueue = new Set();
       this.variant = null;

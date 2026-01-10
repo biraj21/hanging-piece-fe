@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { getAnnotationClasses } from "@/helpers/move-quality";
 import type { GameMove, Variation } from "@/helpers/pgn";
 
-import { MoveQualityIcon } from "./MoveQualityIcon";
 import { TellMeWhyButton } from "./TellMeWhy";
 
 type AnnotationBlockProps = {
@@ -45,7 +44,7 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
 
   if (isSimple) {
     return (
-      <div className="mt-2 ml-8 p-2 rounded-lg text-sm leading-relaxed bg-neutral-700/50 border border-neutral-500 text-neutral-300">
+      <div className="mt-2 ml-8 p-2 rounded-md text-sm leading-relaxed bg-neutral-700/50 border border-neutral-500 text-neutral-300">
         <div className="flex items-center gap-2">
           <span>{annotationText}</span>
         </div>
@@ -54,24 +53,25 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
   }
 
   return (
-    <div
-      className={`mt-2 ml-8 p-2 rounded-lg text-sm font-medium leading-relaxed ${getAnnotationClasses(moveQuality)}`}
-    >
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-1">
-          {moveQuality && <MoveQualityIcon moveQuality={moveQuality} size="small" />}
-          {moveQuality && moveQuality.charAt(0).toUpperCase() + moveQuality.slice(1)}.
-          {hasBestLine && ` Best: ${bestLine.map((v) => v.san).join(" ")}`}
+    <div className="flex gap-1.5 items-stretch mt-2">
+      <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75"></span>
+      <div className={`flex-1 p-2 rounded-md text-sm font-medium leading-relaxed ${getAnnotationClasses(moveQuality)}`}>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1">
+            {/* {moveQuality && <MoveQualityIcon moveQuality={moveQuality} size="small" />} */}
+            {moveQuality && moveQuality.charAt(0).toUpperCase() + moveQuality.slice(1)}.
+            {hasBestLine && ` Best: ${bestLine.map((v) => v.san).join(" ")}`}
+          </div>
+          <div className="flex justify-end">
+            <TellMeWhyButton
+              onClick={handleExplain}
+              disabled={explainDisabled || explanationLoading || !hasBestLine}
+              loading={explanationLoading}
+            />
+          </div>
         </div>
-        <div className="flex justify-end">
-          <TellMeWhyButton
-            onClick={handleExplain}
-            disabled={explainDisabled || explanationLoading || !hasBestLine}
-            loading={explanationLoading}
-          />
-        </div>
+        {error && <p className="mt-2 text-xs text-red-200">{error}</p>}
       </div>
-      {error && <p className="mt-2 text-xs text-red-200">{error}</p>}
     </div>
   );
 };

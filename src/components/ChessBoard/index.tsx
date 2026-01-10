@@ -251,7 +251,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         <div
           id="hp-chessboard-wrapper"
           ref={boardRef}
-          className={`cg-wrap cg-theme-${theme} aspect-square rounded-lg shadow-2xl overflow-hidden`}
+          className={`cg-wrap cg-theme-${theme} aspect-square shadow-2xl`}
         />
       </div>
 

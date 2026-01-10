@@ -1,6 +1,8 @@
-/* ============================================
-   CHESSBOARD THEMES
-   ============================================ */
+@import "tailwindcss";
+
+#hp-chessboard-wrapper.cg-wrap cg-board {
+  @apply rounded-md;
+}
 
 /* ----- start: make coords responsive ----- */
 
@@ -52,6 +54,10 @@
 }
 
 /* ----- end: make coords responsive -----*/
+
+/* ============================================
+   CHESSBOARD THEMES
+   ============================================ */
 
 /* THEME: Brown (uses chessground.brown.css defaults) */
 /* No overrides needed - inherits from chessground.brown.css */
