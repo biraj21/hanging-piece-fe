@@ -61,7 +61,8 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
           <GraduationCapIcon size={16} className="text-white" />
         </div>
         <div className="flex-1">
-          <h3 className="text-xs font-semibold text-neutral-200">Chess Coach</h3>
+          <h3 className="text-xs font-semibold text-neutral-200">Chess Coach (beta)</h3>
+          <p className="text-[10px] text-neutral-400">Beta: Explanations may contain inaccuracies</p>
         </div>
       </div>
 
