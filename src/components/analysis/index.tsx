@@ -123,7 +123,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       return;
     }
 
-    const username = getChessAccountUsername(user!, source);
+    const username = getChessAccountUsername(user, source);
     if (!username) {
       return;
     }
@@ -179,9 +179,26 @@ export const Analysis: React.FC<AnalysisProps> = ({
         throw new Error("No valid moves found in PGN");
       }
 
+      setGame(parsed);
+      setCurrentMoveIndex(0);
+      setGameHasAnalysis(hasAnalysis(parsed));
+
+      if (gameIdProp) {
+        setGameId(gameIdProp);
+      } else {
+        // Generate hash for caching explanations
+        const hash = generateGameHash(parsed.moves);
+        setGameId(hash);
+      }
+      toast.success("PGN parsed successfully");
+
+      if (!user) {
+        return;
+      }
+
       const whitePlayer = parsed.headers.get("White")?.toLowerCase() || "";
       const blackPlayer = parsed.headers.get("Black")?.toLowerCase() || "";
-      const username = getChessAccountUsername(user!, source);
+      const username = getChessAccountUsername(user, source);
       const userColor: BlackOrWhite | undefined = (() => {
         if (username === whitePlayer) {
           return "white";
@@ -195,19 +212,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
       if (userColor && boardOrientation !== userColor) {
         setBoardOrientation(userColor);
       }
-
-      setGame(parsed);
-      setCurrentMoveIndex(0);
-      setGameHasAnalysis(hasAnalysis(parsed));
-
-      if (gameIdProp) {
-        setGameId(gameIdProp);
-      } else {
-        // Generate hash for caching explanations
-        const hash = generateGameHash(parsed.moves);
-        setGameId(hash);
-      }
-      toast.success("PGN parsed successfully");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to parse PGN");
       setGame(null);

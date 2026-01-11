@@ -30,12 +30,13 @@ export default function AppRouter() {
         <Route element={<DashboardLayout />}>
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
           <Route path={ROUTES.GAMES} element={<GamesPage />} />
-          <Route path={`${ROUTES.CHESSCOM_GAME}/:gameId`} element={<GamePage />} />
           <Route path={ROUTES.ANALYSIS} element={<AnalysisPage />} />
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
         </Route>
         <Route path={ROUTES.ONBOARDING} element={<OnboardingPage />} />
       </Route>
+
+      <Route path={`${ROUTES.CHESSCOM_GAME}/:gameId`} element={<GamePage />} />
 
       {/* catch all */}
       <Route path="*" element={<div>404</div>} />
