@@ -36,8 +36,11 @@ export default function AppRouter() {
         <Route path={ROUTES.ONBOARDING} element={<OnboardingPage />} />
       </Route>
 
+      {/* Redirected routes from Chess.com */}
       <Route path={`${ROUTES.CHESSCOM_GAME_LIVE}/:gameId`} element={<GamePage />} />
       <Route path={`${ROUTES.CHESSCOM_GAME}/:gameId`} element={<GamePage />} />
+      <Route path={`${ROUTES.CHESSCOM_GAME_REDIRECT_ANALYSIS}/:gameId/analysis`} element={<GamePage />} />
+      <Route path={`${ROUTES.CHESSCOM_GAME_REDIRECT_REVIEW}/:gameId/review`} element={<GamePage />} />
 
       {/* catch all */}
       <Route path="*" element={<div>404</div>} />

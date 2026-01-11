@@ -41,7 +41,7 @@ interface ExplainMoveResponse {
   bestContinuation: Array<{ move: string; color: BlackOrWhite; reason: string }>;
 }
 
-interface ChessComGameResponse {
+export interface ChessComGameResponse {
   gameId: string;
   pgnHeaders: Record<string, string>;
   moves: Array<{

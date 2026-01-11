@@ -8,6 +8,7 @@ import {
 
 import type { UnifiedGame } from "@/types";
 
+import { backendApi, type ChessComGameResponse } from "./backend";
 import { chesscomApi, type ChesscomProfile } from "./chess-com";
 import { lichessApi, type LichessProfile } from "./lichess";
 
@@ -22,6 +23,7 @@ export const queryKeys = {
     profile: (username: string) => ["chesscom", "profile", username] as const,
     archives: (username: string) => ["chesscom", "archives", username] as const,
     games: (username: string, archive?: string) => ["chesscom", "games", username, archive] as const,
+    game: (gameId: string) => ["chesscom", "game", gameId] as const,
   },
 
   // Lichess query keys
@@ -98,6 +100,20 @@ export function useChesscomArchives(
     queryKey: queryKeys.chesscom.archives(username || ""),
     queryFn: () => chesscomApi.getArchives(username!),
     enabled: !!username && (options?.enabled ?? true),
+    staleTime: 1000 * 60 * 60, // 1 hour
+    ...options,
+  });
+}
+
+// Chess.com game query hook
+export function useChesscomGame(
+  gameId: string | undefined | null,
+  options?: Omit<UseQueryOptions<ChessComGameResponse, Error>, "queryKey" | "queryFn">
+) {
+  return useQuery({
+    queryKey: queryKeys.chesscom.game(gameId || ""),
+    queryFn: () => backendApi.getChessComGame(gameId!),
+    enabled: !!gameId && (options?.enabled ?? true),
     staleTime: 1000 * 60 * 60, // 1 hour
     ...options,
   });
