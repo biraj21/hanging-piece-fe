@@ -36,6 +36,7 @@ export default function AppRouter() {
         <Route path={ROUTES.ONBOARDING} element={<OnboardingPage />} />
       </Route>
 
+      <Route path={`${ROUTES.CHESSCOM_GAME_LIVE}/:gameId`} element={<GamePage />} />
       <Route path={`${ROUTES.CHESSCOM_GAME}/:gameId`} element={<GamePage />} />
 
       {/* catch all */}
