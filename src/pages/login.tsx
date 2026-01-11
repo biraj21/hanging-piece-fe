@@ -1,4 +1,4 @@
-import { LogIn } from "lucide-react";
+import { LogInIcon } from "lucide-react";
 import { Link } from "react-router";
 
 import { Logo } from "@/components/Logo";
@@ -25,9 +25,9 @@ export default function LoginPage() {
           <button
             onClick={() => signIn()}
             disabled={isLoading}
-            className="bg-white hover:bg-neutral-100 disabled:bg-neutral-300 disabled:cursor-not-allowed text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
+            className="mx-auto flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm text-white transition-colors shadow-lg hover:shadow-xl"
           >
-            <LogIn className="w-4 h-4" />
+            <LogInIcon className="w-4 h-4" />
             {isLoading ? "Signing in..." : "Sign In with Google"}
           </button>
         </div>

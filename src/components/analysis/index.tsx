@@ -31,6 +31,7 @@ import { AnalysisSummary } from "./AnalysisSummary";
 import { AnalysisSummaryModal } from "./AnalysisSummaryModal";
 import { AnnotationBlock } from "./AnnotationBlock";
 import { ExplanationViewer } from "./ExplanationViewer";
+import { LoginModal } from "./LoginModal";
 import { MoveControls } from "./MoveControls";
 import { MoveItem } from "./MoveItem";
 import { TellMeWhyButton } from "./TellMeWhy";
@@ -51,7 +52,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
   source = "pgn",
 }) => {
   const engineRef = useRef<Stockfish | null>(null);
-  const { user } = useAuth();
+  const { user, signIn } = useAuth();
   const [pgn, setPgn] = useState(pgnProp);
   const [boardOrientation, setBoardOrientation] = useState<BlackOrWhite>(boardOrientationProp);
   const [game, setGame] = useState<ParsedGame | null>(null);
@@ -82,6 +83,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const [gameHasAnalysis, setGameHasAnalysis] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [showSummaryAfterAnalysis, setShowSummaryAfterAnalysis] = useState(false);
+
+  // Login modal state
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Get current move data
   const currentMove = currentMoveIndex >= 0 ? game?.moves[currentMoveIndex] : null;
@@ -253,6 +257,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       setCurrentMoveIndex(0);
       setShowSummaryAfterAnalysis(true); // Flag to show footer
       setShowSummaryModal(true); // Show summary modal first
+
       toast.success("Analysis complete!");
     } catch (err) {
       console.error("Analysis failed:", err);
@@ -388,6 +393,18 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setActiveExplanation({ moveIndex, explanation });
         setLoadingExplanation(false);
         setActiveTab("coach"); // auto-switch to AI Coach tab
+
+        const lastShownTime = localStorage.getItem("login-modal-last-shown");
+        const COOLDOWN_PERIOD = 15 * 60 * 1000; // 15 minutes
+        if (
+          !user &&
+          (!lastShownTime || (lastShownTime && Date.now() - parseInt(lastShownTime, 10) > COOLDOWN_PERIOD))
+        ) {
+          setTimeout(() => {
+            setShowLoginModal(true);
+            localStorage.setItem("login-modal-last-shown", Date.now().toString());
+          }, 10_000);
+        }
       } catch (err) {
         console.error("Failed to generate explanation:", err);
         throw err;
@@ -395,7 +412,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setLoadingExplanation(false);
       }
     },
-    [gameId, game, userColor, opening, eco, stockfishDepth]
+    [gameId, game, userColor, opening, eco, stockfishDepth, user]
   );
 
   useEffect(() => {
@@ -1214,6 +1231,13 @@ export const Analysis: React.FC<AnalysisProps> = ({
           afterAnalysis={showSummaryAfterAnalysis}
         />
       )}
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLogin={() => signIn(window.location.pathname)}
+      />
     </div>
   );
 };
