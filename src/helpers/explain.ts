@@ -2,11 +2,11 @@ import { parseFen } from "chessops/fen";
 
 import { backendApi, type ExplainMovePayload } from "@/api/backend";
 import { CONTINUATION_LENGTH, INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
-import type { BlackOrWhite, EngineEvaluation, EngineMove, Explanation } from "@/types";
+import type { BlackOrWhite, EngineEvaluation, Explanation } from "@/types";
 import { parseUciContinuation, type ContinuationMove } from "@/utils/chess";
 
 import { ExplanationCache } from "./explanation-cache";
-import { isMateEval, type GameMove } from "./pgn";
+import { isMateEval, isPawnsEval, type GameMove } from "./pgn";
 import { isCentipawnEval, Stockfish } from "./stockfish";
 
 interface ExplainOptions {
@@ -48,14 +48,6 @@ export async function explain({
 
   const beforeFen = moveIndex === 0 ? INITIAL_FEN : moves[moveIndex - 1].fen;
   const color: BlackOrWhite = move.ply % 2 === 1 ? "white" : "black";
-
-  const mateValue = () => {
-    if (move.evaluation && isMateEval(move.evaluation)) {
-      return move.evaluation.mate;
-    }
-
-    return 0;
-  };
 
   // Try to load from cache first
   const cached = await ExplanationCache.get({ gameId, moveIndex });
@@ -118,20 +110,36 @@ export async function explain({
     bestContinuationParsed = parseUciContinuation(bestUciMoves, beforeFen);
   }
 
+  // Calculate evaluations for each position in the continuations
+  const badLineWithEvals = await getContinuationWithEvaluations(engine, badContinuationParsed, depth);
+  const bestLineWithEvals = await getContinuationWithEvaluations(engine, bestContinuationParsed, depth);
+
   // Format continuations for backend
-  const badContinuation = formatContinuation(badContinuationParsed, color);
-  const bestContinuation = formatContinuation(bestContinuationParsed, color);
+
+  // invert color for continuation since it starts from opponent's move
+  const badContinuation = formatContinuation(badLineWithEvals, color === "white" ? "black" : "white");
+
+  // keep color as the mover for best continuation since it starts from the mover's best move
+  const bestContinuation = formatContinuation(bestLineWithEvals, color);
+
+  let moveEval: EngineEvaluation | undefined;
+  if (move.evaluation && isPawnsEval(move.evaluation)) {
+    moveEval = normalizeToWhitePerspective({ cp: move.evaluation.pawns * 100 }, move.fen);
+  } else if (move.evaluation && isMateEval(move.evaluation)) {
+    moveEval = normalizeToWhitePerspective(move.evaluation, move.fen);
+  }
 
   const body: ExplainMovePayload = {
-    color: color,
-    userColor: userColor,
     move: {
       san: move.san,
+      uci: move.uci,
+      color: color,
       beforeFen: beforeFen,
       afterFen: move.fen,
+      evaluation: moveEval,
     },
     moveQuality: move.getQuality(),
-    mate: mateValue(),
+    userColor: userColor,
     badContinuation,
     bestContinuation,
     opening,
@@ -141,16 +149,24 @@ export async function explain({
 
   const data = await backendApi.explainMove(body);
 
-  // Calculate evaluations for each position in the continuations
-  const badLineFormatted: EngineMove[] = await getContinuationWithEvaluations(engine, badContinuationParsed, depth);
-  const bestLineFormatted: EngineMove[] = await getContinuationWithEvaluations(engine, bestContinuationParsed, depth);
-
   const explanation: Explanation = {
     explanation: data.explanation,
     badContinuation: data.badContinuation,
     bestContinuation: data.bestContinuation,
-    badLine: badLineFormatted,
-    bestLine: bestLineFormatted,
+    badLine: badLineWithEvals.map((m) => ({
+      san: m.san,
+      from: m.uci.substring(0, 2),
+      to: m.uci.substring(2, 4),
+      fen: m.afterFen,
+      evaluation: m.evaluation,
+    })),
+    bestLine: bestLineWithEvals.map((m) => ({
+      san: m.san,
+      from: m.uci.substring(0, 2),
+      to: m.uci.substring(2, 4),
+      fen: m.afterFen,
+      evaluation: m.evaluation,
+    })),
   };
 
   // Store in cache for future use
@@ -161,9 +177,10 @@ export async function explain({
   return explanation;
 }
 
-function formatContinuation(continuation: ContinuationMove[], moverColor: BlackOrWhite) {
+function formatContinuation<T extends ContinuationMove>(continuation: T[], firstMoveColor: BlackOrWhite) {
+  const secondMoveColor: BlackOrWhite = firstMoveColor === "white" ? "black" : "white";
   return continuation.map((item, idx) => {
-    const color: BlackOrWhite = idx % 2 === 0 ? moverColor : moverColor === "white" ? "black" : "white";
+    const color: BlackOrWhite = idx % 2 === 0 ? firstMoveColor : secondMoveColor;
     return {
       ...item,
       color,
@@ -196,7 +213,7 @@ function normalizeToWhitePerspective(ev: EngineEvaluation, fen: string): EngineE
 }
 
 async function getContinuationWithEvaluations(engine: Stockfish, moves: ContinuationMove[], depth: number) {
-  const continuation: EngineMove[] = [];
+  const continuation: Array<ContinuationMove & { evaluation?: EngineEvaluation }> = [];
   for (const move of moves) {
     let ev: EngineEvaluation | undefined;
     try {
@@ -207,10 +224,9 @@ async function getContinuationWithEvaluations(engine: Stockfish, moves: Continua
     }
 
     continuation.push({
-      san: move.san,
-      from: move.uci.substring(0, 2),
-      to: move.uci.substring(2, 4),
-      fen: move.afterFen,
+      ...move,
+      // from: move.uci.substring(0, 2),
+      // to: move.uci.substring(2, 4),
       evaluation: ev,
     });
   }

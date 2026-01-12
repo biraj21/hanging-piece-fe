@@ -1,5 +1,5 @@
 import { env } from "@/config/env";
-import type { BlackOrWhite } from "@/types";
+import type { BlackOrWhite, EngineEvaluation } from "@/types";
 
 /**
  * Backend API functions
@@ -10,26 +10,21 @@ interface UpdateProfilePayload {
   lichessId?: string | null;
 }
 
-type Continuation = Array<{
+type MoveToSend = {
   san: string;
   uci: string;
   beforeFen: string;
   afterFen: string;
   color: string;
-}>;
+  evaluation?: EngineEvaluation;
+};
 
 export interface ExplainMovePayload {
-  color: BlackOrWhite;
-  userColor?: BlackOrWhite; // Color the user is playing as
+  move: MoveToSend;
   moveQuality?: string;
-  mate: number;
-  move: {
-    san: string;
-    beforeFen: string;
-    afterFen: string;
-  };
-  badContinuation: Continuation;
-  bestContinuation: Continuation;
+  badContinuation: MoveToSend[];
+  bestContinuation: MoveToSend[];
+  userColor?: BlackOrWhite; // Color the user is playing as
   opening?: string;
   eco?: string;
   additionalContext?: string;
