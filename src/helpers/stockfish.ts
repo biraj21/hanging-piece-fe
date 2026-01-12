@@ -1,4 +1,5 @@
 import type { EngineCentipawnEval, EngineEvaluation, EngineMateEval } from "@/types";
+import { isMobileDevice } from "@/utils/device";
 
 export function isMateEval(ev: EngineEvaluation): ev is EngineMateEval {
   return "mate" in ev;
@@ -63,7 +64,7 @@ class StockfishEngine {
   private isReady = false;
   private variant: EngineVariant | null = null;
 
-  async init(variant: EngineVariant): Promise<void> {
+  async init(variant: EngineVariant, hashMemoryMb?: number): Promise<void> {
     if (this.worker) {
       console.debug("Engine already initialized");
       return;
@@ -99,8 +100,16 @@ class StockfishEngine {
             if (variant.threads > 1) {
               // see https://official-stockfish.github.io/docs/stockfish-wiki/UCI-&-Commands.html#setoption
               this.send(`setoption name Threads value ${variant.threads}`);
+
               console.debug(`⚙️ Configured ${variant.threads} threads`);
             }
+
+            console.log("birajlog threads", variant.threads, { hashMemoryMb });
+            if (hashMemoryMb) {
+              console.log("birajlog memory", hashMemoryMb);
+              this.send(`setoption name Hash value ${hashMemoryMb || 16}`);
+            }
+
             // Request ready status
             this.send("isready");
             return;
@@ -290,14 +299,6 @@ class StockfishEngine {
 }
 
 /**
- * Detect if the device is mobile
- */
-function isMobileDevice(): boolean {
-  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera; // eslint-disable-line @typescript-eslint/no-explicit-any
-  return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-}
-
-/**
  * Check if SharedArrayBuffer is available (required for multi-threaded engine)
  * This requires proper CORS headers: Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy
  */
@@ -332,9 +333,9 @@ export class Stockfish {
   private engine: StockfishEngine;
   private initPromise: Promise<void>;
 
-  private constructor(variant: EngineVariant) {
+  private constructor(variant: EngineVariant, hashMemoryMb?: number) {
     this.engine = new StockfishEngine();
-    this.initPromise = this.engine.init(variant);
+    this.initPromise = this.engine.init(variant, hashMemoryMb);
   }
 
   /**
@@ -344,11 +345,13 @@ export class Stockfish {
    * - Mobile: Lite engine (7MB, fast & battery-friendly)
    */
   static create(): Stockfish {
+    const isMobile = isMobileDevice();
+    const hashMemoryMb = isMobile ? 4 : 16;
+
     if (ALWAYS_SINGLE_LITE) {
-      return new Stockfish(STOCKFISH_ENGINE.LITE_SINGLE);
+      return new Stockfish(STOCKFISH_ENGINE.LITE_SINGLE, hashMemoryMb);
     }
 
-    const isMobile = isMobileDevice();
     if (isMobile) {
       return this.createLite();
     } else {

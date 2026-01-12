@@ -45,6 +45,17 @@ interface AnalysisProps {
 
 type Tab = "game" | "coach" | "advanced" | "summary";
 
+const STOCKFISH_DEPTH_KEY = "saved-stockfish-depth";
+
+function getStockfishDepth() {
+  const saved = localStorage.getItem(STOCKFISH_DEPTH_KEY);
+  return saved ? parseInt(saved, 10) : STOCKFISH_DEFAULT_DEPTH;
+}
+
+function persistStockfishDepth(depth: number) {
+  localStorage.setItem(STOCKFISH_DEPTH_KEY, depth.toString());
+}
+
 export const Analysis: React.FC<AnalysisProps> = ({
   gameId: gameIdProp,
   pgn: pgnProp = "",
@@ -64,10 +75,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const [previewEvaluation, setPreviewEvaluation] = useState<Evaluation | null>(null);
 
   // Advanced settings
-  const [stockfishDepth, setStockfishDepth] = useState<number>(() => {
-    const saved = localStorage.getItem("stockfish-depth");
-    return saved ? parseInt(saved, 10) : STOCKFISH_DEFAULT_DEPTH;
-  });
+  const [stockfishDepth, setStockfishDepth] = useState<number>(getStockfishDepth());
 
   // Tab state
   const [activeTab, setActiveTab] = useState<Tab>("game");
@@ -428,10 +436,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
     };
   }, []);
 
-  // Persist depth to localStorage
-  useEffect(() => {
-    localStorage.setItem("stockfish-depth", stockfishDepth.toString());
-  }, [stockfishDepth]);
+  const handleStockfishDepthChange = (depth: number) => {
+    setStockfishDepth(depth);
+    persistStockfishDepth(depth);
+  };
 
   // Find first mistake/blunder for user
   const findFirstBadMove = useCallback(() => {
@@ -1176,7 +1184,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                       max="25"
                       step="1"
                       value={stockfishDepth}
-                      onChange={(e) => setStockfishDepth(parseInt(e.target.value))}
+                      onChange={(e) => handleStockfishDepthChange(parseInt(e.target.value))}
                       className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer  accent-emerald-600"
                     />
                     <div className="flex items-center gap-2 min-w-[60px]">

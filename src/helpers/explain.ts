@@ -38,8 +38,6 @@ export async function explain({
     throw new Error("Invalid move index.");
   }
 
-  console.log("birajlog depth", depth);
-
   const move = moves[moveIndex];
   const bestLine = move.variations?.[0];
   if (!bestLine || bestLine.length === 0) {

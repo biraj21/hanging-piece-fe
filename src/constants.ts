@@ -1,3 +1,4 @@
+import { isMobileDevice } from "@/utils/device";
 import type { MoveQuality } from "./helpers/pgn";
 
 /**
@@ -8,7 +9,7 @@ export const INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -
 /**
  * Default depth for Stockfish analysis
  */
-export const STOCKFISH_DEFAULT_DEPTH = 15;
+export const STOCKFISH_DEFAULT_DEPTH = isMobileDevice() ? 12 : 15;
 
 export const CONTINUATION_LENGTH: Record<MoveQuality, number> = {
   blunder: 8,
