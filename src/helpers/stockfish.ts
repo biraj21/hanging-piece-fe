@@ -104,9 +104,7 @@ class StockfishEngine {
               console.debug(`⚙️ Configured ${variant.threads} threads`);
             }
 
-            console.log("birajlog threads", variant.threads, { hashMemoryMb });
             if (hashMemoryMb) {
-              console.log("birajlog memory", hashMemoryMb);
               this.send(`setoption name Hash value ${hashMemoryMb || 16}`);
             }
 
@@ -345,13 +343,11 @@ export class Stockfish {
    * - Mobile: Lite engine (7MB, fast & battery-friendly)
    */
   static create(): Stockfish {
-    const isMobile = isMobileDevice();
-    const hashMemoryMb = isMobile ? 4 : 16;
-
     if (ALWAYS_SINGLE_LITE) {
-      return new Stockfish(STOCKFISH_ENGINE.LITE_SINGLE, hashMemoryMb);
+      return new Stockfish(STOCKFISH_ENGINE.LITE_SINGLE);
     }
 
+    const isMobile = isMobileDevice();
     if (isMobile) {
       return this.createLite();
     } else {

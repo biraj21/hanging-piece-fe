@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -22,15 +23,16 @@ const queryClient = new QueryClient({
   },
 });
 
-const posthogOptions = {
-  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-  defaults: "2025-11-30",
-  disable_session_recording: window.location.hostname === "localhost",
-} as const;
+if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+  posthog.init(env.VITE_PUBLIC_POSTHOG_KEY, {
+    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+    defaults: "2025-11-30",
+  });
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <PostHogProvider apiKey={env.VITE_PUBLIC_POSTHOG_KEY} options={posthogOptions}>
+    <PostHogProvider client={posthog}>
       <QueryClientProvider client={queryClient}>
         <Toaster position="top-right" theme="dark" richColors closeButton />
         <BrowserRouter>

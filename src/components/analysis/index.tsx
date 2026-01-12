@@ -12,6 +12,7 @@ import {
   SettingsIcon,
   type LucideProps,
 } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -94,6 +95,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   // Login modal state
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const posthog = usePostHog();
 
   // Get current move data
   const currentMove = currentMoveIndex >= 0 ? game?.moves[currentMoveIndex] : null;
@@ -259,6 +262,12 @@ export const Analysis: React.FC<AnalysisProps> = ({
         },
         engineRef.current
       );
+
+      posthog.capture("game_analyzed", {
+        email: user?.email,
+        chesscomId: user?.chesscomId,
+        lichessId: user?.lichessId,
+      });
 
       setGame(analyzedGame);
       setGameHasAnalysis(true);
