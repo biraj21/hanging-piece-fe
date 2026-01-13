@@ -1,3 +1,5 @@
+import { PlayOnPlatform } from "./PlayOnPlatform";
+
 interface ProfilePreviewProps {
   loading?: boolean;
   platform: "chesscom" | "lichess";
@@ -9,6 +11,7 @@ interface ProfilePreviewProps {
   title?: string;
   rating?: number;
   url?: string;
+  showPlayButton?: boolean;
 }
 
 export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
@@ -21,12 +24,10 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
   league,
   title,
   rating,
-  url,
+  showPlayButton = false,
 }) => {
   const displayName = name || username;
-  const platformName = platform === "chesscom" ? "Chess.com" : "Lichess";
 
-  // Generate initials from display name
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -36,8 +37,12 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-3 py-2">
-      <div className={`w-10 h-10 rounded-full shrink-0 border border-neutral-700 flex items-center justify-center ${loading ? "bg-neutral-700 animate-pulse" : ""}`}>
+    <div className="flex items-center gap-3 py-1.5">
+      <div
+        className={`w-9 h-9 rounded-full shrink-0 border border-neutral-700 flex items-center justify-center ${
+          loading ? "bg-neutral-700 animate-pulse" : ""
+        }`}
+      >
         {!loading && avatar ? (
           <img src={avatar} alt={`${username}'s avatar`} className="w-full h-full rounded-full object-cover" />
         ) : !loading && !avatar ? (
@@ -92,23 +97,11 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
                   <span className="uppercase">{country}</span>
                 </>
               )}
-              {url && (
-                <>
-                  <span>•</span>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-neutral-400 hover:text-white transition-colors underline"
-                  >
-                    {platformName}
-                  </a>
-                </>
-              )}
             </>
           )}
         </div>
       </div>
+      {showPlayButton && !loading && <PlayOnPlatform platform={platform} />}
     </div>
   );
 };

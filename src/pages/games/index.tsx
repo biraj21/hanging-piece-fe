@@ -11,7 +11,7 @@ import { getChessAccountUsername } from "@/helpers/chess-username";
 import { parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
 import { ROUTES } from "@/router/routes";
 import type { BlackOrWhite, UnifiedGame } from "@/types";
-import { BarChart3Icon, ClockIcon, FilterIcon, MinusIcon, SwordsIcon, TrophyIcon, XIcon } from "lucide-react";
+import { BarChart3Icon, ClockIcon, HandshakeIcon, SwordsIcon, TrophyIcon, XIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
@@ -114,17 +114,18 @@ export default function GamesPage() {
     });
   };
 
-  // Filter games
-  const filteredGames = allGames.filter((game) => {
-    // Result filter
-    if (resultFilter !== "all" && game.result !== resultFilter) return false;
-
-    // Search filter
+  // Filter games - first by search, then we'll filter by result separately for display
+  const searchFilteredGames = allGames.filter((game) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return game.white.username.toLowerCase().includes(query) || game.black.username.toLowerCase().includes(query);
     }
+    return true;
+  });
 
+  // Then apply result filter for display
+  const filteredGames = searchFilteredGames.filter((game) => {
+    if (resultFilter !== "all" && game.result !== resultFilter) return false;
     return true;
   });
 
@@ -133,155 +134,114 @@ export default function GamesPage() {
       {/* Page Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4">
         <h1 className="text-3xl font-bold text-white mb-2">My Games</h1>
-        <p className="text-sm text-neutral-400">
-          {activeSource === "chesscom" && user?.chesscomId && `Viewing games from Chess.com`}
-          {activeSource === "lichess" && user?.lichessId && `Viewing games from Lichess`}
-        </p>
       </div>
 
       {/* Stats and Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-4">
         {/* Profile Preview */}
-        {
-          <div className="mb-4">
-            {activeSource === "chesscom" && user?.chesscomId && (
-              <ProfilePreview
-                platform="chesscom"
-                avatar={chesscomProfile?.avatar}
-                username={chesscomProfile?.username || user.chesscomId}
-                name={chesscomProfile?.name}
-                country={chesscomProfile?.country}
-                league={chesscomProfile?.league}
-                url={chesscomProfile?.url}
-                loading={!chesscomProfile && isLoading}
-              />
-            )}
-            {activeSource === "lichess" && user?.lichessId && (
-              <ProfilePreview
-                platform="lichess"
-                username={lichessProfile?.username || user.lichessId}
-                name={lichessProfile?.name}
-                title={lichessProfile?.title}
-                rating={lichessProfile?.rating}
-                country={lichessProfile?.country}
-                url={lichessProfile?.url}
-                loading={!lichessProfile && isLoading}
-              />
-            )}
-          </div>
-        }
+        <div className="mb-3">
+          {activeSource === "chesscom" && user?.chesscomId && (
+            <ProfilePreview
+              platform="chesscom"
+              avatar={chesscomProfile?.avatar}
+              username={chesscomProfile?.username || user.chesscomId}
+              name={chesscomProfile?.name}
+              country={chesscomProfile?.country}
+              league={chesscomProfile?.league}
+              url={chesscomProfile?.url}
+              loading={!chesscomProfile && isLoading}
+              showPlayButton
+            />
+          )}
+          {activeSource === "lichess" && user?.lichessId && (
+            <ProfilePreview
+              platform="lichess"
+              username={lichessProfile?.username || user.lichessId}
+              name={lichessProfile?.name}
+              title={lichessProfile?.title}
+              rating={lichessProfile?.rating}
+              country={lichessProfile?.country}
+              url={lichessProfile?.url}
+              loading={!lichessProfile && isLoading}
+              showPlayButton
+            />
+          )}
+        </div>
 
-        {/* Stats Summary */}
-        {
-          <div className="mb-6 grid grid-cols-3 gap-3">
-            <div className="bg-neutral-900/60 border border-green-500/20 rounded-lg p-3">
-              <div className="flex items-center gap-1.5 text-xs text-green-400/70 font-medium mb-1">
-                <TrophyIcon className="w-3.5 h-3.5" />
-                <span>Wins</span>
-              </div>
-              <div className="text-lg md:text-2xl font-bold text-green-400">
-                {filteredGames.filter((g) => g.result === "win").length}
-              </div>
-            </div>
-            <div className="bg-neutral-900/60 border border-red-500/20 rounded-lg p-3">
-              <div className="flex items-center gap-1.5 text-xs text-red-400/70 font-medium mb-1">
-                <XIcon className="w-3.5 h-3.5" />
-                <span>Losses</span>
-              </div>
-              <div className="text-lg md:text-2xl font-bold text-red-400">
-                {filteredGames.filter((g) => g.result === "loss").length}
-              </div>
-            </div>
-            <div className="bg-neutral-900/60 border border-neutral-500/20 rounded-lg p-3">
-              <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-medium mb-1">
-                <MinusIcon className="w-3.5 h-3.5" />
-                <span>Draws</span>
-              </div>
-              <div className="text-lg md:text-2xl font-bold text-neutral-300">
-                {filteredGames.filter((g) => g.result === "draw").length}
-              </div>
-            </div>
-          </div>
-        }
+        {/* Source Dropdown and Search */}
+        <div className="flex gap-2 mb-4">
+          {user?.chesscomId && user?.lichessId && (
+            <select
+              value={activeSource}
+              onChange={(e) => setActiveSource(e.target.value as "chesscom" | "lichess")}
+              className="px-3 py-2 bg-neutral-800 text-white text-sm rounded-lg border border-neutral-700"
+            >
+              <option value="chesscom">Chess.com</option>
+              <option value="lichess">Lichess</option>
+            </select>
+          )}
+          <input
+            type="text"
+            placeholder="Search opponent..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 px-4 py-2 bg-neutral-900/50 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500"
+          />
+        </div>
 
-        <div className="flex flex-wrap gap-3 mb-6">
-          {/* Top Row: Source Dropdown and Search */}
-          <div className="flex flex-row gap-3">
-            {/* Source Dropdown */}
-            {user?.chesscomId && user?.lichessId && (
-              <div>
-                <select
-                  value={activeSource}
-                  onChange={(e) => {
-                    setActiveSource(e.target.value as "chesscom" | "lichess");
-                  }}
-                  className="w-full sm:w-auto px-4 py-2 bg-neutral-700 text-white rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-neutral-500 cursor-pointer"
-                >
-                  <option value="chesscom">Chess.com</option>
-                  <option value="lichess">Lichess</option>
-                </select>
-              </div>
-            )}
-
-            {/* Search */}
-            <div className="flex-1 sm:max-w-xs">
-              <input
-                type="text"
-                placeholder="Search opponent..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 bg-neutral-900/50 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500"
-              />
-            </div>
-          </div>
-
-          {/* Bottom Row: Result Filter */}
-          <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
-            <button
-              onClick={() => setResultFilter("all")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
-                resultFilter === "all"
-                  ? "bg-neutral-700 text-white"
-                  : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
-              }`}
-            >
-              <FilterIcon className="w-3.5 h-3.5" />
-              <span>All</span>
-            </button>
-            <button
-              onClick={() => setResultFilter("win")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
-                resultFilter === "win"
-                  ? "bg-neutral-700 text-white"
-                  : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
-              }`}
-            >
-              <TrophyIcon className="w-3.5 h-3.5" />
-              <span>Wins</span>
-            </button>
-            <button
-              onClick={() => setResultFilter("loss")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
-                resultFilter === "loss"
-                  ? "bg-neutral-700 text-white"
-                  : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
-              }`}
-            >
-              <XIcon className="w-3.5 h-3.5" />
-              <span>Losses</span>
-            </button>
-            <button
-              onClick={() => setResultFilter("draw")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
-                resultFilter === "draw"
-                  ? "bg-neutral-700 text-white"
-                  : "bg-neutral-900/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
-              }`}
-            >
-              <MinusIcon className="w-3.5 h-3.5" />
-              <span>Draws</span>
-            </button>
-          </div>
+        {/* Bottom Row: Result Filter */}
+        <div className="flex gap-2 overflow-x-auto mb-4">
+          <button
+            onClick={() => setResultFilter("all")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
+              resultFilter === "all"
+                ? "bg-neutral-700 text-white"
+                : "bg-neutral-900/50 border border-neutral-700/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
+            }`}
+          >
+            <span>All</span>
+            <span className="text-xs opacity-60">({searchFilteredGames.length})</span>
+          </button>
+          <button
+            onClick={() => setResultFilter("win")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
+              resultFilter === "win"
+                ? "bg-green-500/20 border border-green-500/30 text-green-400"
+                : "bg-neutral-900/50 border border-neutral-700/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
+            }`}
+          >
+            <TrophyIcon className="w-3.5 h-3.5" />
+            <span>Wins</span>
+            <span className="text-xs opacity-60">({searchFilteredGames.filter((g) => g.result === "win").length})</span>
+          </button>
+          <button
+            onClick={() => setResultFilter("loss")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
+              resultFilter === "loss"
+                ? "bg-red-500/20 border border-red-500/30 text-red-400"
+                : "bg-neutral-900/50 border border-neutral-700/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
+            }`}
+          >
+            <XIcon className="w-3.5 h-3.5" />
+            <span>Losses</span>
+            <span className="text-xs opacity-60">
+              ({searchFilteredGames.filter((g) => g.result === "loss").length})
+            </span>
+          </button>
+          <button
+            onClick={() => setResultFilter("draw")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
+              resultFilter === "draw"
+                ? "bg-neutral-500/20 border border-neutral-500/30 text-neutral-300"
+                : "bg-neutral-900/50 border border-neutral-700/50 text-neutral-400 hover:text-white hover:bg-neutral-800"
+            }`}
+          >
+            <HandshakeIcon className="w-3.5 h-3.5" />
+            <span>Draws</span>
+            <span className="text-xs opacity-60">
+              ({searchFilteredGames.filter((g) => g.result === "draw").length})
+            </span>
+          </button>
         </div>
 
         {/* Games Grid */}
