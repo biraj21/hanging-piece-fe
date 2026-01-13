@@ -19,6 +19,7 @@ interface ExplainOptions {
   annotationText?: string;
   engine?: Stockfish | null;
   depth?: number;
+  isAuthenticated?: boolean;
 }
 
 let cachedEngine: Stockfish | undefined;
@@ -38,6 +39,7 @@ export async function explain({
   annotationText,
   engine,
   depth = STOCKFISH_DEFAULT_DEPTH,
+  isAuthenticated = true,
 }: ExplainOptions): Promise<Explanation> {
   if (moveIndex < 0 || moveIndex >= moves.length) {
     throw new Error("Invalid move index.");
@@ -150,7 +152,7 @@ export async function explain({
     additionalContext: annotationText,
   };
 
-  const data = await backendApi.explainMove(body);
+  const data = await backendApi.explainMove(body, isAuthenticated);
 
   const explanation: Explanation = {
     explanation: data.explanation,

@@ -84,8 +84,9 @@ export const backendApi = {
   /**
    * Get AI explanation for a chess move
    */
-  async explainMove(payload: ExplainMovePayload): Promise<ExplainMoveResponse> {
-    const response = await fetch(`${env.VITE_API_BASE_URL}explain`, {
+  async explainMove(payload: ExplainMovePayload, isAuthenticated = true): Promise<ExplainMoveResponse> {
+    const endpoint = isAuthenticated ? "explain" : "explain/try";
+    const response = await fetch(`${env.VITE_API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

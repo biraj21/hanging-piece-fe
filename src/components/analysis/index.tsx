@@ -432,6 +432,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
           annotationText: annotationText,
           engine: engineRef.current,
           depth: stockfishDepth,
+          isAuthenticated: !!user,
         });
 
         setActiveExplanation({ moveIndex, explanation });
