@@ -206,7 +206,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
         const hash = generateGameHash(parsed.moves);
         setGameId(hash);
       }
-      toast.success("PGN parsed successfully");
 
       if (!user) {
         return;

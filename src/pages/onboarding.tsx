@@ -53,7 +53,7 @@ export default function OnboardingPage() {
     const canSubmit = hasChesscom || hasLichess;
 
     if (!canSubmit) {
-      setError("Please provide at least one valid chess platform username (Chess.com or Lichess)");
+      setError("Please provide at least one valid chess platform username");
       return;
     }
 
@@ -92,18 +92,21 @@ export default function OnboardingPage() {
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Connect Your Accounts</h1>
-          <p className="text-neutral-400 text-sm">Add your Chess.com or Lichess username to analyze your games</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Connect Your Chess Accounts</h1>
+          <p className="text-neutral-400 text-sm">Add your Chess.com and/or Lichess username to analyze your games</p>
         </div>
 
         {/* Onboarding Form Card */}
         <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-5">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Chess.com ID Input */}
             <div className="space-y-1.5">
-              <label htmlFor="chesscomId" className="block text-left text-white text-xs font-medium">
-                Chess.com Username
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="chesscomId" className="block text-left text-white text-xs font-medium">
+                  Chess.com Username
+                </label>
+                <span className="text-[10px] text-neutral-500">Optional</span>
+              </div>
               <input
                 id="chesscomId"
                 type="text"
@@ -144,11 +147,21 @@ export default function OnboardingPage() {
               )}
             </div>
 
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-neutral-700" />
+              <span className="text-xs text-neutral-500 whitespace-nowrap">add one or both</span>
+              <div className="flex-1 h-px bg-neutral-700" />
+            </div>
+
             {/* Lichess ID Input */}
             <div className="space-y-1.5">
-              <label htmlFor="lichessId" className="block text-left text-white text-xs font-medium">
-                Lichess Username
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="lichessId" className="block text-left text-white text-xs font-medium">
+                  Lichess Username
+                </label>
+                <span className="text-[10px] text-neutral-500">Optional</span>
+              </div>
               <input
                 id="lichessId"
                 type="text"
