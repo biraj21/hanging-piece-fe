@@ -23,6 +23,11 @@ interface ExplainOptions {
 
 let cachedEngine: Stockfish | undefined;
 
+export async function hasExplanationCached(gameId: string, moveIndex: number): Promise<boolean> {
+  const cached = await ExplanationCache.get({ gameId, moveIndex });
+  return cached !== null;
+}
+
 export async function explain({
   gameId,
   moves,

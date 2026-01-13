@@ -3,6 +3,7 @@ import { startingPosition, type Evaluation } from "chessops/pgn";
 import { parseUci } from "chessops/util";
 
 import { CONTINUATION_LENGTH, INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
+import { AnalysisCache } from "@/helpers/analysis-cache";
 import { getNagFromQuality } from "@/helpers/move-quality";
 import type { MoveQuality, ParsedGame, Variation } from "@/helpers/pgn";
 import { GameMove } from "@/helpers/pgn";
@@ -25,15 +26,25 @@ export type AnalysisCallbacks = {
  * @param game - Parsed game without analysis
  * @param depth - Search depth
  * @param callbacks - Progress callbacks
+ * @param gameId - Game identifier for caching
  * @returns New ParsedGame with evaluations and NAGs
  */
 export async function analyzeGame(
   game: ParsedGame,
   depth: number = STOCKFISH_DEFAULT_DEPTH,
   callbacks: AnalysisCallbacks = {},
-  engine?: Stockfish | null
+  engine?: Stockfish | null,
+  gameId?: string
 ): Promise<ParsedGame> {
   const { onProgress } = callbacks;
+
+  if (gameId) {
+    const cached = await AnalysisCache.get({ gameId, depth });
+    if (cached) {
+      console.debug("Using cached analysis for", gameId, "at depth", depth);
+      return cached;
+    }
+  }
 
   const startTime = performance.now();
 
@@ -212,11 +223,16 @@ export async function analyzeGame(
     engine.terminate();
   }
 
-  // Return new ParsedGame with analyzed moves
-  return {
+  const result: ParsedGame = {
     headers: game.headers,
     moves: analyzedMoves,
   };
+
+  if (gameId) {
+    AnalysisCache.store({ gameId, depth }, result);
+  }
+
+  return result;
 }
 
 // ============================================================================

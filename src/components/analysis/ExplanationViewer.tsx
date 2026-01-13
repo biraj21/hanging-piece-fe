@@ -1,4 +1,4 @@
-import { GraduationCapIcon, RotateCcwIcon } from "lucide-react";
+import { EyeIcon, GraduationCapIcon, RotateCcwIcon } from "lucide-react";
 import React, { useState } from "react";
 
 import { getMoveQualityDisplay } from "@/helpers/move-quality";
@@ -62,7 +62,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
         </div>
         <div className="flex-1">
           <h3 className="text-xs font-semibold text-neutral-200">Chess Coach (beta)</h3>
-          <p className="text-[10px] text-neutral-400">Beta: Explanations may contain inaccuracies</p>
+          <p className="text-[10px] text-neutral-400">Explanations may contain inaccuracies</p>
         </div>
       </div>
 
@@ -111,10 +111,13 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
             <div className="bg-neutral-800/50 border border-neutral-600/50 rounded-lg overflow-hidden">
               <div className="w-full px-3 py-2.5 bg-neutral-700/40 border-b border-neutral-600/50">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                  <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wide">
-                    {`What goes wrong for ${playerLabel}`}
-                  </h4>
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-400"></div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wide">
+                      {`What goes wrong for ${playerLabel}`}
+                    </h4>
+                    <p className="text-[10px] text-neutral-500 mt-1 leading-none">Click a move to visualize</p>
+                  </div>
                 </div>
               </div>
 
@@ -144,10 +147,13 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
             <div className="bg-neutral-800/50 border border-neutral-600/50 rounded-lg overflow-hidden">
               <div className="w-full px-3 py-2.5 bg-neutral-700/40 border-b border-neutral-600/50">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
-                    {`What ${playerLabel} should have done`}
-                  </h4>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+                      {`What ${playerLabel} should have done`}
+                    </h4>
+                    <p className="text-[10px] text-neutral-500 mt-1 leading-none">Click a move to visualize</p>
+                  </div>
                 </div>
               </div>
 
@@ -213,13 +219,21 @@ const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, onClic
   return (
     <button
       onClick={onClick}
-      className={`w-full flex flex-col text-sm px-3 py-2 rounded ${baseClasses} text-left cursor-pointer ${selectedClasses}`}
+      className={`group w-full flex items-start gap-2 text-sm px-3 py-2 rounded ${baseClasses} text-left cursor-pointer ${selectedClasses}`}
       title="Click to visualize this position"
     >
-      <span className={`${moveNotationClass} font-mono shrink-0 min-w-[70px] text-sm`}>
-        {isWhite ? `${moveNum}. ${cont.move}` : `${moveNum}... ${cont.move}`}
-      </span>
-      <p className="text-xs text-neutral-400 leading-relaxed flex-1 pt-0.5">{cont.reason}</p>
+      <div className="flex-1">
+        <span className={`${moveNotationClass} font-mono shrink-0 min-w-[70px] text-sm`}>
+          {isWhite ? `${moveNum}. ${cont.move}` : `${moveNum}... ${cont.move}`}
+        </span>
+        <p className="text-xs text-neutral-400 leading-relaxed flex-1 pt-0.5">{cont.reason}</p>
+      </div>
+      <EyeIcon
+        size={14}
+        className={`mt-0.5 shrink-0 transition-opacity ${
+          isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-60"
+        } ${isBest ? "text-emerald-400" : "text-red-400"}`}
+      />
     </button>
   );
 };

@@ -19,7 +19,8 @@ import { toast } from "sonner";
 import { ChessBoard, type BoardArrow } from "@/components/ChessBoard";
 import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
-import { explain } from "@/helpers/explain";
+import { AnalysisCache } from "@/helpers/analysis-cache";
+import { explain, hasExplanationCached } from "@/helpers/explain";
 import { analyzeGame, type AnalysisProgress } from "@/helpers/game-analyzer";
 import { hasAnalysis, isMateEval, parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
 import { isCentipawnEval, Stockfish } from "@/helpers/stockfish";
@@ -260,7 +261,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
             setCurrentMoveIndex(progress.currentMoveIndex);
           },
         },
-        engineRef.current
+        engineRef.current,
+        gameId || undefined
       );
 
       posthog.capture("game_analyzed", {
@@ -294,6 +296,21 @@ export const Analysis: React.FC<AnalysisProps> = ({
       setActiveTab("advanced");
     }
   }, [pgnProp]);
+
+  // Check for cached analysis when gameId or depth changes
+  useEffect(() => {
+    if (!gameId || !game || gameHasAnalysis) {
+      return;
+    }
+
+    AnalysisCache.get({ gameId, depth: stockfishDepth }).then((cached) => {
+      if (cached) {
+        console.debug("Auto-loading cached analysis for", gameId, "at depth", stockfishDepth);
+        setGame(cached);
+        setGameHasAnalysis(true);
+      }
+    });
+  }, [gameId, stockfishDepth, game, gameHasAnalysis]);
 
   const handlePGNSubmit = () => {
     if (pgn.trim()) {
@@ -386,6 +403,17 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const handleExplanation = useCallback(
     async (moveIndex: number, annotationText: string) => {
       try {
+        // Check if user needs to login (not logged in, used free explanation for this game, and not cached)
+        if (!user) {
+          const isCached = await hasExplanationCached(gameId, moveIndex);
+          const hasUsedFreeExplanation = localStorage.getItem(`free-explanation-used:${gameId}`) === "true";
+
+          if (!isCached && hasUsedFreeExplanation) {
+            setShowLoginModal(true);
+            return;
+          }
+        }
+
         setCurrentMoveIndex(moveIndex);
 
         // reset all preview states
@@ -411,16 +439,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setLoadingExplanation(false);
         setActiveTab("coach"); // auto-switch to AI Coach tab
 
-        const lastShownTime = localStorage.getItem("login-modal-last-shown");
-        const COOLDOWN_PERIOD = 15 * 60 * 1000; // 15 minutes
-        if (
-          !user &&
-          (!lastShownTime || (lastShownTime && Date.now() - parseInt(lastShownTime, 10) > COOLDOWN_PERIOD))
-        ) {
-          setTimeout(() => {
-            setShowLoginModal(true);
-            localStorage.setItem("login-modal-last-shown", Date.now().toString());
-          }, 10_000);
+        // Mark that user has used their free explanation for this game
+        if (!user) {
+          localStorage.setItem(`free-explanation-used:${gameId}`, "true");
         }
       } catch (err) {
         console.error("Failed to generate explanation:", err);
