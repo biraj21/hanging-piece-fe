@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router";
 
 import { ProtectedRoutes, StrictlyPublicRoutes } from "@/components/route-protection";
 import { DashboardLayout } from "@/layouts/dashboard";
+import AboutPage from "@/pages/about";
 import AnalysisPage from "@/pages/analysis";
 import DashboardPage from "@/pages/dashboard";
 import GamePage from "@/pages/game";
@@ -19,6 +20,7 @@ export default function AppRouter() {
   return (
     <Routes>
       <Route path={ROUTES.INDEX} element={<IndexPage />} />
+      <Route path={ROUTES.ABOUT} element={<AboutPage />} />
       <Route path={ROUTES.PRIVACY} element={<PrivacyPage />} />
       <Route path={ROUTES.TERMS} element={<TermsPage />} />
 

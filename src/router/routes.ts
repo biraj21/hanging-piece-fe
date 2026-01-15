@@ -21,4 +21,5 @@ export const ROUTES = {
 
   PRIVACY: "/privacy",
   TERMS: "/terms",
+  ABOUT: "/about",
 };

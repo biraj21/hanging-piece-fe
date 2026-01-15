@@ -1,5 +1,6 @@
-import { ChessKnightIcon, Crown, Handshake, InfoIcon, SearchIcon } from "lucide-react";
 import { useNavigate } from "react-router";
+
+import { ChessKnightIcon, Crown, Handshake, InfoIcon, SearchIcon } from "lucide-react";
 
 import { MoveQualityIcon } from "@/components/analysis/MoveQualityIcon";
 import { Loader } from "@/components/Loader";
@@ -103,6 +104,23 @@ export default function IndexPage() {
                 <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">Learn & Improve</h3>
                 <p className="text-[10px] sm:text-xs text-neutral-400 leading-snug">Stop repeating the same mistakes</p>
               </div>
+            </div>
+          </section>
+
+          {/* Simple About */}
+          <section className="mb-8 sm:mb-12">
+            <div className="max-w-2xl mx-auto text-center">
+              <p className="text-sm sm:text-base text-neutral-300 leading-relaxed mb-3">
+                Hanging Piece is an AI-powered chess coach that helps you understand{" "}
+                <span className="text-emerald-400">WHY</span> you make mistakes, so you can stop repeating them and
+                actually improve.
+              </p>
+              <a
+                href={ROUTES.ABOUT}
+                className="inline-block text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+              >
+                Learn more about us →
+              </a>
             </div>
           </section>
         </div>
