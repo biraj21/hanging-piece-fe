@@ -20,29 +20,104 @@ export default function AboutPage() {
       {/* Main Content */}
       <main className="flex-1 px-4 sm:px-6 pb-6 sm:pb-8">
         <div className="max-w-4xl mx-auto">
-          {/* Business Description */}
+          {/* Company Overview */}
           <section className="mb-12">
             <div className="max-w-2xl mx-auto text-center">
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6">About Hanging Piece</h1>
-              <p className="text-base sm:text-lg text-neutral-300 leading-relaxed mb-6">
-                Hanging Piece is an AI-powered chess coach that explains{" "}
-                <span className="text-emerald-400 font-medium">why</span> you make mistakes. Most chess players plateau
-                not because they lack tactics, but because they never truly understand the reasoning behind their
-                blunders. We help chess enthusiasts systematically improve by providing contextual, human-readable
-                explanations powered by world-class Stockfish analysis.
-              </p>
-              <p className="text-base sm:text-lg text-neutral-300 leading-relaxed">
-                Whether you're a 1000 rated player struggling with opening principles or a 1600 rated player trying to
-                break through a plateau, Hanging Piece gives you the insights you need to stop repeating the same
-                mistakes and start improving.
-              </p>
+
+              {/* tl;dr FIRST */}
+              <div className="mb-10">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white mb-4">Company Overview</h2>
+                <p className="text-base sm:text-lg text-neutral-300 leading-relaxed">
+                  Hanging Piece is a consumer AI / edtech startup focused on helping chess players improve by explaining
+                  the reasoning behind their mistakes using Stockfish-backed analysis.
+                </p>
+              </div>
+
+              {/* Product Status */}
+              <div className="mb-10">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white mb-4">Product Status</h2>
+                <div className="inline-flex items-center gap-2 bg-emerald-600/20 border border-emerald-500/50 px-3 py-1 rounded-full">
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                  <span className="text-emerald-400 font-medium">Public Beta</span>
+                </div>
+                <p className="text-sm text-neutral-400 mt-2">Under active development</p>
+              </div>
+
+              {/* Detailed Product Description */}
+              <div className="pt-8 border-t border-neutral-700/50">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white text-center mb-6">
+                  What Hanging Piece Does
+                </h2>
+                <p className="text-base sm:text-lg text-neutral-300 leading-relaxed mb-6">
+                  Hanging Piece is an AI-powered chess coach that explains{" "}
+                  <span className="text-emerald-400 font-medium">WHY</span> you make mistakes. Most chess players
+                  plateau not because they lack tactics, but because they never truly understand the reasoning behind
+                  their blunders. We help chess enthusiasts systematically improve by providing contextual,
+                  human-readable explanations powered by world-class Stockfish analysis.
+                </p>
+                <p className="text-base sm:text-lg text-neutral-300 leading-relaxed">
+                  Whether you're a 1000 rated player struggling with opening principles or a 1600 rated player trying to
+                  break through a plateau, Hanging Piece gives you the insights you need to stop repeating the same
+                  mistakes and start improving.
+                </p>
+              </div>
             </div>
           </section>
 
-          {/* Team Section */}
+          {/* Key Features */}
           <section className="mb-12">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-6">About the Founder</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-white text-center mb-6">Key Features</h2>
+              <div className="space-y-4">
+                <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-lg p-4">
+                  <h3 className="text-white font-medium mb-2">Upload and analyze chess games</h3>
+                  <p className="text-sm text-neutral-400">Support for PGN files and integration with chess platforms</p>
+                </div>
+                <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-lg p-4">
+                  <h3 className="text-white font-medium mb-2">AI-generated, human-readable explanations</h3>
+                  <p className="text-sm text-neutral-400">Understand the reasoning behind mistakes in plain language</p>
+                </div>
+                <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-lg p-4">
+                  <h3 className="text-white font-medium mb-2">Engine-backed analysis powered by Stockfish</h3>
+                  <p className="text-sm text-neutral-400">World-class engine evaluation for accuracy</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Product Demo */}
+          <section className="mb-12">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-xl sm:text-2xl font-semibold text-white text-center mb-6">Product Demo</h2>
+              <p className="text-base text-neutral-300 text-center mb-6">
+                Watch a short demo of Hanging Piece in action below.
+              </p>
+              <div className="aspect-video rounded-lg overflow-hidden bg-neutral-900 shadow-2xl">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube.com/embed/E8fj1dmj4a0?si=2ZDZsJAv7_-nOwMQ"
+                  title="Hanging Piece Product Demo"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Team */}
+          <section className="mb-12">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-6">Team</h2>
+
+              {/* Compliance line (non-visual) */}
+              <p className="sr-only">
+                Hanging Piece is an early-stage startup applying for Google Cloud Startup Credits.
+              </p>
+
               <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-lg p-6">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                   <div className="flex-1 text-center sm:text-left">
@@ -83,11 +158,15 @@ export default function AboutPage() {
                     </div>
                   </div>
                 </div>
+
+                <p className="text-center text-neutral-300 mt-6 font-medium">
+                  Hanging Piece is built and operated by a <span className="text-emerald-400">solo founder</span>.
+                </p>
               </div>
             </div>
           </section>
 
-          {/* Contact Section */}
+          {/* Contact */}
           <section className="mb-12">
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">Get in Touch</h2>
