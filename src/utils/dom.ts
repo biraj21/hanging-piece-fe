@@ -7,7 +7,9 @@ export function scrollIntoViewCentered(el: HTMLElement) {
     parent = parent.parentElement;
   }
 
-  if (!parent) return;
+  if (!parent) {
+    return;
+  }
 
   const parentRect = parent.getBoundingClientRect();
   const elRect = el.getBoundingClientRect();

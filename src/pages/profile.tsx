@@ -189,6 +189,7 @@ export default function ProfilePage() {
                   country={currentChesscomProfile.country}
                   league={currentChesscomProfile.league}
                   url={currentChesscomProfile.url}
+                  showPlayButton
                 />
               </div>
             ) : (
@@ -208,6 +209,7 @@ export default function ProfilePage() {
                   rating={currentLichessProfile.rating}
                   country={currentLichessProfile.country}
                   url={currentLichessProfile.url}
+                  showPlayButton
                 />
               </div>
             ) : (

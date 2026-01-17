@@ -36,7 +36,6 @@ import { ExplanationViewer } from "./ExplanationViewer";
 import { LoginModal } from "./LoginModal";
 import { MoveControls } from "./MoveControls";
 import { MoveItem } from "./MoveItem";
-import { TellMeWhyButton } from "./TellMeWhy";
 
 interface AnalysisProps {
   gameId?: string;
@@ -85,7 +84,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
   // Explanation state
   const [loadingExplanation, setLoadingExplanation] = useState<false | number>(false);
   const [activeExplanation, setActiveExplanation] = useState<{ moveIndex: number; explanation: Explanation } | null>(
-    null
+    null,
   );
 
   // Analysis state
@@ -261,7 +260,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
           },
         },
         engineRef.current,
-        gameId || undefined
+        gameId || undefined,
       );
 
       posthog.capture("game_analyzed", {
@@ -385,7 +384,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setPreviewEvaluation(null);
       }
     },
-    [game, currentMoveIndex, activeExplanation]
+    [game, currentMoveIndex, activeExplanation],
   );
 
   const goToNext = useCallback(() => {
@@ -421,6 +420,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setPreviewLastMove(undefined);
         setPreviewEvaluation(null);
         setArrows([]);
+        setActiveTab("coach"); // auto-switch to AI Coach tab to show loading state
 
         const explanation = await explain({
           gameId: gameId,
@@ -445,12 +445,14 @@ export const Analysis: React.FC<AnalysisProps> = ({
         }
       } catch (err) {
         console.error("Failed to generate explanation:", err);
+        toast.error("Failed to generate explanation. Please try again.");
+        setActiveTab("game");
         throw err;
       } finally {
         setLoadingExplanation(false);
       }
     },
-    [gameId, game, userColor, opening, eco, stockfishDepth, user]
+    [gameId, game, userColor, opening, eco, stockfishDepth, user],
   );
 
   useEffect(() => {
@@ -506,9 +508,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     setShowSummaryModal(false);
     const badMove = findFirstBadMove();
     if (badMove) {
-      handleExplanation(badMove.moveIndex, badMove.annotationText).catch(() => {
-        toast.error("Failed to generate explanation. Please try again.");
-      });
+      handleExplanation(badMove.moveIndex, badMove.annotationText);
     }
   }, [findFirstBadMove, handleExplanation]);
 
@@ -746,7 +746,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   {
                     "text-white border-emerald-500": activeTab === tab.value,
                     "text-neutral-400 border-transparent hover:text-neutral-300": activeTab !== tab.value,
-                  }
+                  },
                 )}
               >
                 {!tab.isLoading && <tab.Icon className="w-3 h-3 lg:w-4 lg:h-4" />}
@@ -758,498 +758,477 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
           {/* Tab Content */}
           <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-xl p-4 lg:p-5 shadow-lg shadow-black/20 flex flex-col flex-1 overflow-y-auto">
-            {activeTab === "game" ? (
-              <>
-                {moves.length === 0 && (
-                  <div className="text-neutral-500 text-center py-12">
-                    <p className="text-sm opacity-60">Load a PGN from Advanced tab to see moves</p>
-                  </div>
-                )}
-                {analysisProgress && (
-                  <div className="flex flex-col items-center justify-center py-4 space-y-4 mb-4">
-                    <div className="w-full max-w-md">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-neutral-400">Analyzing game...</span>
-                        <span className="text-sm text-neutral-400">
-                          {`${analysisProgress.currentMoveIndex + 1} / ${analysisProgress.totalMoves}`}
-                        </span>
-                      </div>
-                      <div className="w-full bg-neutral-700 rounded-full h-2">
-                        <div
-                          className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
-                          style={{
-                            width: `${((analysisProgress.currentMoveIndex + 1) / analysisProgress.totalMoves) * 100}%`,
-                          }}
-                        />
-                      </div>
+            {/* Game Tab */}
+            <div className={clsx({ hidden: activeTab !== "game" })}>
+              {moves.length === 0 && (
+                <div className="text-neutral-500 text-center py-12">
+                  <p className="text-sm opacity-60">Load a PGN from Advanced tab to see moves</p>
+                </div>
+              )}
+              {analysisProgress && (
+                <div className="flex flex-col items-center justify-center py-4 space-y-4 mb-4">
+                  <div className="w-full max-w-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-neutral-400">Analyzing game...</span>
+                      <span className="text-sm text-neutral-400">
+                        {`${analysisProgress.currentMoveIndex + 1} / ${analysisProgress.totalMoves}`}
+                      </span>
+                    </div>
+                    <div className="w-full bg-neutral-700 rounded-full h-2">
+                      <div
+                        className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${((analysisProgress.currentMoveIndex + 1) / analysisProgress.totalMoves) * 100}%`,
+                        }}
+                      />
                     </div>
                   </div>
-                )}
-                {moves.length > 0 && !gameHasAnalysis && !analysisProgress && (
-                  <div className="flex flex-col items-center justify-center py-4 space-y-4 mb-4">
-                    <div className="text-center">
-                      <p className="text-sm text-neutral-400 text-center max-w-md">
-                        This game does not have analysis yet.
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleStartReview}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2"
-                    >
-                      <SearchIcon className="w-4 h-4" />
-                      Start Review
-                    </button>
+                </div>
+              )}
+              {moves.length > 0 && !gameHasAnalysis && !analysisProgress && (
+                <div className="flex flex-col items-center justify-center py-4 space-y-4 mb-4">
+                  <div className="text-center">
+                    <p className="text-sm text-neutral-400 text-center max-w-md">
+                      This game does not have analysis yet.
+                    </p>
                   </div>
-                )}
-                {moves.length > 0 && (
-                  <>
-                    <div className="space-y-1.5 flex-1 min-h-0 overflow-y-auto">
-                      {(() => {
-                        const rows: React.ReactNode[] = [];
-                        for (let i = 0; i < moves.length; ) {
-                          // Capture current indices to avoid closure issues
-                          const whiteIndex = i;
-                          const blackIndex = i + 1;
+                  <button
+                    onClick={handleStartReview}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2"
+                  >
+                    <SearchIcon className="w-4 h-4" />
+                    Start Review
+                  </button>
+                </div>
+              )}
+              {moves.length > 0 && (
+                <div className="space-y-1.5 flex-1">
+                  {(() => {
+                    const rows: React.ReactNode[] = [];
+                    for (let i = 0; i < moves.length; ) {
+                      // Capture current indices to avoid closure issues
+                      const whiteIndex = i;
+                      const blackIndex = i + 1;
 
-                          const isWhite = i % 2 === 0;
-                          const moveNumber = Math.floor(i / 2) + 1;
-                          const move = moves[i];
-                          const annotationType = move.getQuality();
-                          const bestLine = move.variations?.[0];
-                          const hasAnnotation = !!annotationType && !!bestLine?.length;
-                          const hasSimpleAnnotation = !hasAnnotation && move.textComments.length > 0;
+                      const isWhite = i % 2 === 0;
+                      const moveNumber = Math.floor(i / 2) + 1;
+                      const move = moves[i];
+                      const annotationType = move.getQuality();
+                      const bestLine = move.variations?.[0];
+                      const hasAnnotation = !!annotationType && !!bestLine?.length;
+                      const hasSimpleAnnotation = !hasAnnotation && move.textComments.length > 0;
 
-                          if (isWhite) {
-                            // White's move
-                            const blackMove = moves[blackIndex];
-                            const blackAnnotationType = blackMove ? blackMove.getQuality() : null;
-                            const blackBestLine = blackMove?.variations?.[0];
-                            const blackHasAnnotation = !!blackAnnotationType && !!blackBestLine?.length;
-                            const blackHasSimpleAnnotation =
-                              !blackHasAnnotation && blackMove?.textComments.length
-                                ? blackMove.textComments.length > 0
-                                : false;
+                      if (isWhite) {
+                        // White's move
+                        const blackMove = moves[blackIndex];
+                        const blackAnnotationType = blackMove ? blackMove.getQuality() : null;
+                        const blackBestLine = blackMove?.variations?.[0];
+                        const blackHasAnnotation = !!blackAnnotationType && !!blackBestLine?.length;
+                        const blackHasSimpleAnnotation =
+                          !blackHasAnnotation && blackMove?.textComments.length
+                            ? blackMove.textComments.length > 0
+                            : false;
 
-                            if (hasAnnotation) {
-                              // Full annotation with best line
-                              // White has annotation: show white alone, then comment
-                              rows.push(
-                                <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
-                                  <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
-                                    {moveNumber}.
-                                  </span>
-                                  <MoveItem
-                                    key={`move-${whiteIndex}`}
-                                    move={move}
-                                    index={whiteIndex}
-                                    isSelected={whiteIndex === currentMoveIndex}
-                                    onClick={handleMoveClick}
-                                    className="rounded-md"
-                                  />
-                                  <div className="flex-1 px-2 py-1" />
-                                </div>
-                              );
-                              // Annotation comment with best line
-                              rows.push(
-                                <AnnotationBlock
-                                  key={`ann-${whiteIndex}`}
-                                  moves={moves}
-                                  moveIndex={whiteIndex}
-                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== whiteIndex}
-                                  explanationLoading={loadingExplanation === whiteIndex}
-                                  explain={handleExplanation}
+                        if (hasAnnotation) {
+                          // Full annotation with best line
+                          // White has annotation: show white alone, then comment
+                          rows.push(
+                            <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
+                              <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
+                                {moveNumber}.
+                              </span>
+                              <MoveItem
+                                key={`move-${whiteIndex}`}
+                                move={move}
+                                index={whiteIndex}
+                                isSelected={whiteIndex === currentMoveIndex}
+                                onClick={handleMoveClick}
+                                className="rounded-md"
+                              />
+                              <div className="flex-1 px-2 py-1" />
+                            </div>,
+                          );
+                          // Annotation comment with best line
+                          rows.push(
+                            <AnnotationBlock
+                              key={`ann-${whiteIndex}`}
+                              moves={moves}
+                              moveIndex={whiteIndex}
+                              explainDisabled={loadingExplanation !== false && loadingExplanation !== whiteIndex}
+                              explanationLoading={loadingExplanation === whiteIndex}
+                              explain={handleExplanation}
+                            />,
+                          );
+                          i++;
+
+                          // Now show black's move on continuation row: ... | black
+                          if (blackMove) {
+                            rows.push(
+                              <div key={`row-${blackIndex}`} className="flex gap-1.5 items-stretch">
+                                <span className="text-neutral-500 text-xs sm:text-sm w-6 shrink-0 flex items-center justify-center opacity-60">
+                                  ...
+                                </span>
+                                <div className="flex-1 px-2 py-1" />
+                                <MoveItem
+                                  key={`move-${blackIndex}`}
+                                  move={blackMove}
+                                  index={blackIndex}
+                                  isSelected={blackIndex === currentMoveIndex}
+                                  onClick={handleMoveClick}
                                 />
-                              );
-                              i++;
-
-                              // Now show black's move on continuation row: ... | black
-                              if (blackMove) {
-                                rows.push(
-                                  <div key={`row-${blackIndex}`} className="flex gap-1.5 items-stretch">
-                                    <span className="text-neutral-500 text-xs sm:text-sm w-6 shrink-0 flex items-center justify-center opacity-60">
-                                      ...
-                                    </span>
-                                    <div className="flex-1 px-2 py-1" />
-                                    <MoveItem
-                                      key={`move-${blackIndex}`}
-                                      move={blackMove}
-                                      index={blackIndex}
-                                      isSelected={blackIndex === currentMoveIndex}
-                                      onClick={handleMoveClick}
-                                    />
-                                  </div>
-                                );
-                                if (blackHasAnnotation) {
-                                  rows.push(
-                                    <AnnotationBlock
-                                      key={`ann-${blackIndex}`}
-                                      moves={moves}
-                                      moveIndex={blackIndex}
-                                      explainDisabled={
-                                        loadingExplanation !== false && loadingExplanation !== blackIndex
-                                      }
-                                      explanationLoading={loadingExplanation === blackIndex}
-                                      explain={handleExplanation}
-                                    />
-                                  );
-                                } else if (blackHasSimpleAnnotation) {
-                                  rows.push(
-                                    <AnnotationBlock
-                                      key={`ann-${blackIndex}`}
-                                      moves={moves}
-                                      moveIndex={blackIndex}
-                                      isSimple
-                                      explainDisabled={
-                                        loadingExplanation !== false && loadingExplanation !== blackIndex
-                                      }
-                                      explanationLoading={loadingExplanation === blackIndex}
-                                      explain={handleExplanation}
-                                    />
-                                  );
-                                }
-                                i++;
-                              }
-                            } else if (hasSimpleAnnotation) {
-                              // Simple annotation without best line (e.g., "Black resigns." or opening name)
-                              rows.push(
-                                <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
-                                  <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
-                                    {moveNumber}.
-                                  </span>
-                                  <MoveItem
-                                    move={move}
-                                    index={whiteIndex}
-                                    isSelected={whiteIndex === currentMoveIndex}
-                                    onClick={handleMoveClick}
-                                    className="rounded-md"
-                                  />
-                                  <div className="flex-1 px-2 py-1" />
-                                </div>
-                              );
-                              // Simple annotation comment
+                              </div>,
+                            );
+                            if (blackHasAnnotation) {
                               rows.push(
                                 <AnnotationBlock
-                                  key={`ann-${whiteIndex}`}
+                                  key={`ann-${blackIndex}`}
                                   moves={moves}
-                                  moveIndex={whiteIndex}
+                                  moveIndex={blackIndex}
+                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
+                                  explanationLoading={loadingExplanation === blackIndex}
+                                  explain={handleExplanation}
+                                />,
+                              );
+                            } else if (blackHasSimpleAnnotation) {
+                              rows.push(
+                                <AnnotationBlock
+                                  key={`ann-${blackIndex}`}
+                                  moves={moves}
+                                  moveIndex={blackIndex}
                                   isSimple
-                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== whiteIndex}
-                                  explanationLoading={loadingExplanation === whiteIndex}
+                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
+                                  explanationLoading={loadingExplanation === blackIndex}
                                   explain={handleExplanation}
-                                />
+                                />,
                               );
-                              i++;
-
-                              // Now show black's move on continuation row: ... | black
-                              if (blackMove) {
-                                rows.push(
-                                  <div key={`row-${blackIndex}`} className="flex gap-1.5 items-stretch">
-                                    <span className="text-neutral-500 text-xs sm:text-sm w-6 shrink-0 flex items-center justify-center opacity-60">
-                                      ...
-                                    </span>
-                                    <div className="flex-1 px-2 py-1" />
-                                    <MoveItem
-                                      move={blackMove}
-                                      index={blackIndex}
-                                      isSelected={blackIndex === currentMoveIndex}
-                                      onClick={handleMoveClick}
-                                    />
-                                  </div>
-                                );
-                                if (blackHasAnnotation) {
-                                  rows.push(
-                                    <AnnotationBlock
-                                      key={`ann-${blackIndex}`}
-                                      moves={moves}
-                                      moveIndex={blackIndex}
-                                      explainDisabled={
-                                        loadingExplanation !== false && loadingExplanation !== blackIndex
-                                      }
-                                      explanationLoading={loadingExplanation === blackIndex}
-                                      explain={handleExplanation}
-                                    />
-                                  );
-                                } else if (blackHasSimpleAnnotation) {
-                                  rows.push(
-                                    <AnnotationBlock
-                                      key={`ann-${blackIndex}`}
-                                      moves={moves}
-                                      moveIndex={blackIndex}
-                                      isSimple
-                                      explainDisabled={
-                                        loadingExplanation !== false && loadingExplanation !== blackIndex
-                                      }
-                                      explanationLoading={loadingExplanation === blackIndex}
-                                      explain={handleExplanation}
-                                    />
-                                  );
-                                }
-                                i++;
-                              }
-                            } else if (blackHasAnnotation || blackHasSimpleAnnotation) {
-                              // White has no annotation but black has annotation (full or simple): show white | black then annotation
-                              rows.push(
-                                <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
-                                  <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
-                                    {moveNumber}.
-                                  </span>
-                                  <MoveItem
-                                    move={move}
-                                    index={whiteIndex}
-                                    isSelected={whiteIndex === currentMoveIndex}
-                                    onClick={handleMoveClick}
-                                    className="rounded-md"
-                                  />
-                                  <MoveItem
-                                    move={blackMove!}
-                                    index={blackIndex}
-                                    isSelected={blackIndex === currentMoveIndex}
-                                    onClick={handleMoveClick}
-                                  />
-                                </div>
-                              );
-                              i++;
-
-                              // Black's annotation
-                              if (blackHasAnnotation) {
-                                rows.push(
-                                  <AnnotationBlock
-                                    key={`ann-${blackIndex}`}
-                                    moves={moves}
-                                    moveIndex={blackIndex}
-                                    explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
-                                    explanationLoading={loadingExplanation === blackIndex}
-                                    explain={handleExplanation}
-                                  />
-                                );
-                              } else if (blackHasSimpleAnnotation) {
-                                rows.push(
-                                  <AnnotationBlock
-                                    key={`ann-${blackIndex}`}
-                                    moves={moves}
-                                    moveIndex={blackIndex}
-                                    isSimple
-                                    explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
-                                    explanationLoading={loadingExplanation === blackIndex}
-                                    explain={handleExplanation}
-                                  />
-                                );
-                              }
-                              i++;
-                            } else {
-                              // Neither has annotation: show both moves together
-                              rows.push(
-                                <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
-                                  <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
-                                    {moveNumber}.
-                                  </span>
-                                  <MoveItem
-                                    move={move}
-                                    index={whiteIndex}
-                                    isSelected={whiteIndex === currentMoveIndex}
-                                    onClick={handleMoveClick}
-                                    className="rounded-md"
-                                  />
-                                  {blackMove ? (
-                                    <MoveItem
-                                      move={blackMove}
-                                      index={blackIndex}
-                                      isSelected={blackIndex === currentMoveIndex}
-                                      onClick={handleMoveClick}
-                                    />
-                                  ) : (
-                                    <div className="flex-1 px-2 py-1" />
-                                  )}
-                                </div>
-                              );
-                              i++;
-                              if (blackMove) i++;
                             }
-                          } else {
-                            // Shouldn't happen in normal flow, but handle edge case
                             i++;
                           }
-                        }
+                        } else if (hasSimpleAnnotation) {
+                          // Simple annotation without best line (e.g., "Black resigns." or opening name)
+                          rows.push(
+                            <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
+                              <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
+                                {moveNumber}.
+                              </span>
+                              <MoveItem
+                                move={move}
+                                index={whiteIndex}
+                                isSelected={whiteIndex === currentMoveIndex}
+                                onClick={handleMoveClick}
+                                className="rounded-md"
+                              />
+                              <div className="flex-1 px-2 py-1" />
+                            </div>,
+                          );
+                          // Simple annotation comment
+                          rows.push(
+                            <AnnotationBlock
+                              key={`ann-${whiteIndex}`}
+                              moves={moves}
+                              moveIndex={whiteIndex}
+                              isSimple
+                              explainDisabled={loadingExplanation !== false && loadingExplanation !== whiteIndex}
+                              explanationLoading={loadingExplanation === whiteIndex}
+                              explain={handleExplanation}
+                            />,
+                          );
+                          i++;
 
-                        return rows;
-                      })()}
-                    </div>
-                  </>
-                )}
-              </>
-            ) : activeTab === "coach" ? (
-              <>
-                {activeExplanation && (
-                  <ExplanationViewer
-                    move={moves[activeExplanation.moveIndex]}
-                    explanation={activeExplanation.explanation}
-                    userColor={userColor}
-                    onVisualize={handleVisualizeMove}
-                    onNavigateToOriginalMove={handleNavigateToOriginalMove}
-                  />
-                )}
-                {!activeExplanation && (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="text-neutral-400 leading-relaxed text-center flex items-center justify-center flex-wrap">
-                      <span>Click the &nbsp;</span> <TellMeWhyButton onClick={() => setActiveTab("game")} />{" "}
-                      <span>&nbsp;on any of your mistakes to get started!</span>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : activeTab === "summary" ? (
-              <>
-                {/* Game Summary */}
-                {game && (
-                  <div className="space-y-6">
-                    {/* Game Info */}
-                    <div>
-                      <div className="space-y-2">
-                        {event && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-20">Event:</span>
-                            <span className="text-sm text-white">{event}</span>
-                          </div>
-                        )}
-                        {site && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-20">Site:</span>
-                            <span className="text-sm text-white">
-                              {isUrl(site) ? (
-                                <a href={site} target="_blank" rel="noopener noreferrer" className="underline">
-                                  {site}
-                                </a>
+                          // Now show black's move on continuation row: ... | black
+                          if (blackMove) {
+                            rows.push(
+                              <div key={`row-${blackIndex}`} className="flex gap-1.5 items-stretch">
+                                <span className="text-neutral-500 text-xs sm:text-sm w-6 shrink-0 flex items-center justify-center opacity-60">
+                                  ...
+                                </span>
+                                <div className="flex-1 px-2 py-1" />
+                                <MoveItem
+                                  move={blackMove}
+                                  index={blackIndex}
+                                  isSelected={blackIndex === currentMoveIndex}
+                                  onClick={handleMoveClick}
+                                />
+                              </div>,
+                            );
+                            if (blackHasAnnotation) {
+                              rows.push(
+                                <AnnotationBlock
+                                  key={`ann-${blackIndex}`}
+                                  moves={moves}
+                                  moveIndex={blackIndex}
+                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
+                                  explanationLoading={loadingExplanation === blackIndex}
+                                  explain={handleExplanation}
+                                />,
+                              );
+                            } else if (blackHasSimpleAnnotation) {
+                              rows.push(
+                                <AnnotationBlock
+                                  key={`ann-${blackIndex}`}
+                                  moves={moves}
+                                  moveIndex={blackIndex}
+                                  isSimple
+                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
+                                  explanationLoading={loadingExplanation === blackIndex}
+                                  explain={handleExplanation}
+                                />,
+                              );
+                            }
+                            i++;
+                          }
+                        } else if (blackHasAnnotation || blackHasSimpleAnnotation) {
+                          // White has no annotation but black has annotation (full or simple): show white | black then annotation
+                          rows.push(
+                            <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
+                              <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
+                                {moveNumber}.
+                              </span>
+                              <MoveItem
+                                move={move}
+                                index={whiteIndex}
+                                isSelected={whiteIndex === currentMoveIndex}
+                                onClick={handleMoveClick}
+                                className="rounded-md"
+                              />
+                              <MoveItem
+                                move={blackMove!}
+                                index={blackIndex}
+                                isSelected={blackIndex === currentMoveIndex}
+                                onClick={handleMoveClick}
+                              />
+                            </div>,
+                          );
+                          i++;
+
+                          // Black's annotation
+                          if (blackHasAnnotation) {
+                            rows.push(
+                              <AnnotationBlock
+                                key={`ann-${blackIndex}`}
+                                moves={moves}
+                                moveIndex={blackIndex}
+                                explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
+                                explanationLoading={loadingExplanation === blackIndex}
+                                explain={handleExplanation}
+                              />,
+                            );
+                          } else if (blackHasSimpleAnnotation) {
+                            rows.push(
+                              <AnnotationBlock
+                                key={`ann-${blackIndex}`}
+                                moves={moves}
+                                moveIndex={blackIndex}
+                                isSimple
+                                explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
+                                explanationLoading={loadingExplanation === blackIndex}
+                                explain={handleExplanation}
+                              />,
+                            );
+                          }
+                          i++;
+                        } else {
+                          // Neither has annotation: show both moves together
+                          rows.push(
+                            <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
+                              <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
+                                {moveNumber}.
+                              </span>
+                              <MoveItem
+                                move={move}
+                                index={whiteIndex}
+                                isSelected={whiteIndex === currentMoveIndex}
+                                onClick={handleMoveClick}
+                                className="rounded-md"
+                              />
+                              {blackMove ? (
+                                <MoveItem
+                                  move={blackMove}
+                                  index={blackIndex}
+                                  isSelected={blackIndex === currentMoveIndex}
+                                  onClick={handleMoveClick}
+                                />
                               ) : (
-                                site
+                                <div className="flex-1 px-2 py-1" />
                               )}
-                            </span>
-                          </div>
-                        )}
-                        {date && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-20">Date:</span>
-                            <span className="text-sm text-white">{date}</span>
-                          </div>
-                        )}
-                        {(opening || eco) && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-20">Opening:</span>
-                            <span className="text-sm text-white">
-                              {opening}
-                              {opening && eco && <span className="text-neutral-400 mx-2">•</span>}
-                              {eco && <span className="text-neutral-300">ECO: {eco}</span>}
-                            </span>
-                          </div>
-                        )}
-                        {result && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-20">Result:</span>
-                            <span className="text-sm text-white flex items-center gap-2">
-                              {result}
-                              {winner === "white" && <CrownIcon className="inline w-4 h-4 text-amber-400" />}
-                              {winner === "black" && <CrownIcon className="inline w-4 h-4 text-amber-400" />}
-                              {winner === "draw" && <HandshakeIcon className="inline w-4 h-4 text-neutral-400" />}
-                            </span>
-                          </div>
-                        )}
-                        {gameHasAnalysis && game && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-neutral-400 min-w-20">Status:</span>
-                            <span className="text-sm text-emerald-400">Analyzed</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                            </div>,
+                          );
+                          i++;
+                          if (blackMove) i++;
+                        }
+                      } else {
+                        // Shouldn't happen in normal flow, but handle edge case
+                        i++;
+                      }
+                    }
 
-                    {/* Analysis Summary Table */}
-                    {gameHasAnalysis && game && (
-                      <AnalysisSummary game={game} whiteName={whiteName} blackName={blackName} userColor={userColor} />
-                    )}
+                    return rows;
+                  })()}
+                </div>
+              )}
+            </div>
 
-                    {!gameHasAnalysis && game && (
-                      <div>
-                        <div className="text-center py-8">
-                          <p className="text-sm text-neutral-400 mb-4">This game hasn't been analyzed yet.</p>
-                          <button
-                            onClick={handleStartReview}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors"
-                          >
-                            Start Review
-                          </button>
+            {/* Coach Tab */}
+            <div className={clsx({ hidden: activeTab !== "coach" })}>
+              <ExplanationViewer
+                move={activeExplanation ? moves[activeExplanation.moveIndex] : undefined}
+                explanation={activeExplanation?.explanation}
+                isLoading={loadingExplanation !== false}
+                userColor={userColor}
+                onVisualize={handleVisualizeMove}
+                onNavigateToOriginalMove={handleNavigateToOriginalMove}
+              />
+            </div>
+
+            {/* Summary Tab */}
+            <div className={clsx({ hidden: activeTab !== "summary" })}>
+              {/* Game Summary */}
+              {!game && (
+                <div className="text-neutral-500 text-center py-12">
+                  <p className="text-sm opacity-60">Load a PGN from Advanced tab to see game summary</p>
+                </div>
+              )}
+              {game && (
+                <div className="space-y-6">
+                  {/* Game Info */}
+                  <div>
+                    <div className="space-y-2">
+                      {event && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-neutral-400 min-w-20">Event:</span>
+                          <span className="text-sm text-white">{event}</span>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {!game && (
-                  <div className="text-neutral-500 text-center py-12">
-                    <p className="text-sm opacity-60">Load a PGN from Advanced tab to see game summary</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {/* FEN Display */}
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
-                    FEN
-                  </label>
-                  <input
-                    type="text"
-                    value={currentFen}
-                    readOnly
-                    className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-sm text-neutral-300 cursor-not-allowed"
-                  />
-                </div>
-
-                {/* Stockfish Depth Control */}
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
-                    Stockfish Analysis Depth
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="10"
-                      max="25"
-                      step="1"
-                      value={stockfishDepth}
-                      onChange={(e) => handleStockfishDepthChange(parseInt(e.target.value))}
-                      className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer  accent-emerald-600"
-                    />
-                    <div className="flex items-center gap-2 min-w-[60px]">
-                      <span className="text-sm text-neutral-300 font-mono">{stockfishDepth}</span>
+                      )}
+                      {site && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-neutral-400 min-w-20">Site:</span>
+                          <span className="text-sm text-white">
+                            {isUrl(site) ? (
+                              <a href={site} target="_blank" rel="noopener noreferrer" className="underline">
+                                {site}
+                              </a>
+                            ) : (
+                              site
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      {date && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-neutral-400 min-w-20">Date:</span>
+                          <span className="text-sm text-white">{date}</span>
+                        </div>
+                      )}
+                      {(opening || eco) && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-neutral-400 min-w-20">Opening:</span>
+                          <span className="text-sm text-white">
+                            {opening}
+                            {opening && eco && <span className="text-neutral-400 mx-2">•</span>}
+                            {eco && <span className="text-neutral-300">ECO: {eco}</span>}
+                          </span>
+                        </div>
+                      )}
+                      {result && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-neutral-400 min-w-20">Result:</span>
+                          <span className="text-sm text-white flex items-center gap-2">
+                            {result}
+                            {winner === "white" && <CrownIcon className="inline w-4 h-4 text-amber-400" />}
+                            {winner === "black" && <CrownIcon className="inline w-4 h-4 text-amber-400" />}
+                            {winner === "draw" && <HandshakeIcon className="inline w-4 h-4 text-neutral-400" />}
+                          </span>
+                        </div>
+                      )}
+                      {gameHasAnalysis && game && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-neutral-400 min-w-20">Status:</span>
+                          <span className="text-sm text-emerald-400">Analyzed</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <p className="text-xs text-neutral-500 mt-1">
-                    Higher depth = more accurate analysis but slower explanations
-                  </p>
-                </div>
 
-                {/* PGN Input */}
-                <div className="mb-4 flex-1 min-h-30 flex flex-col">
-                  <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
-                    PGN
-                  </label>
-                  <textarea
-                    value={pgn}
-                    onChange={(e) => setPgn(e.target.value)}
-                    readOnly={!!pgnProp}
-                    placeholder="Paste your PGN here (with or without headers)"
-                    className="flex-1 w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 resize-none"
+                  {/* Analysis Summary Table */}
+                  {gameHasAnalysis && game && (
+                    <AnalysisSummary game={game} whiteName={whiteName} blackName={blackName} userColor={userColor} />
+                  )}
+
+                  {!gameHasAnalysis && game && (
+                    <div>
+                      <div className="text-center py-8">
+                        <p className="text-sm text-neutral-400 mb-4">This game hasn't been analyzed yet.</p>
+                        <button
+                          onClick={handleStartReview}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors"
+                        >
+                          Start Review
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Advanced Tab */}
+            <div className={clsx({ hidden: activeTab !== "advanced" })}>
+              {/* FEN Display */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">FEN</label>
+                <input
+                  type="text"
+                  value={currentFen}
+                  readOnly
+                  className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-sm text-neutral-300 cursor-not-allowed"
+                />
+              </div>
+
+              {/* Stockfish Depth Control */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
+                  Stockfish Analysis Depth
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="10"
+                    max="25"
+                    step="1"
+                    value={stockfishDepth}
+                    onChange={(e) => handleStockfishDepthChange(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer  accent-emerald-600"
                   />
+                  <div className="flex items-center gap-2 min-w-[60px]">
+                    <span className="text-sm text-neutral-300 font-mono">{stockfishDepth}</span>
+                  </div>
                 </div>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Higher depth = more accurate analysis but slower explanations
+                </p>
+              </div>
 
-                {!pgnProp && (
-                  <button
-                    onClick={handlePGNSubmit}
-                    className="w-full px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded font-semibold text-sm transition"
-                  >
-                    Load PGN
-                  </button>
-                )}
-              </>
-            )}
+              {/* PGN Input */}
+              <div className="mb-4 flex-1 min-h-30 flex flex-col">
+                <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">PGN</label>
+                <textarea
+                  value={pgn}
+                  onChange={(e) => setPgn(e.target.value)}
+                  readOnly={!!pgnProp}
+                  placeholder="Paste your PGN here (with or without headers)"
+                  className="flex-1 w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 resize-none"
+                />
+              </div>
+
+              {!pgnProp && (
+                <button
+                  onClick={handlePGNSubmit}
+                  className="w-full px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded font-semibold text-sm transition"
+                >
+                  Load PGN
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
