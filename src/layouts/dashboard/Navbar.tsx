@@ -90,7 +90,7 @@ export const Navbar = () => {
   return (
     <>
       {/* Desktop Navbar */}
-      <div className="hidden md:flex fixed left-0 top-0 h-screen w-16 bg-neutral-900 border-r border-neutral-700 flex-col items-center py-4 z-50">
+      <div className="hidden md:flex fixed left-0 top-0 h-screen w-16 bg-neutral-900 border-r border-neutral-700 flex-col items-center py-4 z-30">
         {/* Logo at top */}
         <Link to={ROUTES.INDEX} className="mb-8">
           <img src={LogoImage} alt="Logo" className="w-10 h-10 rounded-md" />
@@ -151,7 +151,7 @@ export const Navbar = () => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-12 bg-neutral-900 border-t border-neutral-700 flex items-center justify-around px-1 z-50 safe-area-bottom">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-12 bg-neutral-900 border-t border-neutral-700 flex items-center justify-around px-1 z-30 safe-area-bottom">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (

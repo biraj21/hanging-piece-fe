@@ -6,10 +6,10 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { Toaster } from "sonner";
 
+import { PWAInstaller } from "@/components/PWAInstaller";
+import { env } from "@/config/env";
+import { AuthProvider } from "@/contexts/AuthContext";
 import AppRouter from "@/router";
-
-import { env } from "./config/env";
-import { AuthProvider } from "./contexts/AuthContext";
 
 import "./index.css";
 
@@ -38,6 +38,7 @@ createRoot(document.getElementById("root")!).render(
         <BrowserRouter>
           <AuthProvider>
             <AppRouter />
+            <PWAInstaller />
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

@@ -2,13 +2,32 @@
   "name": "Hanging Piece - Your AI Chess Coach",
   "short_name": "Hanging Piece",
   "description": "Your AI Chess Coach - Stockfish says you blundered, Hanging Piece will tell you WHY.",
-  "icons": [
+    "icons": [
     { "src": "/favicon/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/favicon/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
   ],
-  "theme_color": "#000000",
-  "background_color": "#000000",
+  "theme_color": "#059668",
+  "background_color": "#171717",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "start_url": "/dashboard",
-  "scope": "/"
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["education", "games"],
+  "shortcuts": [
+    {
+      "name": "My Games",
+      "short_name": "Games",
+      "description": "Browse and analyze your games",
+      "url": "/games",
+      "icons": [{ "src": "/favicon/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Analyze PGN",
+      "short_name": "Analysis",
+      "description": "Import and analyze any game",
+      "url": "/analysis",
+      "icons": [{ "src": "/favicon/android-chrome-192x192.png", "sizes": "192x192" }]
+    }
+  ]
 }
