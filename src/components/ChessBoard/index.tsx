@@ -57,9 +57,10 @@ interface PlayerInfoProps {
   position: "left" | "right" | "stacked";
   userColor?: BlackOrWhite;
   winner?: BlackOrWhite | "draw";
+  className?: string;
 }
 
-const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position, userColor, winner }) => {
+const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position, userColor, winner, className }) => {
   // On mobile: left player has [Avatar, Name], right player has [Name, Avatar]
   // On desktop (stacked): always [Avatar, Name]
   const isRightSide = position === "right";
@@ -69,27 +70,32 @@ const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position
       className={clsx("flex items-center gap-3 lg:flex-row", {
         "flex-row-reverse": isRightSide,
         "flex-row": !isRightSide,
+        [className || ""]: !!className,
       })}
     >
       <div
         className={clsx(
-          "w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center lg:text-lg font-semibold",
+          "w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center lg:text-lg font-semibold shrink-0",
           {
             "bg-neutral-950 text-neutral-300": color === "black",
             "bg-neutral-50 text-neutral-950": color !== "black",
-          }
+          },
         )}
       >
         {name.charAt(0).toUpperCase()}
       </div>
-      <div className={clsx({ "text-right lg:text-left": isRightSide })}>
-        <div className="flex items-center gap-1 text-sm font-semibold text-neutral-100">
-          {name}
-          {color && userColor === color && <span className="text-neutral-400">(you)</span>}
-          {winner === color && <Crown className="inline w-4 h-4 text-amber-400" />}
-          {winner === "draw" && <Handshake className="inline w-4 h-4 text-neutral-400" />}
+      <div className={clsx("flex-1 overflow-hidden", { "text-right lg:text-left": isRightSide })}>
+        <div
+          className={clsx("flex items-center gap-1 text-sm font-semibold text-neutral-100", {
+            "flex-row-reverse": isRightSide,
+          })}
+        >
+          <span className="truncate flex-1">{name + "birajlog birajlog"}</span>
+          {color && userColor === color && <span className="text-neutral-400 shrink-0">(you)</span>}
+          {winner === color && <Crown className="inline w-4 h-4 text-amber-400 shrink-0" />}
+          {winner === "draw" && <Handshake className="inline w-4 h-4 text-neutral-400 shrink-0" />}
         </div>
-        <div className="text-xs text-neutral-400">{elo}</div>
+        <p className="text-xs text-neutral-400">{elo}</p>
       </div>
     </div>
   );
@@ -204,7 +210,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     <div className={`w-full mx-auto flex flex-col gap-3 ${className}`}>
       {/* Mobile: both players side by side above board */}
       {players && (
-        <div className="flex w-full justify-between gap-3 lg:hidden">
+        <div className="flex w-full justify-between lg:hidden">
           <BoardPlayerInfo
             name={orientation === "white" ? players.white.name : players.black.name}
             elo={orientation === "white" ? players.white.elo : players.black.elo}
@@ -212,7 +218,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             position="left"
             userColor={userColor}
             winner={winner}
+            className="max-w-[calc(50%-0.5rem)]"
           />
+          <span className="text-neutral-500 text-center">|</span>
           <BoardPlayerInfo
             name={orientation === "white" ? players.black.name : players.white.name}
             elo={orientation === "white" ? players.black.elo : players.white.elo}
@@ -220,6 +228,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             position="right"
             userColor={userColor}
             winner={winner}
+            className="max-w-[calc(50%-0.5rem)]"
           />
         </div>
       )}
