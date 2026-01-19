@@ -9,7 +9,7 @@ import {
 import type { UnifiedGame } from "@/types";
 
 import { backendApi, type ChessComGameResponse } from "./backend";
-import { chesscomApi, type ChesscomProfile } from "./chess-com";
+import { chesscomApi, type ChesscomProfileWithStats } from "./chess-com";
 import { lichessApi, type LichessProfile } from "./lichess";
 
 /**
@@ -61,14 +61,14 @@ function addEmptyArchive(username: string, archive: string): void {
  * Centralized React Query hooks for consistent data fetching
  */
 
-// Chess.com profile query hook
+// Chess.com profile query hook (includes stats)
 export function useChesscomProfile(
   username: string | undefined | null,
-  options?: Omit<UseQueryOptions<ChesscomProfile, Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<ChesscomProfileWithStats, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
     queryKey: queryKeys.chesscom.profile(username || ""),
-    queryFn: () => chesscomApi.getProfile(username!),
+    queryFn: () => chesscomApi.getProfileWithStats(username!),
     enabled: !!username && (options?.enabled ?? true),
     retry: false,
     staleTime: 1000 * 60 * 60, // 1 hour
@@ -79,7 +79,7 @@ export function useChesscomProfile(
 // Lichess profile query hook
 export function useLichessProfile(
   username: string | undefined | null,
-  options?: Omit<UseQueryOptions<LichessProfile, Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<LichessProfile, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
     queryKey: queryKeys.lichess.profile(username || ""),
@@ -94,7 +94,7 @@ export function useLichessProfile(
 // Chess.com archives query hook
 export function useChesscomArchives(
   username: string | undefined | null,
-  options?: Omit<UseQueryOptions<string[], Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<string[], Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
     queryKey: queryKeys.chesscom.archives(username || ""),
@@ -108,7 +108,7 @@ export function useChesscomArchives(
 // Chess.com game query hook
 export function useChesscomGame(
   gameId: string | undefined | null,
-  options?: Omit<UseQueryOptions<ChessComGameResponse, Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<ChessComGameResponse, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
     queryKey: queryKeys.chesscom.game(gameId || ""),
@@ -132,7 +132,7 @@ export function useChesscomGamesInfinite(
   options?: Omit<
     UseInfiniteQueryOptions<ChesscomGamesPage, Error, InfiniteData<ChesscomGamesPage>, any, number>, // eslint-disable-line @typescript-eslint/no-explicit-any
     "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
-  >
+  >,
 ) {
   return useInfiniteQuery({
     queryKey: [...queryKeys.chesscom.games(username || "", "infinite"), archives],
@@ -191,7 +191,7 @@ export function useLichessGamesInfinite(
   options?: Omit<
     UseInfiniteQueryOptions<UnifiedGame[], Error, InfiniteData<UnifiedGame[]>, any, number | null>, // eslint-disable-line @typescript-eslint/no-explicit-any
     "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
-  >
+  >,
 ) {
   return useInfiniteQuery({
     queryKey: [...queryKeys.lichess.games(username || "", null), "infinite"],

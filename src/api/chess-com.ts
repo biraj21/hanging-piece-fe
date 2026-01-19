@@ -38,6 +38,17 @@ export interface ChesscomProfile {
   url?: string;
 }
 
+export interface ChesscomStats {
+  rating: number;
+  wins: number;
+  losses: number;
+  draws: number;
+}
+
+export interface ChesscomProfileWithStats extends ChesscomProfile {
+  stats: ChesscomStats;
+}
+
 export const chesscomApi = {
   /**
    * Fetch user profile from Chess.com
@@ -58,6 +69,57 @@ export const chesscomApi = {
       league: data.league,
       followers: data.followers,
       url: data.url,
+    };
+  },
+
+  /**
+   * Fetch user stats from Chess.com
+   */
+  async getStats(username: string): Promise<ChesscomStats> {
+    const response = await fetch(`https://api.chess.com/pub/player/${username}/stats`);
+
+    if (!response.ok) {
+      throw new Error(`Chess.com stats not found: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    const categories = ["chess_bullet", "chess_blitz", "chess_rapid", "chess_daily"];
+    let totalWins = 0;
+    let totalLosses = 0;
+    let totalDraws = 0;
+    let highestRating = 0;
+
+    for (const category of categories) {
+      const catData = data[category];
+      if (catData?.record) {
+        totalWins += catData.record.win || 0;
+        totalLosses += catData.record.loss || 0;
+        totalDraws += catData.record.draw || 0;
+      }
+      if (catData?.best?.rating && catData.best.rating > highestRating) {
+        highestRating = catData.best.rating;
+      }
+    }
+
+    return {
+      rating: highestRating,
+      wins: totalWins,
+      losses: totalLosses,
+      draws: totalDraws,
+    };
+  },
+
+  /**
+   * Fetch user profile with stats from Chess.com
+   */
+  async getProfileWithStats(username: string): Promise<ChesscomProfileWithStats> {
+    const profile = await this.getProfile(username);
+    const stats = await this.getStats(username);
+
+    return {
+      ...profile,
+      stats,
     };
   },
 

@@ -35,6 +35,12 @@ export interface LichessProfile {
   rating?: number;
   country?: string;
   url?: string;
+  games?: {
+    total: number;
+    wins: number;
+    losses: number;
+    draws: number;
+  };
 }
 
 export const lichessApi = {
@@ -50,10 +56,9 @@ export const lichessApi = {
 
     const data = await response.json();
 
-    // Get the highest rating from perfs (prefer non-provisional ratings)
     const perfs = data.perfs || {};
     const ratings = Object.values(perfs)
-      .map((perf: any) => (perf.prov ? null : perf.rating)) // eslint-disable-line @typescript-eslint/no-explicit-any
+      .map((perf: any) => (perf.prov ? null : perf.rating))
       .filter((rating): rating is number => rating !== null && rating !== undefined);
     const highestRating = ratings.length > 0 ? Math.max(...ratings) : undefined;
 
@@ -64,6 +69,12 @@ export const lichessApi = {
       rating: highestRating,
       country: data.profile?.flag,
       url: data.url || `https://lichess.org/@/${data.username}`,
+      games: {
+        total: data.count?.all || 0,
+        wins: data.count?.win || 0,
+        losses: data.count?.loss || 0,
+        draws: data.count?.draw || 0,
+      },
     };
   },
   /**

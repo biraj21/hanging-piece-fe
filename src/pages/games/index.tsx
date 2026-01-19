@@ -1,10 +1,4 @@
-import {
-  useChesscomArchives,
-  useChesscomGamesInfinite,
-  useChesscomProfile,
-  useLichessGamesInfinite,
-  useLichessProfile,
-} from "@/api/queries";
+import { useChesscomArchives, useChesscomGamesInfinite, useLichessGamesInfinite } from "@/api/queries";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { getChessAccountUsername } from "@/helpers/chess-username";
@@ -64,25 +58,13 @@ export default function GamesPage() {
     enabled: !!user?.lichessId && activeSource === "lichess",
   });
 
-  // Fetch Chess.com profile with centralized hook
-  const { data: chesscomProfile } = useChesscomProfile(user?.chesscomId, {
-    enabled: !!user?.chesscomId && activeSource === "chesscom",
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
-
-  // Fetch Lichess profile with centralized hook
-  const { data: lichessProfile } = useLichessProfile(user?.lichessId, {
-    enabled: !!user?.lichessId && activeSource === "lichess",
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
-
   // Flatten all pages into a single array
   const chesscomGames: UnifiedGame[] = chesscomGamesData?.pages.flatMap((page) => page.games) ?? [];
   const lichessGames: UnifiedGame[] = lichessGamesData?.pages.flat() ?? [];
 
   // Show games based on selected source
   const allGames = (activeSource === "chesscom" ? chesscomGames : lichessGames).sort(
-    (a: UnifiedGame, b: UnifiedGame) => b.timestamp - a.timestamp
+    (a: UnifiedGame, b: UnifiedGame) => b.timestamp - a.timestamp,
   );
 
   const isLoading = isLoadingChesscomArchives || isLoadingChesscom || isLoadingLichess;
@@ -141,30 +123,10 @@ export default function GamesPage() {
         {/* Profile Preview */}
         <div className="mb-3">
           {activeSource === "chesscom" && user?.chesscomId && (
-            <ProfilePreview
-              platform="chesscom"
-              avatar={chesscomProfile?.avatar}
-              username={chesscomProfile?.username || user.chesscomId}
-              name={chesscomProfile?.name}
-              country={chesscomProfile?.country}
-              league={chesscomProfile?.league}
-              url={chesscomProfile?.url}
-              loading={!chesscomProfile && isLoading}
-              showPlayButton
-            />
+            <ProfilePreview platform="chesscom" username={user.chesscomId} />
           )}
           {activeSource === "lichess" && user?.lichessId && (
-            <ProfilePreview
-              platform="lichess"
-              username={lichessProfile?.username || user.lichessId}
-              name={lichessProfile?.name}
-              title={lichessProfile?.title}
-              rating={lichessProfile?.rating}
-              country={lichessProfile?.country}
-              url={lichessProfile?.url}
-              loading={!lichessProfile && isLoading}
-              showPlayButton
-            />
+            <ProfilePreview platform="lichess" username={user.lichessId} />
           )}
         </div>
 
