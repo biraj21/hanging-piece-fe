@@ -14,7 +14,6 @@ import { parseUciContinuation } from "@/utils/chess";
 export type AnalysisProgress = {
   currentMoveIndex: number;
   totalMoves: number;
-  currentFen: string;
 };
 
 export type AnalysisCallbacks = {
@@ -34,7 +33,7 @@ export async function analyzeGame(
   depth: number = STOCKFISH_DEFAULT_DEPTH,
   callbacks: AnalysisCallbacks = {},
   engine?: Stockfish | null,
-  gameId?: string
+  gameId?: string,
 ): Promise<ParsedGame> {
   const { onProgress } = callbacks;
 
@@ -106,7 +105,6 @@ export async function analyzeGame(
       onProgress({
         currentMoveIndex: i,
         totalMoves: game.moves.length,
-        currentFen: currentFen,
       });
     }
 
@@ -207,7 +205,7 @@ export async function analyzeGame(
         nags,
         clock: move.clock,
         variations,
-      })
+      }),
     );
 
     // Update for next iteration (keep in white's perspective)
@@ -302,7 +300,7 @@ const THRESHOLDS = {
 export function classifyMoveLichess(
   prevEval: EngineEvaluation,
   currEval: EngineEvaluation,
-  moverColor: "white" | "black"
+  moverColor: "white" | "black",
 ): MoveQuality | undefined {
   // Handle mate transitions first (Lichess MateAdvice logic)
   const mateClassification = classifyMateTransition(prevEval, currEval, moverColor);
@@ -373,7 +371,7 @@ export function classifyMoveByDelta(delta: number): MoveQuality | undefined {
 export function classifyMateTransition(
   prevEval: EngineEvaluation,
   currEval: EngineEvaluation,
-  moverColor: "white" | "black"
+  moverColor: "white" | "black",
 ): MoveQuality | undefined {
   // Normalize to mover's perspective
   const invertIfBlack = (val: number) => (moverColor === "black" ? -val : val);

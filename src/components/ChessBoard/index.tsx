@@ -5,6 +5,7 @@ import type { DrawShape } from "@lichess-org/chessground/draw";
 import type { Key } from "@lichess-org/chessground/types";
 import type { Evaluation } from "chessops/pgn";
 import clsx from "clsx";
+import { Crown, Handshake } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import "@lichess-org/chessground/assets/chessground.base.css";
@@ -32,7 +33,10 @@ export interface MoveAnnotation {
 }
 
 export interface ChessBoardProps {
-  fen: string;
+  move: {
+    san: string;
+    fen: string;
+  };
   previousMove?: [Key, Key];
   theme?: ChessBoardTheme;
   className?: string;
@@ -47,8 +51,6 @@ export interface ChessBoardProps {
   winner?: BlackOrWhite | "draw";
   moveAnnotations?: MoveAnnotation[];
 }
-
-import { Crown, Handshake } from "lucide-react";
 
 interface PlayerInfoProps {
   name: string;
@@ -90,7 +92,7 @@ const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position
             "flex-row-reverse": isRightSide,
           })}
         >
-          <span className="truncate flex-1">{name + "birajlog birajlog"}</span>
+          <span className="truncate flex-1">{name}</span>
           {color && userColor === color && <span className="text-neutral-400 shrink-0">(you)</span>}
           {winner === color && <Crown className="inline w-4 h-4 text-amber-400 shrink-0" />}
           {winner === "draw" && <Handshake className="inline w-4 h-4 text-neutral-400 shrink-0" />}
@@ -124,9 +126,24 @@ const createMoveQualityBadgeSvg = (quality: MoveQuality): string => {
   `;
 };
 
+function playSound(san: string) {
+  let sound = "move-self.mp3";
+
+  if (san.includes("+")) {
+    sound = "move-check.mp3";
+  } else if (san.includes("x")) {
+    sound = "capture.mp3";
+  } else if (san.includes("O-O")) {
+    sound = "castle.mp3";
+  }
+
+  const audio = new Audio(`/audio/${sound}`);
+  audio.play();
+}
+
 export const ChessBoard: React.FC<ChessBoardProps> = ({
   theme = "green",
-  fen,
+  move,
   previousMove,
   className = "",
   arrows = [],
@@ -156,7 +173,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
     if (cgRef.current) {
       cgRef.current.set({
-        fen,
+        fen: move.fen,
         lastMove: previousMove,
         drawable: { shapes: arrows, autoShapes },
         orientation,
@@ -164,7 +181,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     } else {
       const config: Config = {
         orientation,
-        fen,
+        fen: move.fen,
         lastMove: previousMove,
         drawable: {
           enabled: true,
@@ -191,7 +208,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
       cgRef.current = Chessground(boardRef.current, config);
     }
-  }, [fen, previousMove, arrows, orientation, moveAnnotations]);
+  }, [move.fen, previousMove, arrows, orientation, moveAnnotations]);
 
   useEffect(() => {
     return () => {
@@ -199,6 +216,11 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       cgRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    // Play move sound when move changes
+    playSound(move.san);
+  }, [move.san]);
 
   // Determine which player goes on top based on orientation
   const topPlayer = orientation === "white" ? players?.black : players?.white;

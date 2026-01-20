@@ -71,7 +71,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const [gameId, setGameId] = useState<string>(gameIdProp || "");
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [arrows, setArrows] = useState<Array<BoardArrow>>([]);
-  const [previewFen, setPreviewFen] = useState<string | null>(null);
+  const [previewMove, setPreviewMove] = useState<{ san: string; fen: string } | null>(null);
   const [previewLastMove, setPreviewLastMove] = useState<[Key, Key] | undefined>(undefined);
   const [previewEvaluation, setPreviewEvaluation] = useState<Evaluation | null>(null);
 
@@ -98,18 +98,29 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   const posthog = usePostHog();
 
-  // Get current move data
-  const currentMove = currentMoveIndex >= 0 ? game?.moves[currentMoveIndex] : null;
-
-  // During analysis, use progress FEN; otherwise use preview FEN (during explanation) or current move FEN
-  const currentFen = analysisProgress?.currentFen || previewFen || currentMove?.fen || INITIAL_FEN;
-  const previousMove: [Key, Key] | undefined =
-    previewLastMove || (currentMove ? [currentMove.from as Key, currentMove.to as Key] : undefined);
-
   // Derived values from game headers
   const opening = game?.headers.get("Opening") || "";
   const eco = game?.headers.get("ECO") || "";
   const moves = game?.moves || [];
+
+  // Get current move data
+  const currentMove = currentMoveIndex >= 0 ? moves[currentMoveIndex] : null;
+
+  // During analysis, use progress FEN; otherwise use preview FEN (during explanation) or current move FEN
+  let currentMoveForBoard = { san: "", fen: INITIAL_FEN };
+  if (analysisProgress) {
+    // if -1, then we let it be the INITIAL FEN
+    if (analysisProgress.currentMoveIndex > 0) {
+      currentMoveForBoard = moves[analysisProgress.currentMoveIndex];
+    }
+  } else if (previewMove) {
+    currentMoveForBoard = previewMove;
+  } else if (currentMove) {
+    currentMoveForBoard = currentMove;
+  }
+
+  const previousMove: [Key, Key] | undefined =
+    previewLastMove || (currentMove ? [currentMove.from as Key, currentMove.to as Key] : undefined);
 
   // Player and event metadata
   const whiteName = game?.headers.get("White") || "";
@@ -174,7 +185,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     }
 
     // if we're previewing some other move for explanation, then don't show current move quality annotation
-    if (previewFen && previewFen !== currentMove.fen) {
+    if (previewMove && previewMove.fen !== currentMove.fen) {
       return [];
     }
 
@@ -242,7 +253,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
     const initialAnalysisProgress: AnalysisProgress = {
       currentMoveIndex: -1,
       totalMoves: game.moves.length,
-      currentFen: INITIAL_FEN,
     };
 
     setAnalysisProgress(initialAnalysisProgress);
@@ -326,7 +336,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     // Close explanation when navigating to different move
     if (activeExplanation && activeExplanation.moveIndex !== index) {
       setArrows([]);
-      setPreviewFen(null);
+      setPreviewMove(null);
       setPreviewLastMove(undefined);
       setPreviewEvaluation(null);
     }
@@ -341,7 +351,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     // Close explanation when jumping to first
     if (activeExplanation && activeExplanation.moveIndex !== 0) {
       setArrows([]);
-      setPreviewFen(null);
+      setPreviewMove(null);
       setPreviewLastMove(undefined);
       setPreviewEvaluation(null);
     }
@@ -357,7 +367,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     // Close explanation when jumping to last
     if (activeExplanation && activeExplanation.moveIndex !== lastIndex) {
       setArrows([]);
-      setPreviewFen(null);
+      setPreviewMove(null);
       setPreviewLastMove(undefined);
       setPreviewEvaluation(null);
     }
@@ -379,7 +389,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       // Close explanation when navigating
       if (activeExplanation && activeExplanation.moveIndex !== newIndex) {
         setArrows([]);
-        setPreviewFen(null);
+        setPreviewMove(null);
         setPreviewLastMove(undefined);
         setPreviewEvaluation(null);
       }
@@ -416,7 +426,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
         // reset all preview states
         setLoadingExplanation(moveIndex);
-        setPreviewFen(null);
+        setPreviewMove(null);
         setPreviewLastMove(undefined);
         setPreviewEvaluation(null);
         setArrows([]);
@@ -514,7 +524,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   const handleVisualizeMove = useCallback((lineMove: EngineMove, brush: "red" | "green") => {
     if (lineMove.fen) {
-      setPreviewFen(lineMove.fen);
+      setPreviewMove(lineMove);
       setPreviewLastMove([lineMove.from as Key, lineMove.to as Key]);
 
       // Show arrow for this move
@@ -541,7 +551,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     }
 
     // Clear preview state and show the original move position
-    setPreviewFen(null);
+    setPreviewMove(null);
     setPreviewLastMove(undefined);
     setPreviewEvaluation(null);
 
@@ -552,7 +562,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
   // Auto-show arrows when navigating to a move with an explanation
   useEffect(() => {
     // Don't mess with arrows if we're in preview mode (viewing a continuation move)
-    if (previewFen) {
+    if (previewMove) {
       return;
     }
 
@@ -604,7 +614,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setArrows([]);
         return;
     }
-  }, [currentMoveIndex, game, gameId, previewFen]);
+  }, [currentMoveIndex, game, gameId, previewMove]);
 
   // Keyboard navigation for moves
   useEffect(() => {
@@ -665,7 +675,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         }
 
         setActiveTab(this.value);
-        setPreviewFen(null);
+        setPreviewMove(null);
         setPreviewLastMove(undefined);
         setPreviewEvaluation(null);
       },
@@ -706,7 +716,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
             {/* Chessboard */}
             <ChessBoard
               theme="green"
-              fen={currentFen}
+              move={currentMoveForBoard}
               previousMove={previousMove}
               arrows={arrows}
               orientation={boardOrientation}
@@ -1178,7 +1188,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">FEN</label>
                 <input
                   type="text"
-                  value={currentFen}
+                  value={currentMoveForBoard.fen}
                   readOnly
                   className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-sm text-neutral-300 cursor-not-allowed"
                 />
