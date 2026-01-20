@@ -92,9 +92,24 @@ const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position
             "flex-row-reverse": isRightSide,
           })}
         >
-          <span className="truncate flex-1">{name}</span>
-          {color && userColor === color && <span className="text-neutral-400 shrink-0">(you)</span>}
-          {winner === color && <Crown className="inline w-4 h-4 text-amber-400 shrink-0" />}
+          <span
+            className={clsx("truncate", {
+              "text-green-400": winner === color,
+            })}
+          >
+            {name}
+          </span>
+          {color && userColor === color && (
+            <span
+              className={clsx("shrink-0", {
+                "text-green-400": winner === color,
+                "text-neutral-400": winner !== color,
+              })}
+            >
+              (you)
+            </span>
+          )}
+          {winner === color && <Crown className="inline w-4 h-4 text-green-400 shrink-0" />}
           {winner === "draw" && <Handshake className="inline w-4 h-4 text-neutral-400 shrink-0" />}
         </div>
         <p className="text-xs text-neutral-400">{elo}</p>
@@ -240,9 +255,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             position="left"
             userColor={userColor}
             winner={winner}
-            className="max-w-[calc(50%-0.5rem)]"
+            className="w-[calc(50%-0.5rem)]"
           />
-          <span className="text-neutral-500 text-center">|</span>
+          {/* <span className="text-neutral-500 text-center">|</span> */}
           <BoardPlayerInfo
             name={orientation === "white" ? players.black.name : players.white.name}
             elo={orientation === "white" ? players.black.elo : players.white.elo}
@@ -250,7 +265,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             position="right"
             userColor={userColor}
             winner={winner}
-            className="max-w-[calc(50%-0.5rem)]"
+            className="w-[calc(50%-0.5rem)]"
           />
         </div>
       )}
