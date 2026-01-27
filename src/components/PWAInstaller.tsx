@@ -1,6 +1,8 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { DownloadIcon, XIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { isMobileDevice } from "@/utils/device";
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent/BeforeInstallPromptEvent
@@ -68,7 +70,7 @@ export const PWAInstaller: React.FC = () => {
     setShowModal(false);
   };
 
-  if (!user || !showModal) {
+  if (!user || !showModal || !isMobileDevice()) {
     return null;
   }
 
