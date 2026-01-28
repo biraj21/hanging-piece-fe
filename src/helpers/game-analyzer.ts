@@ -1,3 +1,4 @@
+import type { Chess } from "chessops/chess";
 import { makeFen } from "chessops/fen";
 import { startingPosition, type Evaluation } from "chessops/pgn";
 import { parseUci } from "chessops/util";
@@ -60,6 +61,9 @@ export async function analyzeGame(
   // Store evaluations normalized to WHITE's perspective
   // Stockfish returns eval from the perspective of the side to move!
   let previousEvalWhite: EngineEvaluation | null = null;
+
+  // Map to store text comments by move index
+  const textCommentsPerMove: Record<number, string[]> = {};
 
   // Get initial position FEN (white to move, so eval is from white's perspective)
   let currentFen = makeFen(position.toSetup());
@@ -172,6 +176,15 @@ export async function analyzeGame(
                 }));
 
                 variations = [variation];
+
+                // Generate text comment in Lichess format
+                const bestMove = bestContinuation[0];
+                const comment = generateMoveComment(quality, previousEvalWhite, evalAfterWhite, bestMove.san);
+                // Store comment to be used when creating the new GameMove
+                if (!textCommentsPerMove[i]) {
+                  textCommentsPerMove[i] = [];
+                }
+                textCommentsPerMove[i].push(comment);
               }
             } catch (err) {
               console.error(`Failed to get best line for move ${i}:`, err);
@@ -191,7 +204,8 @@ export async function analyzeGame(
       }
     }
 
-    // Create analyzed move
+    // Create analyzed move with text comments
+    const allTextComments = [...move.textComments, ...(textCommentsPerMove[i] || [])];
     analyzedMoves.push(
       new GameMove({
         ply: move.ply,
@@ -200,7 +214,7 @@ export async function analyzeGame(
         from: move.from,
         to: move.to,
         uci: move.uci,
-        textComments: move.textComments,
+        textComments: allTextComments,
         evaluation,
         nags,
         clock: move.clock,
@@ -231,6 +245,67 @@ export async function analyzeGame(
   }
 
   return result;
+}
+
+/**
+ * Format evaluation for display in comments
+ * @param ev - Evaluation (cp or mate)
+ * @returns Formatted string like "10.68" or "Mate in 3"
+ */
+function formatEvaluation(ev: EngineEvaluation): string {
+  if (isCentipawnEval(ev)) {
+    const pawns = ev.cp / 100;
+    return pawns.toFixed(2);
+  } else if (isMateEval(ev)) {
+    if (ev.mate === 0) {
+      return "Mate";
+    }
+    return ev.mate > 0 ? `Mate in ${ev.mate}` : `Mate in ${-ev.mate}`;
+  }
+  return "0.00";
+}
+
+/**
+ * Generate Lichess-style comment text for a move of poor quality
+ * @param quality - Move quality classification
+ * @param prevEval - Evaluation before the move (from white's perspective)
+ * @param currEval - Evaluation after the move (from white's perspective)
+ * @param bestMoveSan - Best move in SAN notation
+ * @param position - Optional chess position to detect game termination
+ * @returns Formatted comment text
+ */
+function generateMoveComment(
+  quality: MoveQuality,
+  prevEval: EngineEvaluation,
+  currEval: EngineEvaluation,
+  bestMoveSan: string,
+  position?: Chess,
+): string {
+  // Format evaluations
+  const prevEvalStr = formatEvaluation(prevEval);
+  const currEvalStr = formatEvaluation(currEval);
+
+  // Build comment base
+  let comment = `(${prevEvalStr} → ${currEvalStr}) ${quality.charAt(0).toUpperCase() + quality.slice(1)}. ${bestMoveSan} was best.`;
+
+  // Add termination info if position is provided
+  if (position) {
+    const outcome = position.outcome();
+
+    if (outcome) {
+      if (position.isStalemate()) {
+        comment += " Draw by stalemate.";
+      } else if (position.isInsufficientMaterial()) {
+        comment += " Draw by insufficient material.";
+      } else if (outcome.winner === "white") {
+        comment += " White wins.";
+      } else if (outcome.winner === "black") {
+        comment += " Black wins.";
+      }
+    }
+  }
+
+  return comment;
 }
 
 // ============================================================================
