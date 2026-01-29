@@ -1,6 +1,8 @@
 import { EyeIcon, GraduationCapIcon, RotateCcwIcon } from "lucide-react";
 import React, { useState } from "react";
 
+import { TermHighlighter } from "@/components/TermHighlighter";
+import type { ChessTerm } from "@/constants/chess-glossary";
 import { getMoveQualityDisplay } from "@/helpers/move-quality";
 import type { GameMove } from "@/helpers/pgn";
 import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
@@ -36,9 +38,12 @@ const ExplanationContent: React.FC<{
   onVisualize: (lineMove: EngineMove, brush: "red" | "green") => void;
   onNavigateToOriginalMove: () => void;
 }> = ({ move, explanation, userColor, onVisualize, onNavigateToOriginalMove }) => {
-  const { explanation: text, badContinuation, bestContinuation, badLine, bestLine } = explanation;
+  const { explanation: overview, badContinuation, bestContinuation, badLine, bestLine } = explanation;
   const [selectedBadMove, setSelectedBadMove] = useState<number | null>(null);
   const [selectedBestMove, setSelectedBestMove] = useState<number | null>(null);
+
+  // Create a shared Set for matched terms across the entire explanation
+  const matchedTerms = new Set<ChessTerm>();
 
   const renderMoveNotation = (san: string, ply: number) => {
     const moveNumber = Math.ceil(ply / 2);
@@ -88,11 +93,12 @@ const ExplanationContent: React.FC<{
 
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wide">Overview</h4>
-          <div className="text-sm text-neutral-300 leading-relaxed space-y-2">
-            {text.split("\n").map((para, idx) => (
-              <p key={idx}>{para.trim()}</p>
-            ))}
-          </div>
+          <TermHighlighter
+            key="overview"
+            text={overview}
+            className="text-sm text-neutral-300 leading-relaxed"
+            matchedTerms={matchedTerms}
+          />
         </div>
 
         {badContinuation.length > 0 && (
@@ -117,6 +123,7 @@ const ExplanationContent: React.FC<{
                   cont={cont}
                   ply={move.ply + idx + 1}
                   isSelected={selectedBadMove === idx}
+                  matchedTerms={matchedTerms}
                   onClick={() => {
                     setSelectedBestMove(null);
                     setSelectedBadMove(idx);
@@ -150,6 +157,7 @@ const ExplanationContent: React.FC<{
                   cont={cont}
                   ply={move.ply + idx}
                   isSelected={selectedBestMove === idx}
+                  matchedTerms={matchedTerms}
                   onClick={() => {
                     setSelectedBadMove(null);
                     setSelectedBestMove(idx);
@@ -174,10 +182,11 @@ interface MoveCardProps {
   };
   ply: number;
   isSelected: boolean;
+  matchedTerms: Set<ChessTerm>;
   onClick: () => void;
 }
 
-const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, onClick }) => {
+const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, matchedTerms, onClick }) => {
   const moveNum = Math.ceil(ply / 2);
   const isWhite = ply % 2 === 1;
   const isBest = type === "best";
@@ -214,7 +223,9 @@ const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, onClic
         />
       </div>
 
-      <p className="text-xs text-neutral-400 leading-relaxed flex-1 pt-0.5">{cont.reason}</p>
+      <p className="text-xs text-neutral-400 leading-relaxed flex-1 pt-0.5">
+        <TermHighlighter text={cont.reason} matchedTerms={matchedTerms} />
+      </p>
     </button>
   );
 };

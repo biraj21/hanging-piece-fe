@@ -712,7 +712,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       <div className="h-full flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-1 lg:gap-6 landscape:grid landscape:grid-cols-2 landscape:grid-rows-1 landscape:gap-6">
         {/* Left Column: Board */}
         <div className="shrink-0 flex flex-col gap-3 overflow-y-auto min-h-0">
-          <div className="flex flex-col gap-3 max-w-[52vh]  max-lg:landscape:max-w-[72vh] lg:max-w-[82vh] mx-auto w-full">
+          <div className="flex flex-col gap-3 max-w-[50vh]  max-lg:landscape:max-w-[70vh] lg:max-w-[80vh] mx-auto w-full">
             {/* Chessboard */}
             <ChessBoard
               theme="green"
@@ -1182,7 +1182,9 @@ export const Analysis: React.FC<AnalysisProps> = ({
             </div>
 
             {/* Advanced Tab */}
-            <div className={clsx({ hidden: activeTab !== "advanced" })}>
+            <div
+              className={clsx({ hidden: activeTab !== "advanced", "flex flex-col flex-1": activeTab === "advanced" })}
+            >
               {/* FEN Display */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">FEN</label>
