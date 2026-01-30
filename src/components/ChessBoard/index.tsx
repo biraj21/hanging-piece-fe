@@ -144,7 +144,7 @@ const createMoveQualityBadgeSvg = (quality: MoveQuality): string => {
 function playSound(san: string) {
   let sound = "move-self.mp3";
 
-  if (san.includes("+")) {
+  if (san.includes("+") || san.includes("#")) {
     sound = "move-check.mp3";
   } else if (san.includes("x")) {
     sound = "capture.mp3";

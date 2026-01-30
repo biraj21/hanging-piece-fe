@@ -7,6 +7,7 @@ import { getMoveQualityDisplay } from "@/helpers/move-quality";
 import type { GameMove } from "@/helpers/pgn";
 import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 
+import clsx from "clsx";
 import { ExplanationLoading } from "./ExplanationLoading";
 import { MoveQualityIcon } from "./MoveQualityIcon";
 
@@ -223,7 +224,12 @@ const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, matche
         />
       </div>
 
-      <p className="text-xs text-neutral-400 leading-relaxed flex-1 pt-0.5">
+      <p
+        className={clsx("text-xs leading-relaxed flex-1 pt-0.5", {
+          "text-neutral-400": !isSelected,
+          "text-neutral-300": isSelected,
+        })}
+      >
         <TermHighlighter text={cont.reason} matchedTerms={matchedTerms} />
       </p>
     </button>
@@ -252,7 +258,7 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
       <div className="flex flex-col h-full">
         <ExplanationHeader />
         <p className="text-center text-sm text-neutral-400 mb-2 max-w-sm mx-auto py-8">
-          Click the "Tell me why" button that looks like this on any of your mistakes to get an explanation
+          Click the "Tell me why" button that on any of your mistakes or blunders to get an explanation
         </p>
       </div>
     );
