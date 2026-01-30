@@ -97,8 +97,8 @@ export const chesscomApi = {
         totalLosses += catData.record.loss || 0;
         totalDraws += catData.record.draw || 0;
       }
-      if (catData?.best?.rating && catData.best.rating > highestRating) {
-        highestRating = catData.best.rating;
+      if (catData?.last?.rating && catData.last.rating > highestRating) {
+        highestRating = catData.last.rating;
       }
     }
 
