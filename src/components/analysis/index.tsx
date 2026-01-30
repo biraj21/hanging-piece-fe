@@ -19,8 +19,8 @@ import { toast } from "sonner";
 import { ChessBoard, type BoardArrow } from "@/components/ChessBoard";
 import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
-import { AnalysisCache } from "@/helpers/analysis-cache";
-import { explain, hasExplanationCached } from "@/helpers/explain";
+import { StockfishAnalysis } from "@/db/stockfish-analysis";
+import { explain, hasCachedExplanation } from "@/helpers/explain";
 import { analyzeGame, type AnalysisProgress } from "@/helpers/game-analyzer";
 import { hasAnalysis, isMateEval, parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
 import { isCentipawnEval, Stockfish } from "@/helpers/stockfish";
@@ -311,7 +311,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       return;
     }
 
-    AnalysisCache.get({ gameId, depth: stockfishDepth }).then((cached) => {
+    StockfishAnalysis.findOne(gameId, stockfishDepth).then((cached) => {
       if (cached) {
         console.debug("Auto-loading cached analysis for", gameId, "at depth", stockfishDepth);
         setGame(cached);
@@ -434,7 +434,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       try {
         // Check if user needs to login (not logged in, used free explanation for this game, and not cached)
         if (!user) {
-          const isCached = await hasExplanationCached(gameId, moveIndex);
+          const isCached = await hasCachedExplanation(gameId, moveIndex);
           const hasUsedFreeExplanation = localStorage.getItem(`free-explanation-used:${gameId}`) === "true";
 
           if (!isCached && hasUsedFreeExplanation) {

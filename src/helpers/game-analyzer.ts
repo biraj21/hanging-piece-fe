@@ -4,7 +4,7 @@ import { startingPosition, type Evaluation } from "chessops/pgn";
 import { parseUci } from "chessops/util";
 
 import { CONTINUATION_LENGTH, INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
-import { AnalysisCache } from "@/helpers/analysis-cache";
+import { StockfishAnalysis } from "@/db/stockfish-analysis";
 import { getNagFromQuality } from "@/helpers/move-quality";
 import type { MoveQuality, ParsedGame, Variation } from "@/helpers/pgn";
 import { GameMove } from "@/helpers/pgn";
@@ -39,7 +39,7 @@ export async function analyzeGame(
   const { onProgress } = callbacks;
 
   if (gameId) {
-    const cached = await AnalysisCache.get({ gameId, depth });
+    const cached = await StockfishAnalysis.findOne(gameId, depth);
     if (cached) {
       console.debug("Using cached analysis for", gameId, "at depth", depth);
       return cached;
@@ -241,7 +241,9 @@ export async function analyzeGame(
   };
 
   if (gameId) {
-    AnalysisCache.store({ gameId, depth }, result);
+    StockfishAnalysis.create(gameId, depth, result).catch((err) => {
+      console.error("Failed to store analysis in cache:", err);
+    });
   }
 
   return result;

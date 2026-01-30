@@ -5,7 +5,7 @@ import { CONTINUATION_LENGTH, INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/con
 import type { BlackOrWhite, EngineEvaluation, Explanation } from "@/types";
 import { parseUciContinuation, type ContinuationMove } from "@/utils/chess";
 
-import { ExplanationCache } from "./explanation-cache";
+import { ExplanationModel } from "@/db/explanation";
 import { isMateEval, isPawnsEval, type GameMove } from "./pgn";
 import { isCentipawnEval, Stockfish } from "./stockfish";
 
@@ -24,8 +24,8 @@ interface ExplainOptions {
 
 let cachedEngine: Stockfish | undefined;
 
-export async function hasExplanationCached(gameId: string, moveIndex: number): Promise<boolean> {
-  const cached = await ExplanationCache.get({ gameId, moveIndex });
+export async function hasCachedExplanation(gameId: string, moveIndex: number): Promise<boolean> {
+  const cached = await ExplanationModel.findOne(gameId, moveIndex);
   return cached !== null;
 }
 
@@ -55,7 +55,7 @@ export async function explain({
   const color: BlackOrWhite = move.ply % 2 === 1 ? "white" : "black";
 
   // Try to load from cache first
-  const cached = await ExplanationCache.get({ gameId, moveIndex });
+  const cached = await ExplanationModel.findOne(gameId, moveIndex);
   if (cached) {
     return cached;
   }
@@ -175,7 +175,7 @@ export async function explain({
   };
 
   // Store in cache for future use
-  ExplanationCache.store({ gameId, moveIndex }, explanation).catch((err) => {
+  ExplanationModel.create(gameId, moveIndex, explanation).catch((err) => {
     console.error("Failed to store explanation in cache:", err);
   });
 
