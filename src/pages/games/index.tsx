@@ -118,6 +118,17 @@ export default function GamesPage() {
         <h1 className="text-3xl font-bold text-white mb-2">My Games</h1>
       </div>
 
+      {/* Chess.com Notice Banner */}
+      {activeSource === "chesscom" && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-4 shrink-0">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3">
+            <p className="text-amber-400 text-sm">
+              Recent games may appear with a short delay due to an issue with Chess.com's Games Archive API.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Stats and Filters */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-4 shrink-0">
         {/* Profile Preview */}
