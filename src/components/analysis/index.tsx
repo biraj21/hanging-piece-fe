@@ -327,6 +327,15 @@ export const Analysis: React.FC<AnalysisProps> = ({
     }
   };
 
+  const checkExplanationModeAndDisable = () => {
+    if (activeTab === "coach" && activeExplanation) {
+      const move = moves[activeExplanation.moveIndex];
+      toast.info(`You're exploring move ${move.san} in explanation mode. Move controls are disabled.`);
+      return true;
+    }
+    return false;
+  };
+
   const handleMoveClick = (index: number) => {
     if (analysisProgress) {
       return;
@@ -347,6 +356,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
       return;
     }
 
+    if (checkExplanationModeAndDisable()) {
+      return;
+    }
+
     setCurrentMoveIndex(0);
     // Close explanation when jumping to first
     if (activeExplanation && activeExplanation.moveIndex !== 0) {
@@ -355,10 +368,14 @@ export const Analysis: React.FC<AnalysisProps> = ({
       setPreviewLastMove(undefined);
       setPreviewEvaluation(null);
     }
-  }, [game, activeExplanation]);
+  }, [game, activeExplanation, checkExplanationModeAndDisable]);
 
   const goToLast = useCallback(() => {
     if (!game) {
+      return;
+    }
+
+    if (checkExplanationModeAndDisable()) {
       return;
     }
 
@@ -371,7 +388,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       setPreviewLastMove(undefined);
       setPreviewEvaluation(null);
     }
-  }, [game, activeExplanation]);
+  }, [game, activeExplanation, checkExplanationModeAndDisable]);
 
   const flipBoard = () => {
     setBoardOrientation((prev) => (prev === "white" ? "black" : "white"));
@@ -380,6 +397,10 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const incrementMoveIndex = useCallback(
     (offset: number) => {
       if (!game) {
+        return;
+      }
+
+      if (checkExplanationModeAndDisable()) {
         return;
       }
 
@@ -394,7 +415,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setPreviewEvaluation(null);
       }
     },
-    [game, currentMoveIndex, activeExplanation],
+    [game, currentMoveIndex, activeExplanation, checkExplanationModeAndDisable],
   );
 
   const goToNext = useCallback(() => {
