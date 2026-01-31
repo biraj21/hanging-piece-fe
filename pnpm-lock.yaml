@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@lichess-org/chessground':
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^10.0.1
+        version: 10.0.1
       '@tailwindcss/vite':
         specifier: ^4.1.17
         version: 4.1.17(vite@7.3.1(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0))
@@ -439,8 +439,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@lichess-org/chessground@9.9.0':
-    resolution: {integrity: sha512-0BAyVXgRLaYTC8lj69Wr5EZoQzHRRwY1oGsggCbNXnkdcoQPP6lQgW0bHgbTScADGiNZvRs8VcV5JEZTTMEPfg==}
+  '@lichess-org/chessground@10.0.1':
+    resolution: {integrity: sha512-QNVgPB2XqfIo4qAbgffP/Eaze12ZzaBJsIDN65g6b1FqbVR0zJYYehTJ8C/dukPR+L9z6+7MJd8n00urelBl/A==}
 
   '@noble/ciphers@2.0.1':
     resolution: {integrity: sha512-xHK3XHPUW8DTAobU+G0XT+/w+JLM7/8k1UFdB5xg/zTFPnFCobhftzw8wl4Lw2aq/Rvir5pxfZV5fEazmeCJ2g==}
@@ -1826,7 +1826,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lichess-org/chessground@9.9.0': {}
+  '@lichess-org/chessground@10.0.1': {}
 
   '@noble/ciphers@2.0.1': {}
 

@@ -32,7 +32,7 @@ export interface MoveAnnotation {
   quality: MoveQuality;
 }
 
-export interface ChessBoardProps {
+type ChessBoardPropsBase = {
   move: {
     san: string;
     fen: string;
@@ -50,7 +50,21 @@ export interface ChessBoardProps {
   userColor?: BlackOrWhite;
   winner?: BlackOrWhite | "draw";
   moveAnnotations?: MoveAnnotation[];
-}
+};
+
+export type ChessBoardProps =
+  | (ChessBoardPropsBase & {
+      playable?: never;
+      onMove?: never;
+      legalDests?: never;
+      turnColor?: never;
+    })
+  | (ChessBoardPropsBase & {
+      playable: boolean;
+      onMove: (from: Key, to: Key) => void;
+      legalDests: Map<Key, Key[]>;
+      turnColor: BlackOrWhite;
+    });
 
 interface PlayerInfoProps {
   name: string;
@@ -63,8 +77,6 @@ interface PlayerInfoProps {
 }
 
 const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position, userColor, winner, className }) => {
-  // On mobile: left player has [Avatar, Name], right player has [Name, Avatar]
-  // On desktop (stacked): always [Avatar, Name]
   const isRightSide = position === "right";
 
   return (
@@ -122,7 +134,6 @@ const createMoveQualityBadgeSvg = (quality: MoveQuality): string => {
   const colors = getMoveQualityColor(quality);
   const symbol = getMoveQualitySymbol(quality);
 
-  // Position badge in top-right corner of the 100x100 viewBox
   const cx = 90;
   const cy = 10;
   const radius = 20;
@@ -153,7 +164,9 @@ function playSound(san: string) {
   }
 
   const audio = new Audio(`/audio/${sound}`);
-  audio.play();
+  audio.play().catch((error) => {
+    console.error("Error playing sound:", error);
+  });
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
@@ -168,9 +181,18 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   userColor,
   winner,
   moveAnnotations = [],
+  playable = false,
+  onMove,
+  legalDests,
+  turnColor,
 }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
+  const onMoveRef = useRef(onMove);
+
+  useEffect(() => {
+    onMoveRef.current = onMove;
+  }, [onMove]);
 
   useEffect(() => {
     if (!boardRef.current) {
@@ -186,15 +208,43 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       },
     }));
 
+    let movableConfig: Config["movable"] = {
+      free: false,
+      dests: new Map(),
+    };
+
+    if (playable) {
+      movableConfig = {
+        free: false,
+        dests: legalDests,
+        color: turnColor,
+        showDests: true,
+        events: {
+          after: (orig: Key, dest: Key) => {
+            console.log("ChessBoard: move completed", orig, dest);
+            if (onMoveRef.current) {
+              console.log("calling onMove callback");
+              onMoveRef.current(orig, dest);
+            }
+          },
+        },
+      };
+    }
+
     if (cgRef.current) {
       cgRef.current.set({
+        turnColor,
         fen: move.fen,
         lastMove: previousMove,
         drawable: { shapes: arrows, autoShapes },
         orientation,
+        movable: movableConfig,
+        draggable: { enabled: playable },
+        selectable: { enabled: playable },
       });
     } else {
       const config: Config = {
+        turnColor,
         orientation,
         fen: move.fen,
         lastMove: previousMove,
@@ -204,15 +254,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           shapes: arrows,
           autoShapes,
         },
-        movable: {
-          free: false,
-          dests: new Map(),
-        },
+        movable: movableConfig,
+        draggable: { enabled: playable },
+        selectable: { enabled: playable },
         highlight: {
           lastMove: true,
-        },
-        draggable: {
-          enabled: false,
+          check: true,
         },
         animation: {
           enabled: true,
@@ -223,7 +270,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
       cgRef.current = Chessground(boardRef.current, config);
     }
-  }, [move.fen, previousMove, arrows, orientation, moveAnnotations]);
+  }, [move.fen, previousMove, arrows, orientation, moveAnnotations, legalDests, turnColor, playable]);
 
   useEffect(() => {
     return () => {
@@ -232,12 +279,20 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     };
   }, []);
 
+  // Play move sound when move changes
   useEffect(() => {
-    // Play move sound when move changes
     playSound(move.san);
+    if (cgRef.current) {
+      const isCheck = move.san.includes("+") || move.san.includes("#");
+      console.log("Setting check highlight to", isCheck);
+      if (isCheck) {
+        cgRef.current.set({ check: true });
+      } else {
+        cgRef.current.set({ check: false });
+      }
+    }
   }, [move.san]);
 
-  // Determine which player goes on top based on orientation
   const topPlayer = orientation === "white" ? players?.black : players?.white;
   const bottomPlayer = orientation === "white" ? players?.white : players?.black;
   const topColor = orientation === "white" ? "black" : "white";
@@ -245,7 +300,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <div className={`w-full mx-auto flex flex-col gap-3 ${className}`}>
-      {/* Mobile: both players side by side above board */}
       {players && (
         <div className="flex w-full justify-between lg:hidden">
           <BoardPlayerInfo
@@ -257,7 +311,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             winner={winner}
             className="w-[calc(50%-0.5rem)]"
           />
-          {/* <span className="text-neutral-500 text-center">|</span> */}
           <BoardPlayerInfo
             name={orientation === "white" ? players.black.name : players.white.name}
             elo={orientation === "white" ? players.black.elo : players.white.elo}
@@ -270,9 +323,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         </div>
       )}
 
-      {/* Desktop: top player */}
-      <div className="hidden lg:block">
-        {topPlayer && (
+      {topPlayer && (
+        <div className="hidden lg:block">
           <BoardPlayerInfo
             name={topPlayer.name}
             elo={topPlayer.elo}
@@ -281,11 +333,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             userColor={userColor}
             winner={winner}
           />
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Chessboard with optional Eval Bar */}
-      <div className="grid grid-cols-[auto_1fr] gap-2">
+      <div className={evaluation ? "grid grid-cols-[auto_1fr] gap-2" : "w-full"}>
         {evaluation && (
           <EvalBar
             evaluation={evaluation}
@@ -301,9 +352,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         />
       </div>
 
-      {/* Desktop: bottom player */}
-      <div className="hidden lg:block">
-        {bottomPlayer && (
+      {bottomPlayer && (
+        <div className="hidden lg:block">
           <BoardPlayerInfo
             name={bottomPlayer.name}
             elo={bottomPlayer.elo}
@@ -312,8 +362,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             userColor={userColor}
             winner={winner}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -46,7 +46,7 @@ export const AnalysisSummaryModal: React.FC<AnalysisSummaryModalProps> = ({
 
         {/* Footer - Only show when opened right after analysis */}
         {afterAnalysis && (
-          <div className="sticky bottom-0 bg-neutral-800 border-t border-neutral-600 px-6 py-4 3">
+          <div className="sticky bottom-0 bg-neutral-800 border-t border-neutral-600 px-6 py-4">
             <button
               onClick={onStart}
               className="w-full flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm text-white transition-colors shadow-lg hover:shadow-xl"

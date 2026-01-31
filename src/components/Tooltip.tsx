@@ -16,88 +16,88 @@ export const Tooltip: React.FC<TooltipProps> = ({ term, definition, children, hi
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const calculatePosition = () => {
+      if (!triggerRef.current || !tooltipRef.current) return;
+
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      const gap = 8; // Gap between trigger and tooltip
+
+      const viewport = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+
+      let newPlacement: "top" | "bottom" | "left" | "right" = "top";
+      let top = 0;
+      let left = 0;
+
+      // Try top first
+      const topSpace = triggerRect.top;
+      const bottomSpace = viewport.height - triggerRect.bottom;
+      const leftSpace = triggerRect.left;
+      const rightSpace = viewport.width - triggerRect.right;
+
+      // Determine vertical placement
+      if (topSpace >= tooltipRect.height + gap) {
+        // Enough space on top
+        newPlacement = "top";
+        top = triggerRect.top - tooltipRect.height - gap;
+      } else if (bottomSpace >= tooltipRect.height + gap) {
+        // Not enough space on top, use bottom
+        newPlacement = "bottom";
+        top = triggerRect.bottom + gap;
+      } else if (leftSpace >= tooltipRect.width + gap) {
+        // Not enough vertical space, try left
+        newPlacement = "left";
+        left = triggerRect.left - tooltipRect.width - gap;
+        top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+      } else if (rightSpace >= tooltipRect.width + gap) {
+        // Not enough space left, try right
+        newPlacement = "right";
+        left = triggerRect.right + gap;
+        top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+      } else {
+        // Default to bottom if nothing fits well
+        newPlacement = "bottom";
+        top = triggerRect.bottom + gap;
+      }
+
+      // Calculate horizontal position for top/bottom placements
+      if (newPlacement === "top" || newPlacement === "bottom") {
+        // Center horizontally by default
+        left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
+
+        // Adjust if tooltip would overflow left
+        if (left < gap) {
+          left = gap;
+        }
+        // Adjust if tooltip would overflow right
+        if (left + tooltipRect.width > viewport.width - gap) {
+          left = viewport.width - tooltipRect.width - gap;
+        }
+      }
+
+      // Adjust vertical position for left/right placements
+      if (newPlacement === "left" || newPlacement === "right") {
+        // Adjust if tooltip would overflow top
+        if (top < gap) {
+          top = gap;
+        }
+        // Adjust if tooltip would overflow bottom
+        if (top + tooltipRect.height > viewport.height - gap) {
+          top = viewport.height - tooltipRect.height - gap;
+        }
+      }
+
+      setPlacement(newPlacement);
+      setPosition({ top, left });
+    };
+
     if (showTooltip && triggerRef.current && tooltipRef.current) {
       calculatePosition();
     }
   }, [showTooltip]);
-
-  const calculatePosition = () => {
-    if (!triggerRef.current || !tooltipRef.current) return;
-
-    const triggerRect = triggerRef.current.getBoundingClientRect();
-    const tooltipRect = tooltipRef.current.getBoundingClientRect();
-    const gap = 8; // Gap between trigger and tooltip
-
-    const viewport = {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-
-    let newPlacement: "top" | "bottom" | "left" | "right" = "top";
-    let top = 0;
-    let left = 0;
-
-    // Try top first
-    const topSpace = triggerRect.top;
-    const bottomSpace = viewport.height - triggerRect.bottom;
-    const leftSpace = triggerRect.left;
-    const rightSpace = viewport.width - triggerRect.right;
-
-    // Determine vertical placement
-    if (topSpace >= tooltipRect.height + gap) {
-      // Enough space on top
-      newPlacement = "top";
-      top = triggerRect.top - tooltipRect.height - gap;
-    } else if (bottomSpace >= tooltipRect.height + gap) {
-      // Not enough space on top, use bottom
-      newPlacement = "bottom";
-      top = triggerRect.bottom + gap;
-    } else if (leftSpace >= tooltipRect.width + gap) {
-      // Not enough vertical space, try left
-      newPlacement = "left";
-      left = triggerRect.left - tooltipRect.width - gap;
-      top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
-    } else if (rightSpace >= tooltipRect.width + gap) {
-      // Not enough space left, try right
-      newPlacement = "right";
-      left = triggerRect.right + gap;
-      top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
-    } else {
-      // Default to bottom if nothing fits well
-      newPlacement = "bottom";
-      top = triggerRect.bottom + gap;
-    }
-
-    // Calculate horizontal position for top/bottom placements
-    if (newPlacement === "top" || newPlacement === "bottom") {
-      // Center horizontally by default
-      left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
-
-      // Adjust if tooltip would overflow left
-      if (left < gap) {
-        left = gap;
-      }
-      // Adjust if tooltip would overflow right
-      if (left + tooltipRect.width > viewport.width - gap) {
-        left = viewport.width - tooltipRect.width - gap;
-      }
-    }
-
-    // Adjust vertical position for left/right placements
-    if (newPlacement === "left" || newPlacement === "right") {
-      // Adjust if tooltip would overflow top
-      if (top < gap) {
-        top = gap;
-      }
-      // Adjust if tooltip would overflow bottom
-      if (top + tooltipRect.height > viewport.height - gap) {
-        top = viewport.height - tooltipRect.height - gap;
-      }
-    }
-
-    setPlacement(newPlacement);
-    setPosition({ top, left });
-  };
 
   const getHighlightClass = (): string => {
     switch (highlightStyle) {

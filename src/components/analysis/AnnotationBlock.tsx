@@ -58,7 +58,6 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
       <div className={`flex-1 p-2 rounded-md text-sm font-medium leading-relaxed ${getAnnotationClasses(moveQuality)}`}>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
-            {/* {moveQuality && <MoveQualityIcon moveQuality={moveQuality} size="small" />} */}
             {moveQuality && moveQuality.charAt(0).toUpperCase() + moveQuality.slice(1)}.
             {hasBestLine && ` Best: ${bestLine.map((v) => v.san).join(" ")}`}
           </div>
