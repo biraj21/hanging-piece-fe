@@ -52,6 +52,7 @@ export default function IndexPage() {
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
                   allowFullScreen
+                  loading="lazy"
                 ></iframe>
               </div>
             </div>
