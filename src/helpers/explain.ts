@@ -20,6 +20,7 @@ interface ExplainOptions {
   engine?: Stockfish | null;
   depth?: number;
   isAuthenticated?: boolean;
+  userElo?: number;
 }
 
 let cachedEngine: Stockfish | undefined;
@@ -40,6 +41,7 @@ export async function explain({
   engine,
   depth = STOCKFISH_DEFAULT_DEPTH,
   isAuthenticated = true,
+  userElo,
 }: ExplainOptions): Promise<Explanation> {
   if (moveIndex < 0 || moveIndex >= moves.length) {
     throw new Error("Invalid move index.");
@@ -138,18 +140,19 @@ export async function explain({
     move: {
       san: move.san,
       uci: move.uci,
-      color: color,
-      beforeFen: beforeFen,
+      color,
+      beforeFen,
       afterFen: move.fen,
       evaluation: moveEval,
     },
     moveQuality: move.getQuality(),
-    userColor: userColor,
+    userColor,
     badContinuation,
     bestContinuation,
     opening,
     eco,
     additionalContext: annotationText,
+    userElo,
   };
 
   const data = await backendApi.explainMove(body, isAuthenticated);
