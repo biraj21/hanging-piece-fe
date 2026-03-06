@@ -24,10 +24,11 @@ export interface ExplainMovePayload {
   moveQuality?: string;
   badContinuation: MoveToSend[];
   bestContinuation: MoveToSend[];
-  userColor?: BlackOrWhite; // Color the user is playing as
+  userColor?: BlackOrWhite;
   opening?: string;
   eco?: string;
   additionalContext?: string;
+  userElo?: number;
 }
 
 interface ExplainMoveResponse {
