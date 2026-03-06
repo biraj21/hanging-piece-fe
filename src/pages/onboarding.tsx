@@ -1,3 +1,5 @@
+import clsx from "clsx";
+import { CheckCircle2Icon, CheckIcon } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 
@@ -25,7 +27,24 @@ export default function OnboardingPage() {
   const [chesscomValid, setChesscomValid] = useState(false);
   const [lichessValid, setLichessValid] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const getValidationMessage = () => {
+    const chesscomValidAndFilled = chesscomId.trim() && chesscomValid;
+    const lichessValidAndFilled = lichessId.trim() && lichessValid;
+
+    if (chesscomValidAndFilled && lichessValidAndFilled) {
+      return "Both usernames are valid. You can proceed.";
+    } else if (chesscomValidAndFilled) {
+      return "Chess.com username valid. You can proceed.";
+    } else if (lichessValidAndFilled) {
+      return "Lichess username valid.  You can proceed.";
+    }
+    return null;
+  };
+
+  const validationMessage = getValidationMessage();
+  const hasValidId = (chesscomId.trim() && chesscomValid) || (lichessId.trim() && lichessValid);
+
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
     const chessComTrimmed = chesscomId.trim();
@@ -77,8 +96,15 @@ export default function OnboardingPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="chesscomId" className="block text-left text-white text-xs font-medium">
+                <label
+                  htmlFor="chesscomId"
+                  className={clsx("text-left text-xs font-medium flex items-center", {
+                    "text-green-500": chesscomId && chesscomValid,
+                    "text-white": !chesscomId || !chesscomValid,
+                  })}
+                >
                   Chess.com Username
+                  {chesscomId && chesscomValid && <CheckCircle2Icon size={11} className="ml-1" />}
                 </label>
                 <span className="text-[10px] text-neutral-500">Optional</span>
               </div>
@@ -87,8 +113,8 @@ export default function OnboardingPage() {
                 type="text"
                 value={chesscomId}
                 onChange={(e) => {
-                  setChesscomId(e.target.value);
-                  debouncedSetChesscomId(e.target.value);
+                  setChesscomId(e.target.value.trim());
+                  debouncedSetChesscomId(e.target.value.trim());
                 }}
                 disabled={isSubmitting}
                 placeholder="e.g., hikaru"
@@ -113,8 +139,15 @@ export default function OnboardingPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="lichessId" className="block text-left text-white text-xs font-medium">
+                <label
+                  htmlFor="lichessId"
+                  className={clsx("text-left text-xs font-medium flex items-center", {
+                    "text-green-500": lichessId && lichessValid,
+                    "text-white": !lichessId || !lichessValid,
+                  })}
+                >
                   Lichess Username
+                  {lichessId && lichessValid && <CheckCircle2Icon size={11} className="ml-1" />}
                 </label>
                 <span className="text-[10px] text-neutral-500">Optional</span>
               </div>
@@ -123,8 +156,8 @@ export default function OnboardingPage() {
                 type="text"
                 value={lichessId}
                 onChange={(e) => {
-                  setLichessId(e.target.value);
-                  debouncedSetLichessId(e.target.value);
+                  setLichessId(e.target.value.trim());
+                  debouncedSetLichessId(e.target.value.trim());
                 }}
                 disabled={isSubmitting}
                 placeholder="e.g., DrNykterstein"
@@ -147,12 +180,19 @@ export default function OnboardingPage() {
               </div>
             )}
 
+            {validationMessage && (
+              <p className="text-center text-xs text-green-500 mb-2 flex items-center justify-center gap-1.5">
+                {validationMessage}
+              </p>
+            )}
+
             <div className="pt-1">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-white hover:bg-neutral-100 disabled:bg-neutral-600 disabled:cursor-not-allowed text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full"
+                className="bg-white hover:bg-neutral-100 disabled:bg-neutral-600 disabled:cursor-not-allowed text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full flex items-center justify-center gap-2"
               >
+                {hasValidId && <CheckIcon size={14} />}
                 {isSubmitting ? "Saving..." : "Continue"}
               </button>
             </div>
