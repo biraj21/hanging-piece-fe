@@ -2,7 +2,7 @@ import { useChesscomArchives, useChesscomGamesInfinite, useLichessGamesInfinite 
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { getChessAccountUsername } from "@/helpers/chess-username";
-import { parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
+import { parsePgnSimple, type ParsedPgnSimple } from "@/helpers/pgn";
 import { ROUTES } from "@/router/routes";
 import type { BlackOrWhite, UnifiedGame } from "@/types";
 import { BarChart3Icon, ClockIcon, HandshakeIcon, SwordsIcon, TrophyIcon, XIcon } from "lucide-react";
@@ -292,10 +292,10 @@ const Game: React.FC<GameProps> = ({ userColor, game, onAnalyze }) => {
   // Use opening field if available (Lichess), otherwise parse PGN (Chess.com)
 
   const infoFromPgn = useMemo(() => {
-    let parsedGame: ParsedGame;
+    let parsedGame: ParsedPgnSimple;
     let openingName: string | undefined;
     try {
-      parsedGame = parsePgnToGame(game.pgn);
+      parsedGame = parsePgnSimple(game.pgn);
 
       const ECOUrl = parsedGame.headers.get("ECOUrl") || "";
 
@@ -330,7 +330,7 @@ const Game: React.FC<GameProps> = ({ userColor, game, onAnalyze }) => {
     }
 
     return {
-      moveCount: Math.ceil(parsedGame.moves.length / 2),
+      moveCount: Math.ceil(parsedGame.moveCount / 2),
       opening: openingName || parsedGame.headers.get("Opening"),
       timeControl: timeControl,
     };
