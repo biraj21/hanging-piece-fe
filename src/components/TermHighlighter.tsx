@@ -68,7 +68,7 @@ export class TermHighlighter extends Component<TermHighlighterProps> {
             key={bestMatch.index}
             term={bestMatch.term}
             definition={CHESS_GLOSSARY_OBJ[bestMatch.term]}
-            highlightStyle="background"
+            highlightStyle="underline"
           >
             <>{matchedText}</>
           </Tooltip>,

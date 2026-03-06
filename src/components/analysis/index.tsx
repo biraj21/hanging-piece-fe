@@ -450,7 +450,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setPreviewMove(null);
         setPreviewLastMove(undefined);
         setPreviewEvaluation(null);
-        setArrows([]);
         setActiveTab("coach"); // auto-switch to AI Coach tab to show loading state
 
         const explanation = await explain({
@@ -539,6 +538,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     setShowSummaryModal(false);
     const badMove = findFirstBadMove();
     if (badMove) {
+      setCurrentMoveIndex(badMove.moveIndex);
       handleExplanation(badMove.moveIndex, badMove.annotationText);
     }
   }, [findFirstBadMove, handleExplanation]);
@@ -1232,7 +1232,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
                     onChange={(e) => handleStockfishDepthChange(parseInt(e.target.value))}
                     className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer  accent-emerald-600"
                   />
-                  <div className="flex items-center gap-2 min-w-[60px]">
+                  <div className="flex items-center gap-2 min-w-15">
                     <span className="text-sm text-neutral-300 font-mono">{stockfishDepth}</span>
                   </div>
                 </div>
