@@ -43,8 +43,7 @@ const ExplanationHeader: React.FC = () => (
 type GuidedStep = "overview" | "bad" | "best";
 
 type OverviewSections = {
-  hook: string;
-  whyFailed: string;
+  whatFailed: string;
   betterPlan: string;
   remember: string;
 };
@@ -76,8 +75,14 @@ const parseOverview = (overview: string): OverviewSections => {
     remember: pickFromLines("Remember") || pickFromText("Remember", []),
   };
 
-  if (byLabel.hook && byLabel.whyFailed && byLabel.betterPlan && byLabel.remember) {
-    return byLabel;
+  const combinedWhatFailed = [byLabel.hook, byLabel.whyFailed].filter(Boolean).join(" ");
+
+  if (combinedWhatFailed && byLabel.betterPlan && byLabel.remember) {
+    return {
+      whatFailed: combinedWhatFailed,
+      betterPlan: byLabel.betterPlan,
+      remember: byLabel.remember,
+    };
   }
 
   const sentences = overview
@@ -86,8 +91,10 @@ const parseOverview = (overview: string): OverviewSections => {
     .filter(Boolean);
 
   return {
-    hook: byLabel.hook || sentences[0] || "The move looked natural but missed a stronger idea.",
-    whyFailed: byLabel.whyFailed || sentences[1] || "The played line gives your opponent the initiative.",
+    whatFailed:
+      combinedWhatFailed ||
+      [sentences[0], sentences[1]].filter(Boolean).join(" ") ||
+      "The move looked natural but missed a stronger idea and gave your opponent the initiative.",
     betterPlan: byLabel.betterPlan || sentences[2] || "The engine line creates a direct, forcing advantage.",
     remember: byLabel.remember || sentences[3] || "Before defending, check if a counter-threat is stronger.",
   };
@@ -132,59 +139,71 @@ const OverviewPanel: React.FC<{
   const sections = parseOverview(overview);
 
   return (
-    <>
-      <div className="py-2">
-        <TermHighlighter
-          text={"👉 " + sections.hook}
-          className="text-sm text-neutral-100 leading-relaxed font-medium"
-          matchedTerms={matchedTerms}
-        />
-      </div>
-
-      <div className="grid gap-6 mt-4">
-        <div className="border-l-3 border-red-500 pl-3 py-1">
-          <div className="flex items-center gap-1.5">
-            <AlertTriangleIcon size={10} className="text-red-400 shrink-0" />
-            <p className="text-[10px] uppercase tracking-wide text-red-300 font-semibold">Why This Failed</p>
+    <div>
+      <div className="mt-4 rounded-lg border border-neutral-700/60 bg-linear-to-b from-neutral-800/60 to-neutral-900/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+        <div className="w-full px-3 py-2.5 bg-neutral-700/40 border-b border-neutral-600/50">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-neutral-200" />
+            <div>
+              <h4 className="text-xs font-semibold text-neutral-200 uppercase tracking-wide">
+                {`Read this in three beats`}
+              </h4>
+              <p className="text-[10px] text-neutral-400 mt-1 leading-none">
+                First understand WHY this failed, then compare it to the stronger plan, then keep the takeaway.
+              </p>
+            </div>
           </div>
-          <div className="mt-1.5">
-            <TermHighlighter
-              text={sections.whyFailed}
-              className="text-sm text-neutral-200 leading-relaxed"
-              matchedTerms={matchedTerms}
-            />
-          </div>
-          <ExploreLineButton label="Explore Line" tone="bad" onClick={onExploreBad} disabled={!hasBadLine} />
         </div>
 
-        <div className="border-l-3 border-emerald-500 pl-3 py-1">
-          <div className="flex items-center gap-1.5">
-            <TargetIcon size={10} className="text-emerald-400 shrink-0" />
-            <p className="text-[10px] uppercase tracking-wide text-emerald-300 font-semibold">Better Plan</p>
-          </div>
-          <div className="mt-1.5">
+        <div className="space-y-4 p-4">
+          <section className="min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              {/* <AlertTriangleIcon size={15} className="shrink-0 text-red-300" /> */}
+              <h4 className="text-sm font-semibold text-red-400">Why this failed</h4>
+            </div>
+            <TermHighlighter
+              text={sections.whatFailed}
+              className="text-[14px] leading-6 text-neutral-100"
+              matchedTerms={matchedTerms}
+            />
+            <div className="mt-1">
+              <ExploreLineButton label="Explore this line" tone="bad" onClick={onExploreBad} disabled={!hasBadLine} />
+            </div>
+          </section>
+
+          <section className="min-w-0 border-t border-neutral-700/50 pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              {/* <TargetIcon size={15} className="shrink-0 text-emerald-300" /> */}
+              <h4 className="text-sm font-semibold text-emerald-400">Stronger plan</h4>
+            </div>
             <TermHighlighter
               text={sections.betterPlan}
-              className="text-sm text-neutral-200 mt-1.5 leading-relaxed"
+              className="text-[14px] leading-6 text-neutral-100"
               matchedTerms={matchedTerms}
             />
-          </div>
-          <ExploreLineButton label="Explore Line" tone="best" onClick={onExploreBest} disabled={!hasBestLine} />
-        </div>
-
-        <div className="rounded-md border border-neutral-600/50 bg-neutral-800/40 p-3">
-          <div className="flex items-center gap-1.5">
-            <BookOpenIcon size={10} className="text-blue-400 shrink-0" />
-            <p className="text-[10px] uppercase tracking-wide text-blue-300 font-semibold">Remember</p>
-          </div>
-          <TermHighlighter
-            text={sections.remember}
-            className="text-sm text-neutral-200 mt-1.5 leading-relaxed"
-            matchedTerms={matchedTerms}
-          />
+            <div className="mt-1">
+              <ExploreLineButton
+                label="Explore this line"
+                tone="best"
+                onClick={onExploreBest}
+                disabled={!hasBestLine}
+              />
+            </div>
+          </section>
         </div>
       </div>
-    </>
+      <section className="mt-4 rounded-lg border border-sky-500/20 bg-sky-500/6 p-4">
+        <div className="flex items-center gap-2">
+          <BookOpenIcon size={15} className="shrink-0 text-sky-300" />
+          <h4 className="text-sm font-semibold text-sky-400">Takeaway</h4>
+        </div>
+        <TermHighlighter
+          text={sections.remember}
+          className="mt-3 text-[14px] leading-6 text-neutral-100"
+          matchedTerms={matchedTerms}
+        />
+      </section>
+    </div>
   );
 };
 
@@ -226,6 +245,9 @@ const ExplanationContent: React.FC<{
   const quality = getMoveQualityDisplay(moveQuality);
   const hasBadLine = badContinuation.length > 0 && badLine.length > 0;
   const hasBestLine = bestContinuation.length > 0 && bestLine.length > 0;
+  const activeTabClasses =
+    "border-neutral-500/80 bg-neutral-100 text-neutral-950 shadow-[0_1px_0_rgba(255,255,255,0.12)]";
+  const inactiveTabClasses = "border-neutral-600/60 bg-neutral-800/40 text-neutral-300 hover:bg-neutral-700/40";
 
   const handleOverviewTab = () => {
     setActiveStep("overview");
@@ -266,40 +288,34 @@ const ExplanationContent: React.FC<{
               onClick={handleOverviewTab}
               className={clsx(
                 "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors text-left flex items-center gap-1.5",
-                activeStep === "overview"
-                  ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-200"
-                  : "border-neutral-600/60 bg-neutral-800/40 text-neutral-300 hover:bg-neutral-700/40",
+                activeStep === "overview" ? activeTabClasses : inactiveTabClasses,
               )}
             >
               <ScanEyeIcon size={13} />
-              <span className="uppercase tracking-wide font-semibold">1. Big Picture</span>
+              <span className="uppercase tracking-wide font-semibold">Big Picture</span>
             </button>
             {badContinuation.length > 0 && (
               <button
                 onClick={handleExploreBad}
                 className={clsx(
                   "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors text-left flex items-center gap-1.5",
-                  activeStep === "bad"
-                    ? "border-red-500/60 bg-red-500/10 text-red-200"
-                    : "border-neutral-600/60 bg-neutral-800/40 text-neutral-300 hover:bg-neutral-700/40",
+                  activeStep === "bad" ? activeTabClasses : inactiveTabClasses,
                 )}
               >
-                <AlertTriangleIcon size={13} className="text-red-400 shrink-0" />
-                <span className="uppercase tracking-wide text-red-300 font-semibold">2. Why This Failed</span>
+                <AlertTriangleIcon size={13} />
+                <span className="uppercase tracking-wide font-semibold">Why This Failed</span>
               </button>
             )}
             <button
               onClick={handleExploreBest}
               className={clsx(
                 "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors text-left flex items-center gap-1.5",
-                activeStep === "best"
-                  ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-200"
-                  : "border-neutral-600/60 bg-neutral-800/40 text-neutral-300 hover:bg-neutral-700/40",
+                activeStep === "best" ? activeTabClasses : inactiveTabClasses,
               )}
             >
-              <TargetIcon size={13} className="text-emerald-400 shrink-0" />
-              <span className=" uppercase tracking-wide text-emerald-300 font-semibold">
-                {badContinuation.length > 0 ? "3. Better Plan" : "2. Better Plan"}
+              <TargetIcon size={13} className=" shrink-0" />
+              <span className=" uppercase tracking-wide  font-semibold">
+                {badContinuation.length > 0 ? "Better Plan" : "Better Plan"}
               </span>
             </button>
           </div>

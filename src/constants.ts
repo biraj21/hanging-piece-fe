@@ -15,7 +15,4 @@ export const CONTINUATION_LENGTH: Record<MoveQuality, number> = {
   blunder: 8,
   mistake: 5,
   inaccuracy: 5,
-  good: 3,
-  great: 5,
-  brilliant: 8,
 };

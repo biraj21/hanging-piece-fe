@@ -836,260 +836,91 @@ export const Analysis: React.FC<AnalysisProps> = ({
                 <div className="space-y-1.5 flex-1">
                   {(() => {
                     const rows: React.ReactNode[] = [];
-                    for (let i = 0; i < moves.length; ) {
-                      // Capture current indices to avoid closure issues
+                    const getAnnotationProps = (moveIndex: number) => {
+                      const move = moves[moveIndex];
+                      if (!move) {
+                        return null;
+                      }
+
+                      const hasFullAnnotation = !!move.getQuality() && !!move.variations?.[0]?.length;
+                      const hasSimpleAnnotation = !hasFullAnnotation && move.textComments.length > 0;
+                      if (!hasFullAnnotation && !hasSimpleAnnotation) {
+                        return null;
+                      }
+
+                      return {
+                        isSimple: hasSimpleAnnotation,
+                        explainDisabled: loadingExplanation !== false && loadingExplanation !== moveIndex,
+                        explanationLoading: loadingExplanation === moveIndex,
+                      };
+                    };
+
+                    for (let i = 0; i < moves.length; i += 2) {
                       const whiteIndex = i;
                       const blackIndex = i + 1;
-
-                      const isWhite = i % 2 === 0;
+                      const whiteMove = moves[whiteIndex];
+                      const blackMove = moves[blackIndex];
                       const moveNumber = Math.floor(i / 2) + 1;
-                      const move = moves[i];
-                      const annotationType = move.getQuality();
-                      const bestLine = move.variations?.[0];
-                      const hasAnnotation = !!annotationType && !!bestLine?.length;
-                      const hasSimpleAnnotation = !hasAnnotation && move.textComments.length > 0;
 
-                      if (isWhite) {
-                        // White's move
-                        const blackMove = moves[blackIndex];
-                        const blackAnnotationType = blackMove ? blackMove.getQuality() : null;
-                        const blackBestLine = blackMove?.variations?.[0];
-                        const blackHasAnnotation = !!blackAnnotationType && !!blackBestLine?.length;
-                        const blackHasSimpleAnnotation =
-                          !blackHasAnnotation && blackMove?.textComments.length
-                            ? blackMove.textComments.length > 0
-                            : false;
+                      if (!whiteMove) {
+                        continue;
+                      }
 
-                        if (hasAnnotation) {
-                          // Full annotation with best line
-                          // White has annotation: show white alone, then comment
-                          rows.push(
-                            <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
-                              <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
-                                {moveNumber}.
-                              </span>
-                              <MoveItem
-                                key={`move-${whiteIndex}`}
-                                move={move}
-                                index={whiteIndex}
-                                isSelected={whiteIndex === currentMoveIndex}
-                                onClick={handleMoveClick}
-                                className="rounded-md"
-                              />
-                              <div className="flex-1 px-2 py-1" />
-                            </div>,
-                          );
-                          // Annotation comment with best line
-                          rows.push(
-                            <AnnotationBlock
-                              key={`ann-${whiteIndex}`}
-                              moves={moves}
-                              moveIndex={whiteIndex}
-                              explainDisabled={loadingExplanation !== false && loadingExplanation !== whiteIndex}
-                              explanationLoading={loadingExplanation === whiteIndex}
-                              explain={handleExplanation}
-                            />,
-                          );
-                          i++;
+                      rows.push(
+                        <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
+                          <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
+                            {moveNumber}.
+                          </span>
+                          <MoveItem
+                            move={whiteMove}
+                            index={whiteIndex}
+                            isSelected={whiteIndex === currentMoveIndex}
+                            onClick={handleMoveClick}
+                            className="rounded-md"
+                          />
+                          {blackMove ? (
+                            <MoveItem
+                              move={blackMove}
+                              index={blackIndex}
+                              isSelected={blackIndex === currentMoveIndex}
+                              onClick={handleMoveClick}
+                            />
+                          ) : (
+                            <div className="flex-1 px-2 py-1" />
+                          )}
+                        </div>,
+                      );
 
-                          // Now show black's move on continuation row: ... | black
-                          if (blackMove) {
-                            rows.push(
-                              <div key={`row-${blackIndex}`} className="flex gap-1.5 items-stretch">
-                                <span className="text-neutral-500 text-xs sm:text-sm w-6 shrink-0 flex items-center justify-center opacity-60">
-                                  ...
-                                </span>
-                                <div className="flex-1 px-2 py-1" />
-                                <MoveItem
-                                  key={`move-${blackIndex}`}
-                                  move={blackMove}
-                                  index={blackIndex}
-                                  isSelected={blackIndex === currentMoveIndex}
-                                  onClick={handleMoveClick}
-                                />
-                              </div>,
-                            );
-                            if (blackHasAnnotation) {
-                              rows.push(
-                                <AnnotationBlock
-                                  key={`ann-${blackIndex}`}
-                                  moves={moves}
-                                  moveIndex={blackIndex}
-                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
-                                  explanationLoading={loadingExplanation === blackIndex}
-                                  explain={handleExplanation}
-                                />,
-                              );
-                            } else if (blackHasSimpleAnnotation) {
-                              rows.push(
-                                <AnnotationBlock
-                                  key={`ann-${blackIndex}`}
-                                  moves={moves}
-                                  moveIndex={blackIndex}
-                                  isSimple
-                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
-                                  explanationLoading={loadingExplanation === blackIndex}
-                                  explain={handleExplanation}
-                                />,
-                              );
-                            }
-                            i++;
-                          }
-                        } else if (hasSimpleAnnotation) {
-                          // Simple annotation without best line (e.g., "Black resigns." or opening name)
-                          rows.push(
-                            <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
-                              <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
-                                {moveNumber}.
-                              </span>
-                              <MoveItem
-                                move={move}
-                                index={whiteIndex}
-                                isSelected={whiteIndex === currentMoveIndex}
-                                onClick={handleMoveClick}
-                                className="rounded-md"
-                              />
-                              <div className="flex-1 px-2 py-1" />
-                            </div>,
-                          );
-                          // Simple annotation comment
-                          rows.push(
-                            <AnnotationBlock
-                              key={`ann-${whiteIndex}`}
-                              moves={moves}
-                              moveIndex={whiteIndex}
-                              isSimple
-                              explainDisabled={loadingExplanation !== false && loadingExplanation !== whiteIndex}
-                              explanationLoading={loadingExplanation === whiteIndex}
-                              explain={handleExplanation}
-                            />,
-                          );
-                          i++;
+                      const whiteAnnotationProps = getAnnotationProps(whiteIndex);
+                      if (whiteAnnotationProps) {
+                        rows.push(
+                          <AnnotationBlock
+                            key={`ann-${whiteIndex}`}
+                            moves={moves}
+                            moveIndex={whiteIndex}
+                            currentMoveIndex={currentMoveIndex}
+                            isSimple={whiteAnnotationProps.isSimple}
+                            explainDisabled={whiteAnnotationProps.explainDisabled}
+                            explanationLoading={whiteAnnotationProps.explanationLoading}
+                            explain={handleExplanation}
+                          />,
+                        );
+                      }
 
-                          // Now show black's move on continuation row: ... | black
-                          if (blackMove) {
-                            rows.push(
-                              <div key={`row-${blackIndex}`} className="flex gap-1.5 items-stretch">
-                                <span className="text-neutral-500 text-xs sm:text-sm w-6 shrink-0 flex items-center justify-center opacity-60">
-                                  ...
-                                </span>
-                                <div className="flex-1 px-2 py-1" />
-                                <MoveItem
-                                  move={blackMove}
-                                  index={blackIndex}
-                                  isSelected={blackIndex === currentMoveIndex}
-                                  onClick={handleMoveClick}
-                                />
-                              </div>,
-                            );
-                            if (blackHasAnnotation) {
-                              rows.push(
-                                <AnnotationBlock
-                                  key={`ann-${blackIndex}`}
-                                  moves={moves}
-                                  moveIndex={blackIndex}
-                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
-                                  explanationLoading={loadingExplanation === blackIndex}
-                                  explain={handleExplanation}
-                                />,
-                              );
-                            } else if (blackHasSimpleAnnotation) {
-                              rows.push(
-                                <AnnotationBlock
-                                  key={`ann-${blackIndex}`}
-                                  moves={moves}
-                                  moveIndex={blackIndex}
-                                  isSimple
-                                  explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
-                                  explanationLoading={loadingExplanation === blackIndex}
-                                  explain={handleExplanation}
-                                />,
-                              );
-                            }
-                            i++;
-                          }
-                        } else if (blackHasAnnotation || blackHasSimpleAnnotation) {
-                          // White has no annotation but black has annotation (full or simple): show white | black then annotation
-                          rows.push(
-                            <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
-                              <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
-                                {moveNumber}.
-                              </span>
-                              <MoveItem
-                                move={move}
-                                index={whiteIndex}
-                                isSelected={whiteIndex === currentMoveIndex}
-                                onClick={handleMoveClick}
-                                className="rounded-md"
-                              />
-                              <MoveItem
-                                move={blackMove!}
-                                index={blackIndex}
-                                isSelected={blackIndex === currentMoveIndex}
-                                onClick={handleMoveClick}
-                              />
-                            </div>,
-                          );
-                          i++;
-
-                          // Black's annotation
-                          if (blackHasAnnotation) {
-                            rows.push(
-                              <AnnotationBlock
-                                key={`ann-${blackIndex}`}
-                                moves={moves}
-                                moveIndex={blackIndex}
-                                explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
-                                explanationLoading={loadingExplanation === blackIndex}
-                                explain={handleExplanation}
-                              />,
-                            );
-                          } else if (blackHasSimpleAnnotation) {
-                            rows.push(
-                              <AnnotationBlock
-                                key={`ann-${blackIndex}`}
-                                moves={moves}
-                                moveIndex={blackIndex}
-                                isSimple
-                                explainDisabled={loadingExplanation !== false && loadingExplanation !== blackIndex}
-                                explanationLoading={loadingExplanation === blackIndex}
-                                explain={handleExplanation}
-                              />,
-                            );
-                          }
-                          i++;
-                        } else {
-                          // Neither has annotation: show both moves together
-                          rows.push(
-                            <div key={`row-${whiteIndex}`} className="flex gap-1.5 items-stretch">
-                              <span className="text-neutral-400 text-xs sm:text-sm font-semibold w-6 shrink-0 flex items-center justify-center opacity-75">
-                                {moveNumber}.
-                              </span>
-                              <MoveItem
-                                move={move}
-                                index={whiteIndex}
-                                isSelected={whiteIndex === currentMoveIndex}
-                                onClick={handleMoveClick}
-                                className="rounded-md"
-                              />
-                              {blackMove ? (
-                                <MoveItem
-                                  move={blackMove}
-                                  index={blackIndex}
-                                  isSelected={blackIndex === currentMoveIndex}
-                                  onClick={handleMoveClick}
-                                />
-                              ) : (
-                                <div className="flex-1 px-2 py-1" />
-                              )}
-                            </div>,
-                          );
-                          i++;
-                          if (blackMove) i++;
-                        }
-                      } else {
-                        // Shouldn't happen in normal flow, but handle edge case
-                        i++;
+                      const blackAnnotationProps = getAnnotationProps(blackIndex);
+                      if (blackAnnotationProps) {
+                        rows.push(
+                          <AnnotationBlock
+                            key={`ann-${blackIndex}`}
+                            moves={moves}
+                            moveIndex={blackIndex}
+                            currentMoveIndex={currentMoveIndex}
+                            isSimple={blackAnnotationProps.isSimple}
+                            explainDisabled={blackAnnotationProps.explainDisabled}
+                            explanationLoading={blackAnnotationProps.explanationLoading}
+                            explain={handleExplanation}
+                          />,
+                        );
                       }
                     }
 

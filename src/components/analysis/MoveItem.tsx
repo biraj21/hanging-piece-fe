@@ -1,7 +1,8 @@
+import clsx from "clsx";
 import React, { useEffect, useRef } from "react";
 
 import { ChessPiece } from "@/components/ChessBoard/ChessPiece";
-import { getAnnotationClasses } from "@/helpers/move-quality";
+import { getMoveClasses } from "@/helpers/move-quality";
 import type { GameMove } from "@/helpers/pgn";
 import { isPawnsEval } from "@/helpers/pgn";
 
@@ -34,10 +35,7 @@ export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, cl
   const moveQuality = move.getQuality();
   const elementRef = useRef<HTMLDivElement | null>(null);
 
-  let tileClasses = getAnnotationClasses(moveQuality);
-  if (isSelected) {
-    tileClasses = "bg-neutral-500/60 border text-neutral-300";
-  }
+  const tileClasses = getMoveClasses(moveQuality, isSelected);
 
   useEffect(() => {
     if (isSelected && elementRef.current) {
@@ -52,7 +50,7 @@ export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, cl
       ref={elementRef}
     >
       <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-1 font-semibold text-white">
+        <div className={clsx("flex items-center gap-1 font-semibold text-white", {})}>
           {moveQuality && <MoveQualityIcon moveQuality={moveQuality} size="small" />}
           <ChessPiece san={move.san} ply={move.ply} />
           <span>{move.san}</span>

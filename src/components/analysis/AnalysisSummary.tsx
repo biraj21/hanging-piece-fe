@@ -18,8 +18,8 @@ export interface AnalysisSummaryProps {
 
 function calculateSummary(game: ParsedGame): AnalysisSummary {
   const summary: AnalysisSummary = {
-    white: { blunder: 0, mistake: 0, inaccuracy: 0, good: 0, great: 0, brilliant: 0 },
-    black: { blunder: 0, mistake: 0, inaccuracy: 0, good: 0, great: 0, brilliant: 0 },
+    white: { blunder: 0, mistake: 0, inaccuracy: 0 },
+    black: { blunder: 0, mistake: 0, inaccuracy: 0 },
   };
 
   for (const move of game.moves) {
@@ -77,12 +77,6 @@ export const AnalysisSummary: React.FC<AnalysisSummaryProps> = ({ game, whiteNam
                   return playerSummary.mistake;
                 case "inaccuracy":
                   return playerSummary.inaccuracy;
-                case "good":
-                  return playerSummary.good;
-                case "great":
-                  return playerSummary.great;
-                case "brilliant":
-                  return playerSummary.brilliant;
                 default:
                   return 0;
               }

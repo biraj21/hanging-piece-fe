@@ -1,3 +1,5 @@
+import clsx from "clsx";
+
 import type { MoveQuality } from "@/helpers/pgn";
 
 /**
@@ -11,12 +13,6 @@ export function getMoveQualitySymbol(quality: MoveQuality): string {
       return "?";
     case "inaccuracy":
       return "?!";
-    case "good":
-      return "!";
-    case "great":
-      return "!¡";
-    case "brilliant":
-      return "!!";
   }
 }
 
@@ -33,12 +29,6 @@ export function getNagFromQuality(quality: MoveQuality): number | undefined {
       return 2; // ?
     case "inaccuracy":
       return 6; // ?!
-    case "good":
-      return 1; // !
-    case "great":
-      return 69; // custom NAG for "Great" move
-    case "brilliant":
-      return 3; // !!
     default:
       return undefined;
   }
@@ -50,17 +40,11 @@ export function getNagFromQuality(quality: MoveQuality): number | undefined {
 export function getMoveQualityColor(quality: MoveQuality): { bg: string; border: string } {
   switch (quality) {
     case "blunder":
-      return { bg: "#ef4444", border: "#dc2626" };
+      return { bg: "oklch(63.7% 0.237 25.331)", border: "oklch(63.7% 0.237 25.331)" };
     case "mistake":
-      return { bg: "#f59e0b", border: "#d97706" };
+      return { bg: "oklch(70.5% 0.213 47.604)", border: "oklch(70.5% 0.213 47.604)" };
     case "inaccuracy":
-      return { bg: "#3b82f6", border: "#2563eb" };
-    case "good":
-      return { bg: "#22c55e", border: "#16a34a" };
-    case "great":
-      return { bg: "#06b6d4", border: "#0891b2" };
-    case "brilliant":
-      return { bg: "#a855f7", border: "#9333ea" };
+      return { bg: "oklch(79.5% 0.184 86.047)", border: "oklch(79.5% 0.184 86.047)" };
     default:
       return { bg: "#6b7280", border: "#4b5563" };
   }
@@ -69,22 +53,28 @@ export function getMoveQualityColor(quality: MoveQuality): { bg: string; border:
 /**
  * Get Tailwind CSS classes for annotation blocks (background, border, text colors)
  */
-export function getAnnotationClasses(moveQuality?: MoveQuality): string {
+export function getMoveClasses(moveQuality?: MoveQuality, isSelected?: boolean): string {
   switch (moveQuality) {
     case "blunder":
-      return "bg-red-500/50 border border-red-500 text-red-100";
+      return clsx("bg-red-500/50 border-2", {
+        "border-transparent": !isSelected,
+        "border-red-500": isSelected,
+      });
     case "mistake":
-      return "bg-amber-500/50 border border-amber-500 text-amber-100";
+      return clsx("bg-neutral-800 bg-orange-500/50 border-2", {
+        "border-transparent": !isSelected,
+        "border-orange-500": isSelected,
+      });
     case "inaccuracy":
-      return "bg-blue-500/50 border border-blue-500 text-blue-100";
-    case "good":
-      return "bg-emerald-500/50 border border-emerald-500 text-emerald-100";
-    case "great":
-      return "bg-cyan-500/50 border border-cyan-500 text-cyan-100";
-    case "brilliant":
-      return "bg-purple-500/50 border border-purple-500 text-purple-100";
+      return clsx("bg-yellow-500/50 border-2", {
+        "border-transparent": !isSelected,
+        "border-yellow-500": isSelected,
+      });
     default:
-      return "bg-neutral-800 text-neutral-200 border border-neutral-700";
+      return clsx(" text-neutral-200 border-2", {
+        "border-transparent bg-neutral-800": !isSelected,
+        "border-neutral-500 bg-neutral-600": isSelected,
+      });
   }
 }
 
@@ -96,15 +86,9 @@ export function getIconColorClasses(moveQuality: MoveQuality): string {
     case "blunder":
       return "bg-red-500 text-white border-red-500";
     case "mistake":
-      return "bg-amber-500 text-white border-amber-500";
+      return "bg-orange-500 text-white border-orange-500";
     case "inaccuracy":
-      return "bg-blue-500 text-white border-blue-500";
-    case "good":
-      return "bg-emerald-500 text-white border-emerald-500";
-    case "great":
-      return "bg-cyan-500 text-white border-cyan-500";
-    case "brilliant":
-      return "bg-purple-500 text-white border-purple-500";
+      return "bg-yellow-500 text-white border-yellow-500";
     default:
       return "bg-gray-600 text-white border-gray-600";
   }
@@ -118,15 +102,9 @@ export function getMoveQualityDisplay(quality?: MoveQuality): { text: string; co
     case "blunder":
       return { text: "BLUNDER", color: "text-red-400" };
     case "mistake":
-      return { text: "MISTAKE", color: "text-amber-400" };
+      return { text: "MISTAKE", color: "text-orange-400" };
     case "inaccuracy":
-      return { text: "INACCURACY", color: "text-blue-400" };
-    case "good":
-      return { text: "GOOD MOVE", color: "text-emerald-400" };
-    case "great":
-      return { text: "GREAT", color: "text-cyan-400" };
-    case "brilliant":
-      return { text: "BRILLIANT", color: "text-purple-400" };
+      return { text: "INACCURACY", color: "text-yellow-400" };
     default:
       return { text: "MOVE", color: "text-neutral-400" };
   }

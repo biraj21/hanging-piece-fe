@@ -30,7 +30,7 @@ export type VariationMove = {
 /** Best continuation (array of moves with FENs) if this move was suboptimal */
 export type Variation = VariationMove[];
 
-export type MoveQuality = "blunder" | "mistake" | "inaccuracy" | "good" | "great" | "brilliant";
+export type MoveQuality = "blunder" | "mistake" | "inaccuracy";
 
 /** Named args for GameMove construction */
 export interface GameMoveInit {
@@ -112,9 +112,6 @@ export class GameMove {
       { nag: 4, quality: "blunder" }, // ??
       { nag: 2, quality: "mistake" }, // ?
       { nag: 6, quality: "inaccuracy" }, // ?!
-      { nag: 3, quality: "brilliant" }, // !!
-      { nag: 1, quality: "good" }, // !
-      { nag: 5, quality: "good" }, // !?
     ];
 
     for (const { nag, quality } of priority) {

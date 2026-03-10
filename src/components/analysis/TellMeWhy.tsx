@@ -13,10 +13,11 @@ export const TellMeWhyButton: React.FC<TellMeWhyButtonProps> = ({ onClick, disab
       onClick={onClick}
       disabled={disabled}
       className={clsx(
-        "flex items-center gap-2 px-2 py-1.5 bg-emerald-600 border border-emerald-500/50 rounded-md text-xs font-medium text-white shadow hover:shadow-md transition-all duration-200 whitespace-nowrap",
+        "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors duration-200",
         {
-          "opacity-60 cursor-not-allowed hover:bg-emerald-600": disabled,
-          "hover:bg-emerald-700": !disabled && onClick,
+          "cursor-not-allowed bg-neutral-700/70 text-neutral-400": disabled,
+          "bg-emerald-600 text-white shadow-[inset_0_-1px_0_rgba(0,0,0,0.25)] hover:bg-emerald-500 active:bg-emerald-700":
+            !disabled && onClick,
         },
       )}
     >
