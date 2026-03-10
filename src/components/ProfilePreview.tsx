@@ -20,6 +20,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
   onError,
   showPlayButton = true,
 }) => {
+  username = username.trim();
   const isChesscom = platform === "chesscom";
   const shouldFetch = !!username;
 
@@ -29,7 +30,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
   const data = isChesscom ? chesscomQuery.data : lichessQuery.data;
   const isLoading = isChesscom ? chesscomQuery.isLoading : lichessQuery.isLoading;
   const isError = isChesscom ? chesscomQuery.isError : lichessQuery.isError;
-  const error = isChesscom ? chesscomQuery.error : lichessQuery.error;
+  const error = !shouldFetch ? null : isChesscom ? chesscomQuery.error : lichessQuery.error;
 
   const chesscomData = chesscomQuery.data;
   const lichessData = lichessQuery.data;
@@ -72,6 +73,10 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
       .slice(0, 2)
       .join("");
   };
+
+  if (!username) {
+    return null;
+  }
 
   if (isError && error) {
     return (

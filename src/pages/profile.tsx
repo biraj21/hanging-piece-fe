@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { Edit2Icon, LogOutIcon, MailIcon, SaveIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -52,6 +53,8 @@ export default function ProfilePage() {
   const handleCancel = () => {
     setChesscomId(user?.chesscomId || "");
     setLichessId(user?.lichessId || "");
+    setChesscomIdForQuery("");
+    setLichessId("");
     setError(null);
     setIsEditing(false);
 
@@ -149,112 +152,89 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {!isEditing ? (
-          <div className="space-y-4">
-            {user?.chesscomId ? (
-              <div>
-                <p className="text-xs text-neutral-500 font-medium mb-2">Chess.com</p>
-                <ProfilePreview platform="chesscom" username={user.chesscomId} />
-              </div>
-            ) : (
-              <div className="p-3 bg-neutral-800/30 border border-neutral-700/50 rounded-lg text-center">
-                <p className="text-xs text-neutral-500">No Chess.com account connected</p>
-              </div>
-            )}
-
-            {user?.lichessId ? (
-              <div>
-                <p className="text-xs text-neutral-500 font-medium mb-2">Lichess</p>
-                <ProfilePreview platform="lichess" username={user.lichessId} />
-              </div>
-            ) : (
-              <div className="p-3 bg-neutral-800/30 border border-neutral-700/50 rounded-lg text-center">
-                <p className="text-xs text-neutral-500">No Lichess account connected</p>
-              </div>
+        <div className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <label htmlFor="chesscomId" className="block text-xs text-neutral-400 font-medium">
+              Your Chess.com
+            </label>
+            <input
+              id="chesscomId"
+              type="text"
+              value={chesscomId}
+              onChange={(e) => {
+                setChesscomId(e.target.value);
+                debouncedSetChesscomId(e.target.value);
+              }}
+              disabled={!isEditing || isSubmitting}
+              placeholder="e.g., hikaru"
+              className="w-full bg-neutral-800/50 border border-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 disabled:bg-neutral-800 disabled:cursor-not-allowed placeholder-neutral-500"
+            />
+            {(chesscomId || chesscomIdForQuery.trim()) && (
+              <ProfilePreview
+                platform="chesscom"
+                username={chesscomIdForQuery.trim() || chesscomId}
+                onLoad={() => setChesscomValid(true)}
+                onError={() => setChesscomValid(false)}
+                showPlayButton={false}
+              />
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label htmlFor="chesscomId" className="block text-xs text-neutral-400 font-medium">
-                Chess.com Username
-              </label>
-              <input
-                id="chesscomId"
-                type="text"
-                value={chesscomId}
-                onChange={(e) => {
-                  setChesscomId(e.target.value);
-                  debouncedSetChesscomId(e.target.value);
-                }}
-                disabled={isSubmitting}
-                placeholder="e.g., hikaru"
-                className="w-full bg-neutral-800/50 border border-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 disabled:bg-neutral-800 disabled:cursor-not-allowed placeholder-neutral-500"
-              />
-              {chesscomIdForQuery.trim() && (
-                <ProfilePreview
-                  platform="chesscom"
-                  username={chesscomIdForQuery.trim()}
-                  onLoad={() => setChesscomValid(true)}
-                  onError={() => setChesscomValid(false)}
-                  showPlayButton={false}
-                />
-              )}
-            </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="lichessId" className="block text-xs text-neutral-400 font-medium">
-                Lichess Username
-              </label>
-              <input
-                id="lichessId"
-                type="text"
-                value={lichessId}
-                onChange={(e) => {
-                  setLichessId(e.target.value);
-                  debouncedSetLichessId(e.target.value);
-                }}
-                disabled={isSubmitting}
-                placeholder="e.g., DrNykterstein"
-                className="w-full bg-neutral-800/50 border border-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 disabled:bg-neutral-800 disabled:cursor-not-allowed placeholder-neutral-500"
+          <div className="space-y-1.5">
+            <label htmlFor="lichessId" className="block text-xs text-neutral-400 font-medium">
+              Your Lichess
+            </label>
+            <input
+              id="lichessId"
+              type="text"
+              value={lichessId}
+              onChange={(e) => {
+                setLichessId(e.target.value);
+                debouncedSetLichessId(e.target.value);
+              }}
+              disabled={!isEditing || isSubmitting}
+              placeholder="e.g., DrNykterstein"
+              className="w-full bg-neutral-800/50 border border-neutral-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 disabled:bg-neutral-800 disabled:cursor-not-allowed placeholder-neutral-500"
+            />
+            {(lichessId || lichessIdForQuery.trim()) && (
+              <ProfilePreview
+                platform="lichess"
+                username={lichessIdForQuery.trim() || lichessId}
+                onLoad={() => setLichessValid(true)}
+                onError={() => setLichessValid(false)}
+                showPlayButton={false}
               />
-              {lichessIdForQuery.trim() && (
-                <ProfilePreview
-                  platform="lichess"
-                  username={lichessIdForQuery.trim()}
-                  onLoad={() => setLichessValid(true)}
-                  onError={() => setLichessValid(false)}
-                  showPlayButton={false}
-                />
-              )}
-            </div>
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-2.5 rounded-lg">
-                {error}
-              </div>
             )}
-
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={handleSave}
-                disabled={isSubmitting}
-                className="flex items-center gap-1.5 flex-1 justify-center px-4 py-2 bg-white hover:bg-neutral-100 disabled:bg-neutral-600 disabled:cursor-not-allowed text-neutral-900 text-sm font-medium rounded-lg transition"
-              >
-                <SaveIcon className="w-3.5 h-3.5" />
-                <span>{isSubmitting ? "Saving..." : "Save Changes"}</span>
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={isSubmitting}
-                className="flex items-center gap-1.5 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
-              >
-                <XIcon className="w-3.5 h-3.5" />
-                <span>Cancel</span>
-              </button>
-            </div>
           </div>
-        )}
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-2.5 rounded-lg">{error}</div>
+          )}
+
+          <div
+            className={clsx("gap-2 pt-2", {
+              flex: isEditing,
+              hidden: !isEditing,
+            })}
+          >
+            <button
+              onClick={handleSave}
+              disabled={isSubmitting}
+              className="flex items-center gap-1.5 flex-1 justify-center px-4 py-2 bg-white hover:bg-neutral-100 disabled:bg-neutral-600 disabled:cursor-not-allowed text-neutral-900 text-sm font-medium rounded-lg transition"
+            >
+              <SaveIcon className="w-3.5 h-3.5" />
+              <span>{isSubmitting ? "Saving..." : "Save Changes"}</span>
+            </button>
+            <button
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              className="flex items-center gap-1.5 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition"
+            >
+              <XIcon className="w-3.5 h-3.5" />
+              <span>Cancel</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-5">

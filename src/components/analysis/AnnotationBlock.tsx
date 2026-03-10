@@ -80,12 +80,17 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
       >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
           <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-            <div className="text-xs">
-              <span>{moveQuality}</span>
-              {hasBestLine && <span className="mx-1">{bestLine[0].san} was the best</span>}
+            <div>
+              {move.textComments[0] && <span>{move.textComments[0]}</span>}
+              {!move.textComments[0] && (
+                <>
+                  <span>{moveQuality}</span>
+                  {hasBestLine && <span>&nbsp;{bestLine[0].san} was the best</span>}
+                </>
+              )}
             </div>
             <div className="flex items-center gap-2">
-              {hasBestLine && <span>Best: {bestLine.map((v) => v.san).join(" ")}</span>}
+              {hasBestLine && <span>Best line: {bestLine.map((v) => v.san).join(" ")}</span>}
             </div>
           </div>
           <div className="flex justify-end">

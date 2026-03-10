@@ -246,7 +246,7 @@ const ExplanationContent: React.FC<{
   const hasBadLine = badContinuation.length > 0 && badLine.length > 0;
   const hasBestLine = bestContinuation.length > 0 && bestLine.length > 0;
   const activeTabClasses =
-    "border-neutral-500/80 bg-neutral-100 text-neutral-950 shadow-[0_1px_0_rgba(255,255,255,0.12)]";
+    "border-cyan-500/35 bg-cyan-500/12 text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
   const inactiveTabClasses = "border-neutral-600/60 bg-neutral-800/40 text-neutral-300 hover:bg-neutral-700/40";
 
   const handleOverviewTab = () => {
@@ -292,7 +292,7 @@ const ExplanationContent: React.FC<{
               )}
             >
               <ScanEyeIcon size={13} />
-              <span className="uppercase tracking-wide font-semibold">Big Picture</span>
+              <span className="uppercase tracking-wide font-semibold">Overview</span>
             </button>
             {badContinuation.length > 0 && (
               <button
@@ -314,9 +314,7 @@ const ExplanationContent: React.FC<{
               )}
             >
               <TargetIcon size={13} className=" shrink-0" />
-              <span className=" uppercase tracking-wide  font-semibold">
-                {badContinuation.length > 0 ? "Better Plan" : "Better Plan"}
-              </span>
+              <span className=" uppercase tracking-wide  font-semibold">Stronger Plan</span>
             </button>
           </div>
         </div>
