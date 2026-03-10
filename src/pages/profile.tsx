@@ -54,7 +54,7 @@ export default function ProfilePage() {
     setChesscomId(user?.chesscomId || "");
     setLichessId(user?.lichessId || "");
     setChesscomIdForQuery("");
-    setLichessId("");
+    setLichessIdForQuery("");
     setError(null);
     setIsEditing(false);
 
