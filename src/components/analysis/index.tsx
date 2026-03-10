@@ -46,17 +46,6 @@ interface AnalysisProps {
 
 type Tab = "game" | "coach" | "advanced" | "summary";
 
-const STOCKFISH_DEPTH_KEY = "saved-stockfish-depth";
-
-function getStockfishDepth() {
-  const saved = localStorage.getItem(STOCKFISH_DEPTH_KEY);
-  return saved ? parseInt(saved, 10) : STOCKFISH_DEFAULT_DEPTH;
-}
-
-function persistStockfishDepth(depth: number) {
-  localStorage.setItem(STOCKFISH_DEPTH_KEY, depth.toString());
-}
-
 export const Analysis: React.FC<AnalysisProps> = ({
   gameId: gameIdProp,
   pgn: pgnProp = "",
@@ -74,9 +63,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const [previewMove, setPreviewMove] = useState<{ san: string; fen: string } | null>(null);
   const [previewLastMove, setPreviewLastMove] = useState<[Key, Key] | undefined>(undefined);
   const [previewEvaluation, setPreviewEvaluation] = useState<Evaluation | null>(null);
-
-  // Advanced settings
-  const [stockfishDepth, setStockfishDepth] = useState<number>(getStockfishDepth());
 
   // Tab state
   const [activeTab, setActiveTab] = useState<Tab>("game");
@@ -261,7 +247,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
     try {
       const analyzedGame = await analyzeGame(
         game,
-        stockfishDepth,
+        STOCKFISH_DEFAULT_DEPTH,
         {
           onProgress: (progress) => {
             setAnalysisProgress(progress);
@@ -311,14 +297,14 @@ export const Analysis: React.FC<AnalysisProps> = ({
       return;
     }
 
-    StockfishAnalysis.findOne(gameId, stockfishDepth).then((cached) => {
+    StockfishAnalysis.findOne(gameId, STOCKFISH_DEFAULT_DEPTH).then((cached) => {
       if (cached) {
-        console.debug("Auto-loading cached analysis for", gameId, "at depth", stockfishDepth);
+        console.debug("Auto-loading cached analysis for", gameId, "at depth", STOCKFISH_DEFAULT_DEPTH);
         setGame(cached);
         setGameHasAnalysis(true);
       }
     });
-  }, [gameId, stockfishDepth, game, gameHasAnalysis]);
+  }, [gameId, game, gameHasAnalysis]);
 
   const handlePGNSubmit = () => {
     if (pgn.trim()) {
@@ -459,7 +445,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
           eco: eco,
           annotationText: annotationText,
           engine: engineRef.current,
-          depth: stockfishDepth,
+          depth: STOCKFISH_DEFAULT_DEPTH,
           isAuthenticated: !!user,
         });
 
@@ -480,7 +466,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         setLoadingExplanation(false);
       }
     },
-    [gameId, game, userColor, opening, eco, stockfishDepth, user],
+    [gameId, game, userColor, opening, eco, user],
   );
 
   useEffect(() => {
@@ -495,11 +481,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
       }
     };
   }, []);
-
-  const handleStockfishDepthChange = (depth: number) => {
-    setStockfishDepth(depth);
-    persistStockfishDepth(depth);
-  };
 
   // Find first mistake/blunder for user
   const findFirstBadMove = useCallback(() => {
@@ -1044,30 +1025,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   readOnly
                   className="w-full px-3 py-2 bg-neutral-900 border border-neutral-600 rounded text-sm text-neutral-300 cursor-not-allowed"
                 />
-              </div>
-
-              {/* Stockfish Depth Control */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-neutral-300 mb-2 uppercase tracking-wide">
-                  Stockfish Analysis Depth
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="10"
-                    max="25"
-                    step="1"
-                    value={stockfishDepth}
-                    onChange={(e) => handleStockfishDepthChange(parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer  accent-emerald-600"
-                  />
-                  <div className="flex items-center gap-2 min-w-15">
-                    <span className="text-sm text-neutral-300 font-mono">{stockfishDepth}</span>
-                  </div>
-                </div>
-                <p className="text-xs text-neutral-500 mt-1">
-                  Higher depth = more accurate analysis but slower explanations
-                </p>
               </div>
 
               {/* PGN Input */}
