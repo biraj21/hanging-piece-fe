@@ -8,7 +8,7 @@ import {
   ScanEyeIcon,
   TargetIcon,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { TermHighlighter } from "@/components/TermHighlighter";
 import type { ChessTerm } from "@/constants/chess-glossary";
@@ -269,6 +269,76 @@ const ExplanationContent: React.FC<{
     setSelectedBestMove(0);
     onVisualize(bestLine[0], "green");
   };
+
+  const navigateBadLine = useCallback((offset: number) => {
+    if (!hasBadLine) {
+      return;
+    }
+
+    const currentIndex = selectedBadMove ?? 0;
+    const nextIndex = Math.max(0, Math.min(currentIndex + offset, badLine.length - 1));
+
+    if (nextIndex === currentIndex) {
+      return;
+    }
+
+    setSelectedBestMove(null);
+    setSelectedBadMove(nextIndex);
+    onVisualize(badLine[nextIndex], "red");
+  }, [badLine, hasBadLine, onVisualize, selectedBadMove]);
+
+  const navigateBestLine = useCallback((offset: number) => {
+    if (!hasBestLine) {
+      return;
+    }
+
+    const currentIndex = selectedBestMove ?? 0;
+    const nextIndex = Math.max(0, Math.min(currentIndex + offset, bestLine.length - 1));
+
+    if (nextIndex === currentIndex) {
+      return;
+    }
+
+    setSelectedBadMove(null);
+    setSelectedBestMove(nextIndex);
+    onVisualize(bestLine[nextIndex], "green");
+  }, [bestLine, hasBestLine, onVisualize, selectedBestMove]);
+
+  useEffect(() => {
+    if (activeStep === "overview") {
+      return;
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (activeStep === "bad") {
+          navigateBadLine(-1);
+        } else if (activeStep === "best") {
+          navigateBestLine(-1);
+        }
+      }
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (activeStep === "bad") {
+          navigateBadLine(1);
+        } else if (activeStep === "best") {
+          navigateBestLine(1);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeStep, navigateBadLine, navigateBestLine]);
 
   return (
     <div className="py-3 flex-1 min-h-0 overflow-y-auto">

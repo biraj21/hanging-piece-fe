@@ -329,8 +329,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   const checkExplanationModeAndDisable = useCallback(() => {
     if (activeTab === "coach" && activeExplanation) {
-      const move = moves[activeExplanation.moveIndex];
-      toast.info(`You're exploring move ${move.san} in explanation mode. Move controls are disabled.`);
       return true;
     }
     return false;

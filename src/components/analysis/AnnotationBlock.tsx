@@ -41,6 +41,7 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
       }
 
       await showExplanation(moveIndex, annotationText);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate explanation");
     }
@@ -96,7 +97,7 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
           <div className="flex justify-end">
             <TellMeWhyButton
               onClick={handleExplain}
-              disabled={explainDisabled || explanationLoading || !hasBestLine}
+              disabled={explainDisabled || !hasBestLine}
               loading={explanationLoading}
             />
           </div>
