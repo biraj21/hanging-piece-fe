@@ -376,7 +376,7 @@ export class Stockfish {
   /**
    * Ensure engine is initialized before use
    */
-  private async ensureReady(): Promise<void> {
+  async ensureReady(): Promise<void> {
     await this.initPromise;
   }
 
