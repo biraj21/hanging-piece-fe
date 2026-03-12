@@ -13,17 +13,18 @@ import {
   type LucideProps,
 } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { toast } from "sonner";
 
 import { ChessBoard, type BoardArrow } from "@/components/ChessBoard";
 import { INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStockfish } from "@/contexts/StockfishContext";
 import { StockfishAnalysis } from "@/db/stockfish-analysis";
 import { explain, hasCachedExplanation } from "@/helpers/explain";
 import { analyzeGame, type AnalysisProgress } from "@/helpers/game-analyzer";
 import { hasAnalysis, isMateEval, parsePgnToGame, type ParsedGame } from "@/helpers/pgn";
-import { isCentipawnEval, Stockfish } from "@/helpers/stockfish";
+import { isCentipawnEval } from "@/helpers/stockfish";
 import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 import { generateGameHash } from "@/utils/chess";
 import { isUrl } from "@/utils/string";
@@ -52,8 +53,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
   boardOrientation: boardOrientationProp = "white",
   source = "pgn",
 }) => {
-  const engineRef = useRef<Stockfish | null>(null);
   const { user, signIn } = useAuth();
+  const { engine, status: engineStatus, error: engineError } = useStockfish();
   const [pgn, setPgn] = useState(pgnProp);
   const [boardOrientation, setBoardOrientation] = useState<BlackOrWhite>(boardOrientationProp);
   const [game, setGame] = useState<ParsedGame | null>(null);
@@ -83,6 +84,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const posthog = usePostHog();
+  const isEngineLoading = engineStatus === "idle" || engineStatus === "loading";
+  const isEngineReady = engineStatus === "ready" && engine !== null;
 
   // Derived values from game headers
   const opening = game?.headers.get("Opening") || "";
@@ -185,7 +188,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   const parsePGN = (pgnText: string) => {
     try {
-      console.debug("parsing PGN from source:", source);
       const parsed = parsePgnToGame(pgnText);
       if (parsed.moves.length === 0) {
         throw new Error("No valid moves found in PGN");
@@ -236,6 +238,11 @@ export const Analysis: React.FC<AnalysisProps> = ({
       return;
     }
 
+    if (!isEngineReady) {
+      toast.error(engineError?.message || "Stockfish is still loading. Please try again in a moment.");
+      return;
+    }
+
     const initialAnalysisProgress: AnalysisProgress = {
       currentMoveIndex: -1,
       totalMoves: game.moves.length,
@@ -255,7 +262,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
             setCurrentMoveIndex(progress.currentMoveIndex);
           },
         },
-        engineRef.current,
+        engine,
         gameId || undefined,
       );
 
@@ -318,7 +325,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       return true;
     }
     return false;
-  }, [activeTab, activeExplanation, moves]);
+  }, [activeTab, activeExplanation]);
 
   const handleMoveClick = (index: number) => {
     if (analysisProgress) {
@@ -416,6 +423,11 @@ export const Analysis: React.FC<AnalysisProps> = ({
   const handleExplanation = useCallback(
     async (moveIndex: number, annotationText: string) => {
       try {
+        if (!isEngineReady) {
+          setActiveTab("coach");
+          throw new Error(engineError?.message || "Stockfish is still loading. Please try again in a moment.");
+        }
+
         // Check if user needs to login (not logged in, used free explanation for this game, and not cached)
         if (!user) {
           const isCached = await hasCachedExplanation(gameId, moveIndex);
@@ -444,7 +456,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
           opening: opening,
           eco: eco,
           annotationText: annotationText,
-          engine: engineRef.current,
+          engine,
           depth: STOCKFISH_DEFAULT_DEPTH,
           isAuthenticated: !!user,
         });
@@ -459,28 +471,15 @@ export const Analysis: React.FC<AnalysisProps> = ({
         }
       } catch (err) {
         console.error("Failed to generate explanation:", err);
-        toast.error("Failed to generate explanation. Please try again.");
+        toast.error(err instanceof Error ? err.message : "Failed to generate explanation. Please try again.");
         setActiveTab("game");
         throw err;
       } finally {
         setLoadingExplanation(false);
       }
     },
-    [gameId, game, userColor, opening, eco, user],
+    [eco, engine, engineError, game, gameId, isEngineReady, opening, user, userColor],
   );
-
-  useEffect(() => {
-    if (!engineRef.current) {
-      engineRef.current = Stockfish.create();
-    }
-
-    return () => {
-      if (engineRef.current) {
-        engineRef.current.terminate();
-        engineRef.current = null;
-      }
-    };
-  }, []);
 
   // Find first mistake/blunder for user
   const findFirstBadMove = useCallback(() => {
@@ -684,7 +683,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       label: "AI Coach",
       value: "coach",
       Icon: BrainIcon,
-      isLoading: loadingExplanation !== false,
+      isLoading: isEngineLoading || loadingExplanation !== false,
       onClick() {
         setActiveTab(this.value);
       },
@@ -804,10 +803,19 @@ export const Analysis: React.FC<AnalysisProps> = ({
                   </div>
                   <button
                     onClick={handleStartReview}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2"
+                    className={clsx(
+                      "px-4 py-2 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2",
+                      isEngineLoading
+                        ? "bg-neutral-700 text-neutral-300 cursor-wait"
+                        : "bg-emerald-600 hover:bg-emerald-700",
+                    )}
                   >
-                    <SearchIcon className="w-4 h-4" />
-                    Start Review
+                    {isEngineLoading ? (
+                      <Loader2Icon className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <SearchIcon className="w-4 h-4" />
+                    )}
+                    {isEngineLoading ? "Loading Engine..." : "Start Review"}
                   </button>
                 </div>
               )}
@@ -829,7 +837,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
                       return {
                         isSimple: hasSimpleAnnotation,
-                        explainDisabled: loadingExplanation !== false && loadingExplanation !== moveIndex,
+                        explainDisabled:
+                          isEngineLoading || (loadingExplanation !== false && loadingExplanation !== moveIndex),
                         explanationLoading: loadingExplanation === moveIndex,
                       };
                     };
@@ -914,7 +923,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
               <ExplanationViewer
                 move={activeExplanation ? moves[activeExplanation.moveIndex] : undefined}
                 explanation={activeExplanation?.explanation}
-                isLoading={loadingExplanation !== false}
+                isLoading={isEngineLoading || loadingExplanation !== false}
                 userColor={userColor}
                 onVisualize={handleVisualizeMove}
                 onNavigateToOriginalMove={handleNavigateToOriginalMove}
@@ -1001,9 +1010,14 @@ export const Analysis: React.FC<AnalysisProps> = ({
                         <p className="text-sm text-neutral-400 mb-4">This game hasn't been analyzed yet.</p>
                         <button
                           onClick={handleStartReview}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-semibold text-sm transition-colors"
+                          className={clsx(
+                            "px-4 py-2 rounded-lg font-semibold text-sm transition-colors",
+                            isEngineLoading
+                              ? "bg-neutral-700 text-neutral-300 cursor-wait"
+                              : "bg-emerald-600 hover:bg-emerald-700",
+                          )}
                         >
-                          Start Review
+                          {isEngineLoading ? "Loading Engine..." : "Start Review"}
                         </button>
                       </div>
                     </div>

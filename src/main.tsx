@@ -9,6 +9,7 @@ import { Toaster } from "sonner";
 import { PWAInstaller } from "@/components/PWAInstaller";
 import { env } from "@/config/env";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { StockfishProvider } from "@/contexts/StockfishContext";
 import AppRouter from "@/router";
 
 import "./index.css";
@@ -36,10 +37,12 @@ createRoot(document.getElementById("root")!).render(
       <QueryClientProvider client={queryClient}>
         <Toaster position="top-right" theme="dark" richColors closeButton />
         <BrowserRouter>
-          <AuthProvider>
-            <AppRouter />
-            <PWAInstaller />
-          </AuthProvider>
+          <StockfishProvider>
+            <AuthProvider>
+              <AppRouter />
+              <PWAInstaller />
+            </AuthProvider>
+          </StockfishProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </PostHogProvider>

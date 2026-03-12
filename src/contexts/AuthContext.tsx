@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Loader } from "@/components/Loader";
 import { authClient, signInWithGoogle as signInWithGoogleFn } from "@/config/auth";
+import { isOnboardingComplete } from "@/helpers/onboarding";
 import { ROUTES } from "@/router/routes";
 
 export interface User {
@@ -85,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     // Check if user needs onboarding (neither chesscomId nor lichessId is set)
-    const needsOnboarding = !user.chesscomId && !user.lichessId;
+    const needsOnboarding = !isOnboardingComplete(user);
     if (needsOnboarding && pathname !== ROUTES.ONBOARDING) {
       navigate(ROUTES.ONBOARDING, {
         replace: true,

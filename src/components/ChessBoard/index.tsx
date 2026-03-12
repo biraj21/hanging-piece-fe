@@ -284,7 +284,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     playSound(move.san);
     if (cgRef.current) {
       const isCheck = move.san.includes("+") || move.san.includes("#");
-      console.log("Setting check highlight to", isCheck);
       if (isCheck) {
         cgRef.current.set({ check: true });
       } else {
