@@ -175,7 +175,7 @@ export default function ProfilePage() {
                 username={chesscomIdForQuery.trim() || chesscomId}
                 onLoad={() => setChesscomValid(true)}
                 onError={() => setChesscomValid(false)}
-                showPlayButton={false}
+                showPlayButton={!isEditing}
               />
             )}
           </div>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
                 username={lichessIdForQuery.trim() || lichessId}
                 onLoad={() => setLichessValid(true)}
                 onError={() => setLichessValid(false)}
-                showPlayButton={false}
+                showPlayButton={!isEditing}
               />
             )}
           </div>
