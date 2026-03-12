@@ -2,6 +2,7 @@ import { DownloadIcon, XIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { isOnboardingComplete } from "@/helpers/onboarding";
 import { isMobileDevice } from "@/utils/device";
 
 /**
@@ -70,7 +71,7 @@ export const PWAInstaller: React.FC = () => {
     setShowModal(false);
   };
 
-  if (!user || !showModal || !isMobileDevice()) {
+  if (!user || !isOnboardingComplete(user) || !showModal || !isMobileDevice()) {
     return null;
   }
 
