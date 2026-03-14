@@ -270,39 +270,45 @@ const ExplanationContent: React.FC<{
     onVisualize(bestLine[0], "green");
   };
 
-  const navigateBadLine = useCallback((offset: number) => {
-    if (!hasBadLine) {
-      return;
-    }
+  const navigateBadLine = useCallback(
+    (offset: number) => {
+      if (!hasBadLine) {
+        return;
+      }
 
-    const currentIndex = selectedBadMove ?? 0;
-    const nextIndex = Math.max(0, Math.min(currentIndex + offset, badLine.length - 1));
+      const currentIndex = selectedBadMove ?? 0;
+      const nextIndex = Math.max(0, Math.min(currentIndex + offset, badLine.length - 1));
 
-    if (nextIndex === currentIndex) {
-      return;
-    }
+      if (nextIndex === currentIndex) {
+        return;
+      }
 
-    setSelectedBestMove(null);
-    setSelectedBadMove(nextIndex);
-    onVisualize(badLine[nextIndex], "red");
-  }, [badLine, hasBadLine, onVisualize, selectedBadMove]);
+      setSelectedBestMove(null);
+      setSelectedBadMove(nextIndex);
+      onVisualize(badLine[nextIndex], "red");
+    },
+    [badLine, hasBadLine, onVisualize, selectedBadMove],
+  );
 
-  const navigateBestLine = useCallback((offset: number) => {
-    if (!hasBestLine) {
-      return;
-    }
+  const navigateBestLine = useCallback(
+    (offset: number) => {
+      if (!hasBestLine) {
+        return;
+      }
 
-    const currentIndex = selectedBestMove ?? 0;
-    const nextIndex = Math.max(0, Math.min(currentIndex + offset, bestLine.length - 1));
+      const currentIndex = selectedBestMove ?? 0;
+      const nextIndex = Math.max(0, Math.min(currentIndex + offset, bestLine.length - 1));
 
-    if (nextIndex === currentIndex) {
-      return;
-    }
+      if (nextIndex === currentIndex) {
+        return;
+      }
 
-    setSelectedBadMove(null);
-    setSelectedBestMove(nextIndex);
-    onVisualize(bestLine[nextIndex], "green");
-  }, [bestLine, hasBestLine, onVisualize, selectedBestMove]);
+      setSelectedBadMove(null);
+      setSelectedBestMove(nextIndex);
+      onVisualize(bestLine[nextIndex], "green");
+    },
+    [bestLine, hasBestLine, onVisualize, selectedBestMove],
+  );
 
   useEffect(() => {
     if (activeStep === "overview") {
@@ -353,38 +359,38 @@ const ExplanationContent: React.FC<{
         </div>
 
         <div className="space-y-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5">
             <button
               onClick={handleOverviewTab}
               className={clsx(
-                "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors text-left flex items-center gap-1.5",
+                "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors flex items-center gap-1.5 justify-center md:justify-start",
                 activeStep === "overview" ? activeTabClasses : inactiveTabClasses,
               )}
             >
               <ScanEyeIcon size={13} />
-              <span className="uppercase tracking-wide font-semibold">Overview</span>
+              <span className="uppercase tracking-wide font-semibold hidden md:inline">Overview</span>
             </button>
             {badContinuation.length > 0 && (
               <button
                 onClick={handleExploreBad}
                 className={clsx(
-                  "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors text-left flex items-center gap-1.5",
+                  "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors flex items-center gap-1.5 justify-center md:justify-start",
                   activeStep === "bad" ? activeTabClasses : inactiveTabClasses,
                 )}
               >
                 <AlertTriangleIcon size={13} />
-                <span className="uppercase tracking-wide font-semibold">Why This Failed</span>
+                <span className="uppercase tracking-wide font-semibold hidden md:inline">Why This Failed</span>
               </button>
             )}
             <button
               onClick={handleExploreBest}
               className={clsx(
-                "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors text-left flex items-center gap-1.5",
+                "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors flex items-center gap-1.5 justify-center md:justify-start",
                 activeStep === "best" ? activeTabClasses : inactiveTabClasses,
               )}
             >
               <TargetIcon size={13} className=" shrink-0" />
-              <span className=" uppercase tracking-wide  font-semibold">Stronger Plan</span>
+              <span className=" uppercase tracking-wide font-semibold hidden md:inline">Stronger Plan</span>
             </button>
           </div>
         </div>
