@@ -193,7 +193,14 @@ export function CodeCraftersBanner({ variant = "feature", closable = false }: Co
           <p
             className={`mt-2 text-neutral-300 ${isCompact ? "text-xs leading-relaxed sm:text-sm" : "text-sm sm:text-base leading-relaxed"}`}
           >
-            {isCompact ? "Build real systems and sharpen your engineering instincts." : challenge.description}
+            {isCompact ? (
+              <>
+                Build <em>real systems</em> and sharpen your software engineering instincts like a{" "}
+                <u className="underline decoration-emerald-500">senior engineer</u>.
+              </>
+            ) : (
+              challenge.description
+            )}
           </p>
           {/* {!isCompact && (
             <p className="mt-3 text-sm text-neutral-400 leading-relaxed">
