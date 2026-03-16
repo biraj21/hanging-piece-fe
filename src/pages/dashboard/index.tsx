@@ -1,6 +1,7 @@
 import { BarChart3Icon, SwordsIcon } from "lucide-react";
 import { Link } from "react-router";
 
+import { CodeCraftersBanner } from "@/components/CodeCraftersBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
 
@@ -53,11 +54,8 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Quick Stats or Info */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-neutral-500">
-            Powered by Stockfish • AI-driven explanations • Multi-platform support
-          </p>
+        <div className="mt-4">
+          <CodeCraftersBanner variant="feature" />
         </div>
       </div>
     </div>
