@@ -76,7 +76,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
   // Analysis state
   const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgress | null>(null);
-  const [gameHasAnalysis, setGameHasAnalysis] = useState(false);
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [showSummaryAfterAnalysis, setShowSummaryAfterAnalysis] = useState(false);
 
@@ -186,6 +185,8 @@ export const Analysis: React.FC<AnalysisProps> = ({
     ];
   })();
 
+  const gameHasAnalysis = game ? hasAnalysis(game) : false;
+
   const parsePGN = (pgnText: string) => {
     try {
       const parsed = parsePgnToGame(pgnText);
@@ -195,7 +196,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
       setGame(parsed);
       setCurrentMoveIndex(0);
-      setGameHasAnalysis(hasAnalysis(parsed));
 
       if (gameIdProp) {
         setGameId(gameIdProp);
@@ -229,7 +229,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
       toast.error(err instanceof Error ? err.message : "Failed to parse PGN");
       setGame(null);
       setGameId("");
-      setGameHasAnalysis(false);
     }
   };
 
@@ -273,7 +272,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
       });
 
       setGame(analyzedGame);
-      setGameHasAnalysis(true);
+
       setCurrentMoveIndex(0);
       setShowSummaryAfterAnalysis(true); // Flag to show footer
       setShowSummaryModal(true); // Show summary modal first
@@ -308,7 +307,6 @@ export const Analysis: React.FC<AnalysisProps> = ({
       if (cached) {
         console.debug("Auto-loading cached analysis for", gameId, "at depth", STOCKFISH_DEFAULT_DEPTH);
         setGame(cached);
-        setGameHasAnalysis(true);
       }
     });
   }, [gameId, game, gameHasAnalysis]);
