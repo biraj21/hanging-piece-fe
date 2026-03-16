@@ -1,15 +1,15 @@
 import { ArrowUpRightIcon, Code2Icon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export interface CodeCraftersChallenge {
+interface CodeCraftersChallenge {
   title: string;
   description: string;
   ctaLabel: string;
 }
 
-export const CODECRAFTERS_INVITE_URL = "https://app.codecrafters.io/join?via=biraj21";
+const CODECRAFTERS_INVITE_URL = "https://app.codecrafters.io/join?via=biraj21";
 
-export const CODECRAFTERS_CHALLENGES: CodeCraftersChallenge[] = [
+const CODECRAFTERS_CHALLENGES: CodeCraftersChallenge[] = [
   {
     title: "Build your own DNS server",
     description: "Learn about the DNS protocol, DNS record types and how name resolution works end to end.",
