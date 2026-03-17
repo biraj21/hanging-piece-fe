@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 
-import { ChessKnightIcon, Crown, Handshake, InfoIcon, SearchIcon } from "lucide-react";
+import { ChessKnightIcon, Crown, Handshake, SearchIcon } from "lucide-react";
 
 import { MoveQualityIcon } from "@/components/analysis/MoveQualityIcon";
 import { Loader } from "@/components/Loader";
@@ -24,9 +24,6 @@ export default function IndexPage() {
           {/* Logo + Badge */}
           <div className="mb-6 sm:mb-8 flex flex-col justify-center items-center">
             <Logo />
-            <div className="mt-3 bg-white text-black px-3 py-1 rounded-full text-xs font-semibold shadow-sm flex items-center gap-2">
-              <InfoIcon className="w-3 h-3" /> We're in beta and are actively improving!
-            </div>
           </div>
 
           {/* Headline */}
