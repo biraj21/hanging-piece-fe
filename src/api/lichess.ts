@@ -11,11 +11,11 @@ interface LichessGame {
   status: string;
   players: {
     white: {
-      user: { name: string; id: string };
+      user?: { name?: string; id?: string };
       rating?: number;
     };
     black: {
-      user: { name: string; id: string };
+      user?: { name?: string; id?: string };
       rating?: number;
     };
   };
@@ -41,6 +41,27 @@ export interface LichessProfile {
     losses: number;
     draws: number;
   };
+}
+
+function getLichessPlayerName(player: LichessGame["players"]["white"], color: "white" | "black"): string {
+  if (player.user?.name) {
+    return player.user.name;
+  }
+  return `Anonymous ${color}`;
+}
+
+function getLichessUserColor(game: LichessGame, username: string): "white" | "black" {
+  const normalizedUsername = username.toLowerCase();
+
+  if (game.players.white.user?.id?.toLowerCase() === normalizedUsername) {
+    return "white";
+  }
+
+  if (game.players.black.user?.id?.toLowerCase() === normalizedUsername) {
+    return "black";
+  }
+
+  return "white";
 }
 
 export const lichessApi = {
@@ -113,7 +134,7 @@ export const lichessApi = {
     const lichessGames: LichessGame[] = lines.map((line) => JSON.parse(line));
 
     return lichessGames.map((game) => {
-      const userColor = game.players.white.user.id.toLowerCase() === username.toLowerCase() ? "white" : "black";
+      const userColor = getLichessUserColor(game, username);
 
       let result = "draw";
       if (game.winner) {
@@ -124,11 +145,11 @@ export const lichessApi = {
         id: game.id,
         source: "lichess" as const,
         white: {
-          username: game.players.white.user.name,
+          username: getLichessPlayerName(game.players.white, "white"),
           rating: game.players.white.rating || 0,
         },
         black: {
-          username: game.players.black.user.name,
+          username: getLichessPlayerName(game.players.black, "black"),
           rating: game.players.black.rating || 0,
         },
         result,

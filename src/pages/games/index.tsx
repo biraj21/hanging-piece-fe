@@ -45,6 +45,7 @@ export default function GamesPage() {
     fetchNextPage: fetchNextChesscomPage,
     hasNextPage: hasMoreChesscom,
     isFetchingNextPage: isFetchingMoreChesscom,
+    error: chessComError,
   } = useChesscomGamesInfinite(user?.chesscomId, chesscomArchives, {
     enabled: !!user?.chesscomId && chesscomArchives.length > 0 && activeSource === "chesscom",
   });
@@ -56,6 +57,7 @@ export default function GamesPage() {
     fetchNextPage: fetchNextLichessPage,
     hasNextPage: hasMoreLichess,
     isFetchingNextPage: isFetchingMoreLichess,
+    error: lichessError,
   } = useLichessGamesInfinite(user?.lichessId, GAMES_PER_BATCH, {
     enabled: !!user?.lichessId && activeSource === "lichess",
   });
@@ -63,6 +65,14 @@ export default function GamesPage() {
   // Flatten all pages into a single array
   const chesscomGames: UnifiedGame[] = chesscomGamesData?.pages.flatMap((page) => page.games) ?? [];
   const lichessGames: UnifiedGame[] = lichessGamesData?.pages.flat() ?? [];
+
+  if (chessComError) {
+    console.error("chess.com error fetching games", chessComError);
+  }
+
+  if (lichessError) {
+    console.error("lichess error fetching games", lichessError);
+  }
 
   // Show games based on selected source
   const allGames = (activeSource === "chesscom" ? chesscomGames : lichessGames).sort(
