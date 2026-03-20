@@ -47,6 +47,8 @@ interface AnalysisProps {
 
 type Tab = "game" | "coach" | "advanced" | "summary";
 
+const FREE_COACH_LOCAL_STORAGE_KEY = "free-explanation-used";
+
 export const Analysis: React.FC<AnalysisProps> = ({
   gameId: gameIdProp,
   pgn: pgnProp = "",
@@ -429,7 +431,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
         // Check if user needs to login (not logged in, used free explanation for this game, and not cached)
         if (!user) {
           const isCached = await hasCachedExplanation(gameId, moveIndex);
-          const hasUsedFreeExplanation = localStorage.getItem(`free-explanation-used:${gameId}`) === "true";
+          const hasUsedFreeExplanation = localStorage.getItem(FREE_COACH_LOCAL_STORAGE_KEY) === "true";
 
           if (!isCached && hasUsedFreeExplanation) {
             setShowLoginModal(true);
@@ -465,7 +467,7 @@ export const Analysis: React.FC<AnalysisProps> = ({
 
         // Mark that user has used their free explanation for this game
         if (!user) {
-          localStorage.setItem(`free-explanation-used:${gameId}`, "true");
+          localStorage.setItem(FREE_COACH_LOCAL_STORAGE_KEY, "true");
         }
       } catch (err) {
         console.error("Failed to generate explanation:", err);

@@ -28,7 +28,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
           <h2 className="text-lg font-bold text-white mt-5">Sign in to continue</h2>
 
           <p className="text-sm text-neutral-400 mt-2 leading-relaxed">
-            Get unlimited AI Coach explanations and analyze games from chess.com and Lichess.
+            Sign in to use AI Coach. I’m a <u>solo developer</u> covering the costs, so login helps keep this running.
           </p>
 
           <button
