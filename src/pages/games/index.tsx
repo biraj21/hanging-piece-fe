@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 
 import { useChesscomArchives, useChesscomGamesInfinite, useLichessGamesInfinite } from "@/api/queries";
-import { CodeCraftersBanner } from "@/components/CodeCraftersBanner";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { getChessAccountUsername } from "@/helpers/chess-username";
@@ -216,10 +215,6 @@ export default function GamesPage() {
               ({searchFilteredGames.filter((g) => g.result === "draw").length})
             </span>
           </button>
-        </div>
-
-        <div className="mb-4">
-          <CodeCraftersBanner variant="compact" closable />
         </div>
 
         {/* Games Grid */}

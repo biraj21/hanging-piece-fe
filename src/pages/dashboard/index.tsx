@@ -1,7 +1,6 @@
 import { BarChart3Icon, SwordsIcon } from "lucide-react";
 import { Link } from "react-router";
 
-import { CodeCraftersBanner } from "@/components/CodeCraftersBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
 
@@ -52,10 +51,6 @@ export default function DashboardPage() {
               </div>
             </div>
           </Link>
-        </div>
-
-        <div className="mt-4">
-          <CodeCraftersBanner variant="feature" />
         </div>
       </div>
     </div>
