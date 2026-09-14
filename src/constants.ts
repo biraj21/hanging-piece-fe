@@ -16,3 +16,5 @@ export const CONTINUATION_LENGTH: Record<MoveQuality, number> = {
   mistake: 8,
   inaccuracy: 5,
 };
+
+export const GITHUB_REPO_URL = "https://github.com/biraj21/hanging-piece-fe";

@@ -6,6 +6,7 @@ import { MoveQualityIcon } from "@/components/analysis/MoveQualityIcon";
 import { Loader } from "@/components/Loader";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
+import { GITHUB_REPO_URL } from "@/constants";
 import { ROUTES } from "@/router/routes";
 
 export default function IndexPage() {
@@ -129,6 +130,14 @@ export default function IndexPage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-6">
+              <a
+                href={GITHUB_REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-neutral-400 hover:text-emerald-400 transition-colors"
+              >
+                ★ Star us on GitHub
+              </a>
               <a
                 href="https://www.linkedin.com/company/hanging-piece"
                 target="_blank"

@@ -2,6 +2,7 @@ import { BarChart3Icon, SwordsIcon } from "lucide-react";
 import { Link } from "react-router";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { GITHUB_REPO_URL } from "@/constants";
 import { ROUTES } from "@/router/routes";
 
 export default function DashboardPage() {
@@ -52,6 +53,16 @@ export default function DashboardPage() {
             </div>
           </Link>
         </div>
+
+        <a
+          href={GITHUB_REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 transition-colors hover:border-emerald-400/50 hover:bg-emerald-500/15 hover:text-emerald-200"
+        >
+          <span aria-hidden="true">★</span>
+          Enjoying Hanging Piece? Support the project with a GitHub star
+        </a>
       </div>
     </div>
   );
