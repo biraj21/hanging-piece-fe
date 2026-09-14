@@ -13,6 +13,6 @@ export const STOCKFISH_DEFAULT_DEPTH = isMobileDevice() ? 12 : 15;
 
 export const CONTINUATION_LENGTH: Record<MoveQuality, number> = {
   blunder: 8,
-  mistake: 5,
+  mistake: 8,
   inaccuracy: 5,
 };
