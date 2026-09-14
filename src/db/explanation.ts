@@ -1,8 +1,12 @@
 import type { Explanation } from "@/types";
+
 import { analysysDb } from "./index";
 
 export class ExplanationModel {
-  static async findOne(gameId: string, moveIndex: number): Promise<Explanation | null> {
+  static async findOne(
+    gameId: string,
+    moveIndex: number,
+  ): Promise<Explanation | null> {
     try {
       const doc = await analysysDb.explanations.get([gameId, moveIndex]);
       if (!doc) {
@@ -22,7 +26,11 @@ export class ExplanationModel {
     }
   }
 
-  static async create(gameId: string, moveIndex: number, data: Explanation): Promise<void> {
+  static async create(
+    gameId: string,
+    moveIndex: number,
+    data: Explanation,
+  ): Promise<void> {
     try {
       await analysysDb.explanations.put({
         gameId,
@@ -38,7 +46,10 @@ export class ExplanationModel {
   static async deleteOlderThan(days: number = 7): Promise<number> {
     try {
       const cutoffTime = Date.now() - days * 24 * 60 * 60 * 1000;
-      return await analysysDb.explanations.where("timestamp").below(cutoffTime).delete();
+      return await analysysDb.explanations
+        .where("timestamp")
+        .below(cutoffTime)
+        .delete();
     } catch (error) {
       console.error("Failed to clean old explanations:", error);
       return 0;

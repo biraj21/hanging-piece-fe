@@ -1,13 +1,11 @@
-import { useNavigate } from "react-router";
-
-import { ChessKnightIcon, Crown, Handshake, SearchIcon } from "lucide-react";
-
 import { MoveQualityIcon } from "@/components/analysis/MoveQualityIcon";
 import { Loader } from "@/components/Loader";
 import { Logo } from "@/components/Logo";
-import { useAuth } from "@/contexts/AuthContext";
 import { GITHUB_REPO_URL } from "@/constants";
+import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
+import { ChessKnightIcon, Crown, Handshake, SearchIcon } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export default function IndexPage() {
   const { isAuthenticated, isLoading, signIn } = useAuth();
@@ -29,7 +27,8 @@ export default function IndexPage() {
 
           {/* Headline */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-            An AI chess coach that explains <span className="text-emerald-400">WHY</span> you blundered
+            An AI chess coach that explains{" "}
+            <span className="text-emerald-400">WHY</span> you blundered
           </h1>
         </div>
       </section>
@@ -58,7 +57,11 @@ export default function IndexPage() {
 
           {/* CTA Button */}
           <button
-            onClick={() => (isAuthenticated ? navigate(ROUTES.DASHBOARD) : signIn(ROUTES.DASHBOARD))}
+            onClick={() =>
+              isAuthenticated
+                ? navigate(ROUTES.DASHBOARD)
+                : signIn(ROUTES.DASHBOARD)
+            }
             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 border border-emerald-500/50 rounded-lg text-sm font-semibold text-white shadow-md hover:shadow-lg hover:bg-emerald-700 active:bg-emerald-800 transition-all duration-200 mx-auto mb-6"
           >
             <ChessKnightIcon />
@@ -72,7 +75,9 @@ export default function IndexPage() {
                 <div className="flex justify-center mb-2">
                   <MoveQualityIcon moveQuality="blunder" size="medium" />
                 </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">Blunder Analysis</h3>
+                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">
+                  Blunder Analysis
+                </h3>
                 <p className="text-[10px] sm:text-xs text-neutral-400 leading-snug">
                   Understand WHY you lost that piece
                 </p>
@@ -82,7 +87,9 @@ export default function IndexPage() {
                 <div className="flex justify-center mb-2">
                   <SearchIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
                 </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">Stockfish Analysis</h3>
+                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">
+                  Stockfish Analysis
+                </h3>
                 <p className="text-[10px] sm:text-xs text-neutral-400 leading-snug">
                   Powered by world-class chess engine
                 </p>
@@ -92,16 +99,24 @@ export default function IndexPage() {
                 <div className="flex justify-center mb-2">
                   <Handshake className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                 </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">Chess.com & Lichess</h3>
-                <p className="text-[10px] sm:text-xs text-neutral-400 leading-snug">Sync your games automatically</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">
+                  Chess.com & Lichess
+                </h3>
+                <p className="text-[10px] sm:text-xs text-neutral-400 leading-snug">
+                  Sync your games automatically
+                </p>
               </div>
 
               <div className="bg-neutral-900/60 border border-neutral-600/50 rounded-lg p-3 sm:p-4 text-center">
                 <div className="flex justify-center mb-2">
                   <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
                 </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">Learn & Improve</h3>
-                <p className="text-[10px] sm:text-xs text-neutral-400 leading-snug">Stop repeating the same mistakes</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1">
+                  Learn & Improve
+                </h3>
+                <p className="text-[10px] sm:text-xs text-neutral-400 leading-snug">
+                  Stop repeating the same mistakes
+                </p>
               </div>
             </div>
           </section>
@@ -110,9 +125,10 @@ export default function IndexPage() {
           <section className="mb-8 sm:mb-12">
             <div className="max-w-2xl mx-auto text-center">
               <p className="text-sm sm:text-base text-neutral-300 leading-relaxed mb-3">
-                Hanging Piece is an AI-powered chess coach that helps you understand{" "}
-                <span className="text-emerald-400">WHY</span> you make mistakes, so you can stop repeating them and
-                actually improve.
+                Hanging Piece is an AI-powered chess coach that helps you
+                understand <span className="text-emerald-400">WHY</span> you
+                make mistakes, so you can stop repeating them and actually
+                improve.
               </p>
               <a
                 href={ROUTES.ABOUT}

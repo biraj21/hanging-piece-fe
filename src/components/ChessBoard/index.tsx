@@ -12,7 +12,10 @@ import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
 
 import { EvalBar } from "@/components/analysis/EvalBar";
-import { getMoveQualityColor, getMoveQualitySymbol } from "@/helpers/move-quality";
+import {
+  getMoveQualityColor,
+  getMoveQualitySymbol,
+} from "@/helpers/move-quality";
 import type { MoveQuality } from "@/helpers/pgn";
 import type { BlackOrWhite } from "@/types";
 
@@ -76,7 +79,15 @@ interface PlayerInfoProps {
   className?: string;
 }
 
-const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position, userColor, winner, className }) => {
+const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({
+  name,
+  elo,
+  color,
+  position,
+  userColor,
+  winner,
+  className,
+}) => {
   const isRightSide = position === "right";
 
   return (
@@ -98,11 +109,18 @@ const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position
       >
         {name.charAt(0).toUpperCase()}
       </div>
-      <div className={clsx("flex-1 overflow-hidden", { "text-right lg:text-left": isRightSide })}>
+      <div
+        className={clsx("flex-1 overflow-hidden", {
+          "text-right lg:text-left": isRightSide,
+        })}
+      >
         <div
-          className={clsx("flex items-center gap-1 text-sm font-semibold text-neutral-100", {
-            "flex-row-reverse": isRightSide,
-          })}
+          className={clsx(
+            "flex items-center gap-1 text-sm font-semibold text-neutral-100",
+            {
+              "flex-row-reverse": isRightSide,
+            },
+          )}
         >
           <span
             className={clsx("truncate", {
@@ -121,8 +139,12 @@ const BoardPlayerInfo: React.FC<PlayerInfoProps> = ({ name, elo, color, position
               (you)
             </span>
           )}
-          {winner === color && <Crown className="inline w-4 h-4 text-green-400 shrink-0" />}
-          {winner === "draw" && <Handshake className="inline w-4 h-4 text-neutral-400 shrink-0" />}
+          {winner === color && (
+            <Crown className="inline w-4 h-4 text-green-400 shrink-0" />
+          )}
+          {winner === "draw" && (
+            <Handshake className="inline w-4 h-4 text-neutral-400 shrink-0" />
+          )}
         </div>
         <p className="text-xs text-neutral-400">{elo}</p>
       </div>
@@ -270,7 +292,16 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
       cgRef.current = Chessground(boardRef.current, config);
     }
-  }, [move.fen, previousMove, arrows, orientation, moveAnnotations, legalDests, turnColor, playable]);
+  }, [
+    move.fen,
+    previousMove,
+    arrows,
+    orientation,
+    moveAnnotations,
+    legalDests,
+    turnColor,
+    playable,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -293,7 +324,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   }, [move.san]);
 
   const topPlayer = orientation === "white" ? players?.black : players?.white;
-  const bottomPlayer = orientation === "white" ? players?.white : players?.black;
+  const bottomPlayer =
+    orientation === "white" ? players?.white : players?.black;
   const topColor = orientation === "white" ? "black" : "white";
   const bottomColor = orientation === "white" ? "white" : "black";
 
@@ -302,8 +334,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       {players && (
         <div className="flex w-full justify-between lg:hidden">
           <BoardPlayerInfo
-            name={orientation === "white" ? players.white.name : players.black.name}
-            elo={orientation === "white" ? players.white.elo : players.black.elo}
+            name={
+              orientation === "white" ? players.white.name : players.black.name
+            }
+            elo={
+              orientation === "white" ? players.white.elo : players.black.elo
+            }
             color={orientation === "white" ? "white" : "black"}
             position="left"
             userColor={userColor}
@@ -311,8 +347,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             className="w-[calc(50%-0.5rem)]"
           />
           <BoardPlayerInfo
-            name={orientation === "white" ? players.black.name : players.white.name}
-            elo={orientation === "white" ? players.black.elo : players.white.elo}
+            name={
+              orientation === "white" ? players.black.name : players.white.name
+            }
+            elo={
+              orientation === "white" ? players.black.elo : players.white.elo
+            }
             color={orientation === "white" ? "black" : "white"}
             position="right"
             userColor={userColor}
@@ -335,7 +375,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         </div>
       )}
 
-      <div className={evaluation ? "grid grid-cols-[auto_1fr] gap-2" : "w-full"}>
+      <div
+        className={evaluation ? "grid grid-cols-[auto_1fr] gap-2" : "w-full"}
+      >
         {evaluation && (
           <EvalBar
             evaluation={evaluation}

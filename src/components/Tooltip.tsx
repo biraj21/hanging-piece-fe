@@ -8,10 +8,17 @@ interface TooltipProps {
   highlightStyle?: "underline" | "wavy" | "background";
 }
 
-export const Tooltip: React.FC<TooltipProps> = ({ term, definition, children, highlightStyle = "background" }) => {
+export const Tooltip: React.FC<TooltipProps> = ({
+  term,
+  definition,
+  children,
+  highlightStyle = "background",
+}) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [placement, setPlacement] = useState<"top" | "bottom" | "left" | "right">("top");
+  const [placement, setPlacement] = useState<
+    "top" | "bottom" | "left" | "right"
+  >("top");
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
@@ -119,22 +126,26 @@ export const Tooltip: React.FC<TooltipProps> = ({ term, definition, children, hi
     switch (placement) {
       case "top":
         return {
-          container: "absolute top-full left-1/2 transform -translate-x-1/2 -mt-1",
+          container:
+            "absolute top-full left-1/2 transform -translate-x-1/2 -mt-1",
           arrow: `${baseStyles} border-l-[${arrowSize}px] border-r-[${arrowSize}px] border-t-[${arrowSize}px] border-transparent border-t-neutral-600/50`,
         };
       case "bottom":
         return {
-          container: "absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1",
+          container:
+            "absolute bottom-full left-1/2 transform -translate-x-1/2 -mb-1",
           arrow: `${baseStyles} border-l-[${arrowSize}px] border-r-[${arrowSize}px] border-b-[${arrowSize}px] border-transparent border-b-neutral-600/50`,
         };
       case "left":
         return {
-          container: "absolute left-full top-1/2 transform -translate-y-1/2 -ml-1",
+          container:
+            "absolute left-full top-1/2 transform -translate-y-1/2 -ml-1",
           arrow: `${baseStyles} border-t-[${arrowSize}px] border-b-[${arrowSize}px] border-l-[${arrowSize}px] border-transparent border-l-neutral-600/50`,
         };
       case "right":
         return {
-          container: "absolute right-full top-1/2 transform -translate-y-1/2 -mr-1",
+          container:
+            "absolute right-full top-1/2 transform -translate-y-1/2 -mr-1",
           arrow: `${baseStyles} border-t-[${arrowSize}px] border-b-[${arrowSize}px] border-r-[${arrowSize}px] border-transparent border-r-neutral-600/50`,
         };
     }
@@ -153,7 +164,9 @@ export const Tooltip: React.FC<TooltipProps> = ({ term, definition, children, hi
       }}
     >
       <div className="bg-neutral-900 border border-neutral-600/50 rounded-lg shadow-lg p-3 w-max max-w-xs">
-        <div className="text-emerald-400 font-semibold text-sm mb-1">{term}</div>
+        <div className="text-emerald-400 font-semibold text-sm mb-1">
+          {term}
+        </div>
         <div className="text-white text-xs leading-relaxed">{definition}</div>
       </div>
       <div className={arrowStyles.container}>
@@ -172,7 +185,9 @@ export const Tooltip: React.FC<TooltipProps> = ({ term, definition, children, hi
       >
         {children}
       </span>
-      {showTooltip && typeof document !== "undefined" && createPortal(tooltipContent, document.body)}
+      {showTooltip &&
+        typeof document !== "undefined" &&
+        createPortal(tooltipContent, document.body)}
     </>
   );
 };

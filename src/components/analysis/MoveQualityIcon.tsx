@@ -1,14 +1,19 @@
-import React from "react";
-
-import { getIconColorClasses, getMoveQualitySymbol } from "@/helpers/move-quality";
+import {
+  getIconColorClasses,
+  getMoveQualitySymbol,
+} from "@/helpers/move-quality";
 import type { MoveQuality } from "@/helpers/pgn";
+import React from "react";
 
 type MoveQualityIconProps = {
   moveQuality: MoveQuality;
   size?: "small" | "medium";
 };
 
-const getSymbolClasses = (moveQuality: MoveQuality, size: "small" | "medium") => {
+const getSymbolClasses = (
+  moveQuality: MoveQuality,
+  size: "small" | "medium",
+) => {
   const baseClasses =
     "rounded-full flex items-center justify-center font-bold border tracking-tighter leading-none shrink-0";
 
@@ -18,7 +23,10 @@ const getSymbolClasses = (moveQuality: MoveQuality, size: "small" | "medium") =>
   return `${baseClasses} ${sizeClasses} ${colorClasses}`;
 };
 
-export const MoveQualityIcon: React.FC<MoveQualityIconProps> = ({ moveQuality, size = "small" }) => {
+export const MoveQualityIcon: React.FC<MoveQualityIconProps> = ({
+  moveQuality,
+  size = "small",
+}) => {
   const symbol = getMoveQualitySymbol(moveQuality);
   return <div className={getSymbolClasses(moveQuality, size)}>{symbol}</div>;
 };

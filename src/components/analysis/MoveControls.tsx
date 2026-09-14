@@ -1,4 +1,10 @@
-import { ChevronFirstIcon, ChevronLastIcon, ChevronLeftIcon, ChevronRightIcon, FlipVerticalIcon } from "lucide-react";
+import {
+  ChevronFirstIcon,
+  ChevronLastIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  FlipVerticalIcon,
+} from "lucide-react";
 
 interface MoveControlsProps {
   goToFirst: () => void;

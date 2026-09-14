@@ -1,3 +1,8 @@
+import { TermHighlighter } from "@/components/TermHighlighter";
+import type { ChessTerm } from "@/constants/chess-glossary";
+import { getMoveQualityDisplay } from "@/helpers/move-quality";
+import type { GameMove } from "@/helpers/pgn";
+import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 import clsx from "clsx";
 import {
   AlertTriangleIcon,
@@ -9,12 +14,6 @@ import {
   TargetIcon,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
-
-import { TermHighlighter } from "@/components/TermHighlighter";
-import type { ChessTerm } from "@/constants/chess-glossary";
-import { getMoveQualityDisplay } from "@/helpers/move-quality";
-import type { GameMove } from "@/helpers/pgn";
-import type { BlackOrWhite, EngineMove, Explanation } from "@/types";
 
 import { ExplanationLoading } from "./ExplanationLoading";
 import { MoveQualityIcon } from "./MoveQualityIcon";
@@ -34,8 +33,12 @@ const ExplanationHeader: React.FC = () => (
       <GraduationCapIcon size={16} className="text-white" />
     </div>
     <div className="flex-1">
-      <h3 className="text-xs font-semibold text-neutral-200">Chess Coach (beta)</h3>
-      <p className="text-[10px] text-neutral-400">Explanations may contain inaccuracies</p>
+      <h3 className="text-xs font-semibold text-neutral-200">
+        Chess Coach (beta)
+      </h3>
+      <p className="text-[10px] text-neutral-400">
+        Explanations may contain inaccuracies
+      </p>
     </div>
   </div>
 );
@@ -55,27 +58,42 @@ const parseOverview = (overview: string): OverviewSections => {
     .filter(Boolean);
 
   const pickFromLines = (label: string) => {
-    const line = lines.find((entry) => entry.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+    const line = lines.find((entry) =>
+      entry.toLowerCase().startsWith(`${label.toLowerCase()}:`),
+    );
     return line ? line.slice(line.indexOf(":") + 1).trim() : "";
   };
 
   const pickFromText = (label: string, nextLabels: string[]) => {
     const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const escapedNext = nextLabels.map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    const boundary = escapedNext.length > 0 ? `(?=\\s*(?:${escapedNext.join("|")}):|$)` : "$";
-    const regex = new RegExp(`${escapedLabel}:\\s*([\\s\\S]*?)${boundary}`, "i");
+    const escapedNext = nextLabels.map((item) =>
+      item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    );
+    const boundary =
+      escapedNext.length > 0 ? `(?=\\s*(?:${escapedNext.join("|")}):|$)` : "$";
+    const regex = new RegExp(
+      `${escapedLabel}:\\s*([\\s\\S]*?)${boundary}`,
+      "i",
+    );
     const match = overview.match(regex);
     return match?.[1]?.trim() || "";
   };
 
   const byLabel = {
-    hook: pickFromLines("Hook") || pickFromText("Hook", ["Why this failed", "Better plan", "Remember"]),
-    whyFailed: pickFromLines("Why this failed") || pickFromText("Why this failed", ["Better plan", "Remember"]),
-    betterPlan: pickFromLines("Better plan") || pickFromText("Better plan", ["Remember"]),
+    hook:
+      pickFromLines("Hook") ||
+      pickFromText("Hook", ["Why this failed", "Better plan", "Remember"]),
+    whyFailed:
+      pickFromLines("Why this failed") ||
+      pickFromText("Why this failed", ["Better plan", "Remember"]),
+    betterPlan:
+      pickFromLines("Better plan") || pickFromText("Better plan", ["Remember"]),
     remember: pickFromLines("Remember") || pickFromText("Remember", []),
   };
 
-  const combinedWhatFailed = [byLabel.hook, byLabel.whyFailed].filter(Boolean).join(" ");
+  const combinedWhatFailed = [byLabel.hook, byLabel.whyFailed]
+    .filter(Boolean)
+    .join(" ");
 
   if (combinedWhatFailed && byLabel.betterPlan && byLabel.remember) {
     return {
@@ -95,8 +113,14 @@ const parseOverview = (overview: string): OverviewSections => {
       combinedWhatFailed ||
       [sentences[0], sentences[1]].filter(Boolean).join(" ") ||
       "The move looked natural but missed a stronger idea and gave your opponent the initiative.",
-    betterPlan: byLabel.betterPlan || sentences[2] || "The engine line creates a direct, forcing advantage.",
-    remember: byLabel.remember || sentences[3] || "Before defending, check if a counter-threat is stronger.",
+    betterPlan:
+      byLabel.betterPlan ||
+      sentences[2] ||
+      "The engine line creates a direct, forcing advantage.",
+    remember:
+      byLabel.remember ||
+      sentences[3] ||
+      "Before defending, check if a counter-threat is stronger.",
   };
 };
 
@@ -123,7 +147,10 @@ const ExploreLineButton: React.FC<{
       title={disabled ? "Line unavailable" : `Open ${label.toLowerCase()} line`}
     >
       <span>{label}</span>
-      <ArrowRightIcon size={12} className="opacity-90 transition-transform group-hover:translate-x-0.5" />
+      <ArrowRightIcon
+        size={12}
+        className="opacity-90 transition-transform group-hover:translate-x-0.5"
+      />
     </button>
   );
 };
@@ -135,7 +162,14 @@ const OverviewPanel: React.FC<{
   hasBestLine: boolean;
   onExploreBad: () => void;
   onExploreBest: () => void;
-}> = ({ overview, matchedTerms, hasBadLine, hasBestLine, onExploreBad, onExploreBest }) => {
+}> = ({
+  overview,
+  matchedTerms,
+  hasBadLine,
+  hasBestLine,
+  onExploreBad,
+  onExploreBest,
+}) => {
   const sections = parseOverview(overview);
 
   return (
@@ -149,7 +183,8 @@ const OverviewPanel: React.FC<{
                 {`Read this in three beats`}
               </h4>
               <p className="text-[10px] text-neutral-400 mt-1 leading-none">
-                First understand WHY this failed, then compare it to the stronger plan, then keep the takeaway.
+                First understand WHY this failed, then compare it to the
+                stronger plan, then keep the takeaway.
               </p>
             </div>
           </div>
@@ -159,7 +194,9 @@ const OverviewPanel: React.FC<{
           <section className="min-w-0">
             <div className="flex items-center gap-2 mb-2">
               {/* <AlertTriangleIcon size={15} className="shrink-0 text-red-300" /> */}
-              <h4 className="text-sm font-semibold text-red-400">Why this failed</h4>
+              <h4 className="text-sm font-semibold text-red-400">
+                Why this failed
+              </h4>
             </div>
             <TermHighlighter
               text={sections.whatFailed}
@@ -167,14 +204,21 @@ const OverviewPanel: React.FC<{
               matchedTerms={matchedTerms}
             />
             <div className="mt-1">
-              <ExploreLineButton label="Explore this line" tone="bad" onClick={onExploreBad} disabled={!hasBadLine} />
+              <ExploreLineButton
+                label="Explore this line"
+                tone="bad"
+                onClick={onExploreBad}
+                disabled={!hasBadLine}
+              />
             </div>
           </section>
 
           <section className="min-w-0 border-t border-neutral-700/50 pt-4">
             <div className="flex items-center gap-2 mb-2">
               {/* <TargetIcon size={15} className="shrink-0 text-emerald-300" /> */}
-              <h4 className="text-sm font-semibold text-emerald-400">Stronger plan</h4>
+              <h4 className="text-sm font-semibold text-emerald-400">
+                Stronger plan
+              </h4>
             </div>
             <TermHighlighter
               text={sections.betterPlan}
@@ -213,8 +257,20 @@ const ExplanationContent: React.FC<{
   userColor?: BlackOrWhite;
   onVisualize: (lineMove: EngineMove, brush: "red" | "green") => void;
   onNavigateToOriginalMove: () => void;
-}> = ({ move, explanation, userColor, onVisualize, onNavigateToOriginalMove }) => {
-  const { explanation: overview, badContinuation, bestContinuation, badLine, bestLine } = explanation;
+}> = ({
+  move,
+  explanation,
+  userColor,
+  onVisualize,
+  onNavigateToOriginalMove,
+}) => {
+  const {
+    explanation: overview,
+    badContinuation,
+    bestContinuation,
+    badLine,
+    bestLine,
+  } = explanation;
   const [selectedBadMove, setSelectedBadMove] = useState<number | null>(null);
   const [selectedBestMove, setSelectedBestMove] = useState<number | null>(null);
   const [activeStep, setActiveStep] = useState<GuidedStep>("overview");
@@ -247,7 +303,8 @@ const ExplanationContent: React.FC<{
   const hasBestLine = bestContinuation.length > 0 && bestLine.length > 0;
   const activeTabClasses =
     "border-cyan-500/35 bg-cyan-500/12 text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
-  const inactiveTabClasses = "border-neutral-600/60 bg-neutral-800/40 text-neutral-300 hover:bg-neutral-700/40";
+  const inactiveTabClasses =
+    "border-neutral-600/60 bg-neutral-800/40 text-neutral-300 hover:bg-neutral-700/40";
 
   const handleOverviewTab = () => {
     setActiveStep("overview");
@@ -277,7 +334,10 @@ const ExplanationContent: React.FC<{
       }
 
       const currentIndex = selectedBadMove ?? 0;
-      const nextIndex = Math.max(0, Math.min(currentIndex + offset, badLine.length - 1));
+      const nextIndex = Math.max(
+        0,
+        Math.min(currentIndex + offset, badLine.length - 1),
+      );
 
       if (nextIndex === currentIndex) {
         return;
@@ -297,7 +357,10 @@ const ExplanationContent: React.FC<{
       }
 
       const currentIndex = selectedBestMove ?? 0;
-      const nextIndex = Math.max(0, Math.min(currentIndex + offset, bestLine.length - 1));
+      const nextIndex = Math.max(
+        0,
+        Math.min(currentIndex + offset, bestLine.length - 1),
+      );
 
       if (nextIndex === currentIndex) {
         return;
@@ -317,7 +380,12 @@ const ExplanationContent: React.FC<{
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
         return;
       }
 
@@ -350,8 +418,12 @@ const ExplanationContent: React.FC<{
     <div className="py-3 flex-1 min-h-0 overflow-y-auto">
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <div className={`text-sm font-bold ${quality.color} flex items-center gap-2`}>
-            {moveQuality && <MoveQualityIcon moveQuality={moveQuality} size="medium" />}
+          <div
+            className={`text-sm font-bold ${quality.color} flex items-center gap-2`}
+          >
+            {moveQuality && (
+              <MoveQualityIcon moveQuality={moveQuality} size="medium" />
+            )}
             <span>
               {renderMoveNotation(move.san, move.ply)} was a {quality.text}
             </span>
@@ -364,11 +436,15 @@ const ExplanationContent: React.FC<{
               onClick={handleOverviewTab}
               className={clsx(
                 "rounded-md border px-2.5 py-2 text-xs font-medium transition-colors flex items-center gap-1.5 justify-center md:justify-start",
-                activeStep === "overview" ? activeTabClasses : inactiveTabClasses,
+                activeStep === "overview"
+                  ? activeTabClasses
+                  : inactiveTabClasses,
               )}
             >
               <ScanEyeIcon size={13} />
-              <span className="uppercase tracking-wide font-semibold hidden md:inline">Overview</span>
+              <span className="uppercase tracking-wide font-semibold hidden md:inline">
+                Overview
+              </span>
             </button>
             {badContinuation.length > 0 && (
               <button
@@ -379,7 +455,9 @@ const ExplanationContent: React.FC<{
                 )}
               >
                 <AlertTriangleIcon size={13} />
-                <span className="uppercase tracking-wide font-semibold hidden md:inline">Why This Failed</span>
+                <span className="uppercase tracking-wide font-semibold hidden md:inline">
+                  Why This Failed
+                </span>
               </button>
             )}
             <button
@@ -390,7 +468,9 @@ const ExplanationContent: React.FC<{
               )}
             >
               <TargetIcon size={13} className=" shrink-0" />
-              <span className=" uppercase tracking-wide font-semibold hidden md:inline">Stronger Plan</span>
+              <span className=" uppercase tracking-wide font-semibold hidden md:inline">
+                Stronger Plan
+              </span>
             </button>
           </div>
         </div>
@@ -414,9 +494,12 @@ const ExplanationContent: React.FC<{
 
         {badContinuation.length > 0 && (
           <div
-            className={clsx("bg-neutral-800/50 border border-neutral-600/50 rounded-lg overflow-hidden", {
-              hidden: activeStep != "bad",
-            })}
+            className={clsx(
+              "bg-neutral-800/50 border border-neutral-600/50 rounded-lg overflow-hidden",
+              {
+                hidden: activeStep != "bad",
+              },
+            )}
           >
             <div className="w-full px-3 py-2.5 bg-neutral-700/40 border-b border-neutral-600/50">
               <div className="flex items-center gap-2">
@@ -425,7 +508,9 @@ const ExplanationContent: React.FC<{
                   <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wide">
                     {`What goes wrong for ${playerLabel}`}
                   </h4>
-                  <p className="text-[10px] text-neutral-500 mt-1 leading-none">Click a move to visualize</p>
+                  <p className="text-[10px] text-neutral-500 mt-1 leading-none">
+                    Click a move to visualize
+                  </p>
                 </div>
               </div>
             </div>
@@ -452,9 +537,12 @@ const ExplanationContent: React.FC<{
 
         {bestContinuation.length > 0 && (
           <div
-            className={clsx("bg-neutral-800/50 border border-neutral-600/50 rounded-lg overflow-hidden", {
-              hidden: activeStep != "best",
-            })}
+            className={clsx(
+              "bg-neutral-800/50 border border-neutral-600/50 rounded-lg overflow-hidden",
+              {
+                hidden: activeStep != "best",
+              },
+            )}
           >
             <div className="w-full px-3 py-2.5 bg-neutral-700/40 border-b border-neutral-600/50">
               <div className="flex items-center gap-2">
@@ -463,7 +551,9 @@ const ExplanationContent: React.FC<{
                   <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
                     {`What ${playerLabel} should have done`}
                   </h4>
-                  <p className="text-[10px] text-neutral-500 mt-1 leading-none">Click a move to visualize</p>
+                  <p className="text-[10px] text-neutral-500 mt-1 leading-none">
+                    Click a move to visualize
+                  </p>
                 </div>
               </div>
             </div>
@@ -505,7 +595,14 @@ interface MoveCardProps {
   onClick: () => void;
 }
 
-const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, matchedTerms, onClick }) => {
+const MoveCard: React.FC<MoveCardProps> = ({
+  type,
+  cont,
+  ply,
+  isSelected,
+  matchedTerms,
+  onClick,
+}) => {
   const moveNum = Math.ceil(ply / 2);
   const isWhite = ply % 2 === 1;
   const isBest = type === "best";
@@ -527,7 +624,11 @@ const MoveCard: React.FC<MoveCardProps> = ({ type, cont, ply, isSelected, matche
   return (
     <button
       onClick={onClick}
-      className={clsx("group w-full text-sm p-2 text-left cursor-pointer", baseClasses, selectedClasses)}
+      className={clsx(
+        "group w-full text-sm p-2 text-left cursor-pointer",
+        baseClasses,
+        selectedClasses,
+      )}
       title="Click to visualize this position"
     >
       <div className="flex items-center">
@@ -576,7 +677,8 @@ export const ExplanationViewer: React.FC<ExplanationViewerProps> = ({
       <div className="flex flex-col h-full">
         <ExplanationHeader />
         <p className="text-center text-sm text-neutral-400 mb-2 max-w-sm mx-auto py-8">
-          Click "Tell me why" on any mistake or blunder to get a guided explanation.
+          Click "Tell me why" on any mistake or blunder to get a guided
+          explanation.
         </p>
       </div>
     );

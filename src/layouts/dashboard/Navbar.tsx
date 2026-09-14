@@ -1,11 +1,16 @@
-import { BarChart3Icon, HomeIcon, MailIcon, SwordsIcon, UserIcon } from "lucide-react";
-import { useState } from "react";
-import { Link, NavLink } from "react-router";
-
-import { LogoImage } from "@/components/Logo";
 import { DiscordIcon } from "@/components/icons/DiscordIcon";
+import { LogoImage } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
+import {
+  BarChart3Icon,
+  HomeIcon,
+  MailIcon,
+  SwordsIcon,
+  UserIcon,
+} from "lucide-react";
+import { useState } from "react";
+import { Link, NavLink } from "react-router";
 
 interface ProfileLinkProps {
   variant: "desktop" | "mobile";
@@ -13,7 +18,11 @@ interface ProfileLinkProps {
   setImageError: (error: boolean) => void;
 }
 
-const ProfileLink = ({ variant, imageError, setImageError }: ProfileLinkProps) => {
+const ProfileLink = ({
+  variant,
+  imageError,
+  setImageError,
+}: ProfileLinkProps) => {
   const { user } = useAuth();
   const isDesktop = variant === "desktop";
   const avatarSize = isDesktop ? "w-8 h-8" : "w-5 h-5";
@@ -44,7 +53,9 @@ const ProfileLink = ({ variant, imageError, setImageError }: ProfileLinkProps) =
   const tooltip = (
     <span
       className={`absolute ${
-        isDesktop ? "left-full top-1 ml-2" : "bottom-full mb-2 left-1/2 -translate-x-1/2"
+        isDesktop
+          ? "left-full top-1 ml-2"
+          : "bottom-full mb-2 left-1/2 -translate-x-1/2"
       } px-2 py-1 bg-neutral-800 shadow-lg text-white text-xs rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap`}
     >
       Profile
@@ -106,7 +117,9 @@ export const Navbar = () => {
                 to={item.path}
                 className={({ isActive }) =>
                   `group relative p-3 rounded-lg transition-colors ${
-                    isActive ? "bg-neutral-700 text-white" : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                    isActive
+                      ? "bg-neutral-700 text-white"
+                      : "text-neutral-400 hover:text-white hover:bg-neutral-800"
                   }`
                 }
               >
@@ -147,7 +160,11 @@ export const Navbar = () => {
         </div>
 
         {/* User avatar at bottom */}
-        <ProfileLink variant="desktop" imageError={imageError} setImageError={setImageError} />
+        <ProfileLink
+          variant="desktop"
+          imageError={imageError}
+          setImageError={setImageError}
+        />
       </div>
 
       {/* Mobile Bottom Navigation */}
@@ -198,7 +215,11 @@ export const Navbar = () => {
         </a>
 
         {/* Profile button in mobile nav */}
-        <ProfileLink variant="mobile" imageError={imageError} setImageError={setImageError} />
+        <ProfileLink
+          variant="mobile"
+          imageError={imageError}
+          setImageError={setImageError}
+        />
       </div>
     </>
   );

@@ -1,8 +1,7 @@
-import clsx from "clsx";
-import React, { useState } from "react";
-
 import { getMoveQualityColor } from "@/helpers/move-quality";
 import type { GameMove, Variation } from "@/helpers/pgn";
+import clsx from "clsx";
+import React, { useState } from "react";
 
 import { TellMeWhyButton } from "./TellMeWhy";
 
@@ -43,7 +42,9 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
       await showExplanation(moveIndex, annotationText);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate explanation");
+      setError(
+        err instanceof Error ? err.message : "Failed to generate explanation",
+      );
     }
   };
 
@@ -86,12 +87,16 @@ export const AnnotationBlock: React.FC<AnnotationBlockProps> = ({
               {!move.textComments[0] && (
                 <>
                   <span>{moveQuality}</span>
-                  {hasBestLine && <span>&nbsp;{bestLine[0].san} was the best</span>}
+                  {hasBestLine && (
+                    <span>&nbsp;{bestLine[0].san} was the best</span>
+                  )}
                 </>
               )}
             </div>
             <div className="flex items-center gap-2">
-              {hasBestLine && <span>Best line: {bestLine.map((v) => v.san).join(" ")}</span>}
+              {hasBestLine && (
+                <span>Best line: {bestLine.map((v) => v.san).join(" ")}</span>
+              )}
             </div>
           </div>
           <div className="flex justify-end">

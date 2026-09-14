@@ -1,25 +1,32 @@
-import clsx from "clsx";
-import { CheckCircle2Icon, CheckIcon } from "lucide-react";
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router";
-
 import { backendApi } from "@/api/backend";
 import { useDebounced } from "@/components/hooks/use-debounced";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
+import clsx from "clsx";
+import { CheckCircle2Icon, CheckIcon } from "lucide-react";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 
 export default function OnboardingPage() {
   const { user, refreshSession } = useAuth();
   const navigate = useNavigate();
   const { state } = useLocation();
 
-  const [playsOnChesscom, setPlaysOnChesscom] = useState(Boolean(user?.chesscomId));
-  const [playsOnLichess, setPlaysOnLichess] = useState(Boolean(user?.lichessId));
+  const [playsOnChesscom, setPlaysOnChesscom] = useState(
+    Boolean(user?.chesscomId),
+  );
+  const [playsOnLichess, setPlaysOnLichess] = useState(
+    Boolean(user?.lichessId),
+  );
   const [chesscomId, setChesscomId] = useState(user?.chesscomId || "");
   const [lichessId, setLichessId] = useState(user?.lichessId || "");
-  const [chesscomIdForQuery, setChesscomIdForQuery] = useState(user?.chesscomId || "");
-  const [lichessIdForQuery, setLichessIdForQuery] = useState(user?.lichessId || "");
+  const [chesscomIdForQuery, setChesscomIdForQuery] = useState(
+    user?.chesscomId || "",
+  );
+  const [lichessIdForQuery, setLichessIdForQuery] = useState(
+    user?.lichessId || "",
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,9 +95,12 @@ export default function OnboardingPage() {
     <div className="min-h-screen w-full overflow-x-hidden bg-neutral-800 flex flex-col items-center justify-center px-6 py-8">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Connect Your Chess Accounts</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Connect Your Chess Accounts
+          </h1>
           <p className="text-neutral-400 text-sm">
-            Choose where you play, then add the username for each platform you use.
+            Choose where you play, then add the username for each platform you
+            use.
           </p>
         </div>
 
@@ -98,8 +108,12 @@ export default function OnboardingPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-white">Where do you play chess?</p>
-                <p className="text-xs text-neutral-400 mt-1">Select all that apply.</p>
+                <p className="text-sm font-medium text-white">
+                  Where do you play chess?
+                </p>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Select all that apply.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -170,13 +184,18 @@ export default function OnboardingPage() {
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="chesscomId"
-                    className={clsx("text-left text-xs font-medium flex items-center", {
-                      "text-green-500": chesscomId && chesscomValid,
-                      "text-white": !chesscomId || !chesscomValid,
-                    })}
+                    className={clsx(
+                      "text-left text-xs font-medium flex items-center",
+                      {
+                        "text-green-500": chesscomId && chesscomValid,
+                        "text-white": !chesscomId || !chesscomValid,
+                      },
+                    )}
                   >
                     Chess.com Username
-                    {chesscomId && chesscomValid && <CheckCircle2Icon size={11} className="ml-1" />}
+                    {chesscomId && chesscomValid && (
+                      <CheckCircle2Icon size={11} className="ml-1" />
+                    )}
                   </label>
                 </div>
                 <input
@@ -209,13 +228,18 @@ export default function OnboardingPage() {
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="lichessId"
-                    className={clsx("text-left text-xs font-medium flex items-center", {
-                      "text-green-500": lichessId && lichessValid,
-                      "text-white": !lichessId || !lichessValid,
-                    })}
+                    className={clsx(
+                      "text-left text-xs font-medium flex items-center",
+                      {
+                        "text-green-500": lichessId && lichessValid,
+                        "text-white": !lichessId || !lichessValid,
+                      },
+                    )}
                   >
                     Lichess Username
-                    {lichessId && lichessValid && <CheckCircle2Icon size={11} className="ml-1" />}
+                    {lichessId && lichessValid && (
+                      <CheckCircle2Icon size={11} className="ml-1" />
+                    )}
                   </label>
                 </div>
                 <input
@@ -243,7 +267,9 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {error && <p className=" text-red-400 text-xs text-center">{error}</p>}
+            {error && (
+              <p className=" text-red-400 text-xs text-center">{error}</p>
+            )}
 
             <div className="pt-1">
               <button

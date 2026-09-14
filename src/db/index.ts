@@ -1,5 +1,4 @@
-import type { Table } from "dexie";
-import Dexie from "dexie";
+import Dexie, { type Table } from "dexie";
 
 import type { ExplanationDocument, StockfishAnalysisDocument } from "./schemas";
 

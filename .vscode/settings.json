@@ -6,8 +6,6 @@
   "prettier.tabWidth": 2,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit",
-    "source.sortImports": "explicit",
+    "source.sortImports": "explicit"
   }
 }
-
-

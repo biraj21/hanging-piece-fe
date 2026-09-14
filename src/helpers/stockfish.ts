@@ -1,11 +1,17 @@
-import type { EngineCentipawnEval, EngineEvaluation, EngineMateEval } from "@/types";
+import type {
+  EngineCentipawnEval,
+  EngineEvaluation,
+  EngineMateEval,
+} from "@/types";
 import { isMobileDevice } from "@/utils/device";
 
 export function isMateEval(ev: EngineEvaluation): ev is EngineMateEval {
   return "mate" in ev;
 }
 
-export function isCentipawnEval(ev: EngineEvaluation): ev is EngineCentipawnEval {
+export function isCentipawnEval(
+  ev: EngineEvaluation,
+): ev is EngineCentipawnEval {
   return "cp" in ev;
 }
 
@@ -24,7 +30,8 @@ interface EngineVariant {
   threads: number;
 }
 
-type EngineVariantKey = "LITE_MULTI" | "LITE_SINGLE" | "FULL_MULTI" | "FULL_SINGLE";
+type EngineVariantKey =
+  "LITE_MULTI" | "LITE_SINGLE" | "FULL_MULTI" | "FULL_SINGLE";
 
 const STOCKFISH_ENGINE: Record<EngineVariantKey, EngineVariant> = {
   LITE_MULTI: {
@@ -216,7 +223,11 @@ class StockfishEngine {
    * @param numMoves - Number of moves to generate (continuation length)
    * @param depth - Search depth
    */
-  async getContinuation(fen: string, numMoves: number, depth: number): Promise<string[]> {
+  async getContinuation(
+    fen: string,
+    numMoves: number,
+    depth: number,
+  ): Promise<string[]> {
     if (!this.worker || !this.isReady) {
       throw new Error("Engine not ready. Call init() first.");
     }
@@ -317,7 +328,9 @@ function getEngineVariant(useLite: boolean = false): EngineVariant {
   if (hasCORS) {
     return useLite ? STOCKFISH_ENGINE.LITE_MULTI : STOCKFISH_ENGINE.FULL_MULTI;
   } else {
-    return useLite ? STOCKFISH_ENGINE.LITE_SINGLE : STOCKFISH_ENGINE.FULL_SINGLE;
+    return useLite
+      ? STOCKFISH_ENGINE.LITE_SINGLE
+      : STOCKFISH_ENGINE.FULL_SINGLE;
   }
 }
 
@@ -391,7 +404,11 @@ export class Stockfish {
   /**
    * Get best continuation from a position
    */
-  async getContinuation(fen: string, numMoves: number, depth: number): Promise<string[]> {
+  async getContinuation(
+    fen: string,
+    numMoves: number,
+    depth: number,
+  ): Promise<string[]> {
     await this.ensureReady();
     return this.engine.getContinuation(fen, numMoves, depth);
   }

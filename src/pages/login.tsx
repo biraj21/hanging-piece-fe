@@ -1,10 +1,9 @@
-import { LogInIcon } from "lucide-react";
-import { Link } from "react-router";
-
 import { Logo } from "@/components/Logo";
 import { Tagline } from "@/components/Tagline";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
+import { LogInIcon } from "lucide-react";
+import { Link } from "react-router";
 
 export default function LoginPage() {
   const { signIn, isLoading } = useAuth();
@@ -35,11 +34,17 @@ export default function LoginPage() {
         {/* Footer Links */}
         <div className="pt-6 border-t border-neutral-700/50">
           <div className="flex items-center justify-center gap-4 text-xs text-neutral-500">
-            <Link to={ROUTES.PRIVACY} className="hover:text-emerald-400 transition-colors">
+            <Link
+              to={ROUTES.PRIVACY}
+              className="hover:text-emerald-400 transition-colors"
+            >
               Privacy
             </Link>
             <span className="text-neutral-600">•</span>
-            <Link to={ROUTES.TERMS} className="hover:text-emerald-400 transition-colors">
+            <Link
+              to={ROUTES.TERMS}
+              className="hover:text-emerald-400 transition-colors"
+            >
               Terms
             </Link>
           </div>

@@ -3,7 +3,10 @@ interface LoaderProps {
   message?: string;
 }
 
-export const Loader: React.FC<LoaderProps> = ({ fullScreen = false, message = "Loading..." }) => {
+export const Loader: React.FC<LoaderProps> = ({
+  fullScreen = false,
+  message = "Loading...",
+}) => {
   const content = (
     <div className="text-white flex items-center justify-center">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mr-3" />

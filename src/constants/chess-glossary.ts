@@ -93,31 +93,44 @@ export type ChessTerm = (typeof ChessTerm)[keyof typeof ChessTerm];
 
 // Raw glossary with base terms only
 export const CHESS_GLOSSARY_RAW: Record<ChessTerm, string> = {
-  [ChessTerm.BACK_RANK_MATE]: "A checkmate delivered by a rook or queen along the back rank",
-  [ChessTerm.SMOTHERED_MATE]: "A checkmate where the king is unable to move due to being surrounded by its own pieces",
-  [ChessTerm.BODENS_MATE]: "Checkmate pattern where two bishops deliver crisscrossing checks",
-  [ChessTerm.ARABIAN_MATE]: "Checkmate that occurs when knight and rook trap the king in a corner",
+  [ChessTerm.BACK_RANK_MATE]:
+    "A checkmate delivered by a rook or queen along the back rank",
+  [ChessTerm.SMOTHERED_MATE]:
+    "A checkmate where the king is unable to move due to being surrounded by its own pieces",
+  [ChessTerm.BODENS_MATE]:
+    "Checkmate pattern where two bishops deliver crisscrossing checks",
+  [ChessTerm.ARABIAN_MATE]:
+    "Checkmate that occurs when knight and rook trap the king in a corner",
 
-  [ChessTerm.PIN]: "A piece cannot legally move out of line of attack without exposing a more valuable piece",
-  [ChessTerm.FORK]: "A knight attack that targets two or more pieces simultaneously",
-  [ChessTerm.SKEWER]: "Similar to pin but attacks the more valuable piece first",
-  [ChessTerm.SACRIFICE]: "Deliberately giving up material to gain other advantages",
+  [ChessTerm.PIN]:
+    "A piece cannot legally move out of line of attack without exposing a more valuable piece",
+  [ChessTerm.FORK]:
+    "A knight attack that targets two or more pieces simultaneously",
+  [ChessTerm.SKEWER]:
+    "Similar to pin but attacks the more valuable piece first",
+  [ChessTerm.SACRIFICE]:
+    "Deliberately giving up material to gain other advantages",
   [ChessTerm.DECOY]: "Luring an enemy piece away from its defensive position",
   [ChessTerm.DEFLECTION]: "Luring an enemy piece away from a good square",
-  [ChessTerm.ATTRACTION]: "Type of decoy involving sacrifice next to enemy king",
-  [ChessTerm.DISCOVERED_ATTACK]: "Attack made when another piece moves out of its way",
+  [ChessTerm.ATTRACTION]:
+    "Type of decoy involving sacrifice next to enemy king",
+  [ChessTerm.DISCOVERED_ATTACK]:
+    "Attack made when another piece moves out of its way",
   [ChessTerm.DISCOVERED_CHECK]: "Discovered attack to the king",
   [ChessTerm.DOUBLE_ATTACK]: "Two attacks made with one move",
   [ChessTerm.CLEARANCE]: "Removal of piece from a square so another may use it",
 
-  [ChessTerm.OUTPOST]: "A square where a piece is hard to attack due to pawn structure",
+  [ChessTerm.OUTPOST]:
+    "A square where a piece is hard to attack due to pawn structure",
   [ChessTerm.BLOCKADE]: "Obstructing enemy pawn advance with a piece",
-  [ChessTerm.CONTROL]: "Guarding squares in a way that prevents opponent from using them",
+  [ChessTerm.CONTROL]:
+    "Guarding squares in a way that prevents opponent from using them",
   [ChessTerm.SPACE]: "Territory and mobility advantage",
   [ChessTerm.WEAKNESS]: "Vulnerability in one's position",
   [ChessTerm.PASSED_PAWN]: "Pawn with no opposing pawns to prevent its advance",
   [ChessTerm.ISOLATED_PAWN]: "Pawn without friendly pawns on adjacent files",
-  [ChessTerm.BACKWARD_PAWN]: "Pawn behind friendly pawn on adjacent file, hard to advance",
+  [ChessTerm.BACKWARD_PAWN]:
+    "Pawn behind friendly pawn on adjacent file, hard to advance",
   [ChessTerm.PAWN_CHAIN]: "Connected pawns supporting each other",
   [ChessTerm.ADVANCED_PAWN]: "Pawn on opponent's half of the board",
   [ChessTerm.DOUBLED_PAWN]: "Two pawns of same color on same file",
@@ -130,7 +143,8 @@ export const CHESS_GLOSSARY_RAW: Record<ChessTerm, string> = {
   [ChessTerm.OPENING]: "Initial phase of the game focusing on development",
   [ChessTerm.MIDDLEGAME]: "Central phase of the game with tactical battles",
   [ChessTerm.ENDGAME]: "Final phase with few pieces remaining",
-  [ChessTerm.DEVELOPMENT]: "Moving pieces from starting squares to active positions",
+  [ChessTerm.DEVELOPMENT]:
+    "Moving pieces from starting squares to active positions",
   [ChessTerm.TEMPO]: "Time advantage, right to move when important",
 
   [ChessTerm.ADVANTAGE]: "Better position with chance to win",
@@ -139,12 +153,15 @@ export const CHESS_GLOSSARY_RAW: Record<ChessTerm, string> = {
   [ChessTerm.ZUGZWANG]: "Being forced to make a move that worsens position",
 
   [ChessTerm.FIANCHETTO]: "Developing bishop to b2/g2/b7/g7",
-  [ChessTerm.COMBINATION]: "Sequence of moves involving sacrifices for advantage",
+  [ChessTerm.COMBINATION]:
+    "Sequence of moves involving sacrifices for advantage",
   [ChessTerm.COORDINATION]: "Multiple pieces working together",
   [ChessTerm.CENTRALIZATION]: "Moving pieces toward center of the board",
-  [ChessTerm.EN_PASSANT]: "Special pawn capture rule when pawn advances two squares",
+  [ChessTerm.EN_PASSANT]:
+    "Special pawn capture rule when pawn advances two squares",
   [ChessTerm.CASTLING]: "Special king and rook move for safety and development",
-  [ChessTerm.PROMOTION]: "Pawn reaching opposite side of the board becoming other piece",
+  [ChessTerm.PROMOTION]:
+    "Pawn reaching opposite side of the board becoming other piece",
   [ChessTerm.CHECK]: "Direct attack on the king",
   [ChessTerm.CHECKMATE]: "King in check with no legal moves",
   [ChessTerm.TACTICS]: "Short-term combinations and attacks",
@@ -166,15 +183,21 @@ export const CHESS_GLOSSARY_RAW: Record<ChessTerm, string> = {
   [ChessTerm.DEFENSE]: "Protecting against opponent's threats",
   [ChessTerm.COUNTERATTACK]: "Attack in response to opponent's attack",
   [ChessTerm.THREAT]: "Potential capture or danger",
-  [ChessTerm.CONTROL_OF_THE_CENTER]: "Having one or more pieces that attack center squares",
+  [ChessTerm.CONTROL_OF_THE_CENTER]:
+    "Having one or more pieces that attack center squares",
   [ChessTerm.WEAK_SQUARE]: "Hard to defend square",
   [ChessTerm.STRONG_SQUARE]: "Well-controlled square",
-  [ChessTerm.OVERLOADED_PIECE]: "Piece with too many defensive responsibilities",
-  [ChessTerm.BACK_RANK]: "The first or eighth rank where pieces start and where back-rank mates occur",
+  [ChessTerm.OVERLOADED_PIECE]:
+    "Piece with too many defensive responsibilities",
+  [ChessTerm.BACK_RANK]:
+    "The first or eighth rank where pieces start and where back-rank mates occur",
 };
 
 // Helper function to generate variations
-function generateVariations(baseTerm: ChessTerm, definition: string): Record<string, string> {
+function generateVariations(
+  baseTerm: ChessTerm,
+  definition: string,
+): Record<string, string> {
   const baseTermStr = baseTerm as string;
   const variations: Record<string, string> = {};
   variations[baseTermStr] = definition;
@@ -196,12 +219,27 @@ function generateVariations(baseTerm: ChessTerm, definition: string): Record<str
     [ChessTerm.CONTROL]: ["controls", "controlled", "controlling"],
     [ChessTerm.ATTACK]: ["attacks", "attacked", "attacking"],
     [ChessTerm.DEFENSE]: ["defenses", "defended", "defending"],
-    [ChessTerm.COUNTERATTACK]: ["counterattacks", "counterattacked", "counterattacking"],
+    [ChessTerm.COUNTERATTACK]: [
+      "counterattacks",
+      "counterattacked",
+      "counterattacking",
+    ],
     [ChessTerm.THREAT]: ["threats", "threatened", "threatening"],
     [ChessTerm.CHECK]: ["checks", "checked", "checking"],
     [ChessTerm.CASTLING]: ["castle", "castles", "castled"],
-    [ChessTerm.PROMOTION]: ["promotions", "promote", "promotes", "promoted", "promoting"],
-    [ChessTerm.COMBINATION]: ["combinations", "combine", "combined", "combining"],
+    [ChessTerm.PROMOTION]: [
+      "promotions",
+      "promote",
+      "promotes",
+      "promoted",
+      "promoting",
+    ],
+    [ChessTerm.COMBINATION]: [
+      "combinations",
+      "combine",
+      "combined",
+      "combining",
+    ],
     [ChessTerm.STRATEGY]: ["strategies", "strategic"],
     [ChessTerm.TACTICS]: ["tactic", "tactical"],
     [ChessTerm.POSITION]: ["positions", "positioned", "positioning"],
@@ -218,8 +256,19 @@ function generateVariations(baseTerm: ChessTerm, definition: string): Record<str
     [ChessTerm.MIDDLEGAME]: ["middlegames"],
     [ChessTerm.ENDGAME]: ["endgames"],
     [ChessTerm.FIANCHETTO]: ["fianchettos", "fianchettoed"],
-    [ChessTerm.CENTRALIZATION]: ["centralizations", "centralize", "centralizes", "centralized", "centralizing"],
-    [ChessTerm.COORDINATION]: ["coordinate", "coordinates", "coordinated", "coordinating"],
+    [ChessTerm.CENTRALIZATION]: [
+      "centralizations",
+      "centralize",
+      "centralizes",
+      "centralized",
+      "centralizing",
+    ],
+    [ChessTerm.COORDINATION]: [
+      "coordinate",
+      "coordinates",
+      "coordinated",
+      "coordinating",
+    ],
     [ChessTerm.DEVELOPMENT]: ["develop", "develops", "developed", "developing"],
     [ChessTerm.PASSED_PAWN]: ["passed pawns"],
     [ChessTerm.ISOLATED_PAWN]: ["isolated pawns"],

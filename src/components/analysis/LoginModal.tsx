@@ -7,7 +7,11 @@ interface LoginModalProps {
   onLogin: () => void;
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({
+  isOpen,
+  onClose,
+  onLogin,
+}) => {
   if (!isOpen) {
     return null;
   }
@@ -25,10 +29,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
         <div className="px-6 pt-8 pb-6 flex flex-col items-center text-center">
           <Logo />
 
-          <h2 className="text-lg font-bold text-white mt-5">Sign in to continue</h2>
+          <h2 className="text-lg font-bold text-white mt-5">
+            Sign in to continue
+          </h2>
 
           <p className="text-sm text-neutral-400 mt-2 leading-relaxed">
-            Sign in to use AI Coach. I’m a <u>solo developer</u> covering the costs, so login helps keep this running.
+            Sign in to use AI Coach. I’m a <u>solo developer</u> covering the
+            costs, so login helps keep this running.
           </p>
 
           <button
@@ -39,7 +46,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
             Sign in with Google
           </button>
 
-          <button onClick={onClose} className="mt-3 text-sm text-neutral-500 hover:text-neutral-300 transition-colors">
+          <button
+            onClick={onClose}
+            className="mt-3 text-sm text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
             Maybe later
           </button>
         </div>

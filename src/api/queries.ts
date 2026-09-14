@@ -1,3 +1,4 @@
+import type { UnifiedGame } from "@/types";
 import {
   useInfiniteQuery,
   useQuery,
@@ -5,8 +6,6 @@ import {
   type UseInfiniteQueryOptions,
   type UseQueryOptions,
 } from "@tanstack/react-query";
-
-import type { UnifiedGame } from "@/types";
 
 import { backendApi, type ChessComGameResponse } from "./backend";
 import { chesscomApi, type ChesscomProfileWithStats } from "./chess-com";
@@ -22,7 +21,8 @@ export const queryKeys = {
     all: ["chesscom"] as const,
     profile: (username: string) => ["chesscom", "profile", username] as const,
     archives: (username: string) => ["chesscom", "archives", username] as const,
-    games: (username: string, archive?: string) => ["chesscom", "games", username, archive] as const,
+    games: (username: string, archive?: string) =>
+      ["chesscom", "games", username, archive] as const,
     game: (gameId: string) => ["chesscom", "game", gameId] as const,
   },
 
@@ -30,7 +30,8 @@ export const queryKeys = {
   lichess: {
     all: ["lichess"] as const,
     profile: (username: string) => ["lichess", "profile", username] as const,
-    games: (username: string, until?: number | null) => ["lichess", "games", username, until] as const,
+    games: (username: string, until?: number | null) =>
+      ["lichess", "games", username, until] as const,
   },
 } as const;
 
@@ -51,7 +52,10 @@ function addEmptyArchive(username: string, archive: string): void {
   try {
     const emptyArchives = getEmptyArchives(username);
     emptyArchives.add(archive);
-    sessionStorage.setItem(`${EMPTY_ARCHIVES_KEY}_${username}`, JSON.stringify([...emptyArchives]));
+    sessionStorage.setItem(
+      `${EMPTY_ARCHIVES_KEY}_${username}`,
+      JSON.stringify([...emptyArchives]),
+    );
   } catch {
     // Ignore session storage errors
   }
@@ -64,7 +68,10 @@ function addEmptyArchive(username: string, archive: string): void {
 // Chess.com profile query hook (includes stats)
 export function useChesscomProfile(
   username: string | undefined | null,
-  options?: Omit<UseQueryOptions<ChesscomProfileWithStats, Error>, "queryKey" | "queryFn">,
+  options?: Omit<
+    UseQueryOptions<ChesscomProfileWithStats, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: queryKeys.chesscom.profile(username || ""),
@@ -79,7 +86,10 @@ export function useChesscomProfile(
 // Lichess profile query hook
 export function useLichessProfile(
   username: string | undefined | null,
-  options?: Omit<UseQueryOptions<LichessProfile, Error>, "queryKey" | "queryFn">,
+  options?: Omit<
+    UseQueryOptions<LichessProfile, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: queryKeys.lichess.profile(username || ""),
@@ -108,7 +118,10 @@ export function useChesscomArchives(
 // Chess.com game query hook
 export function useChesscomGame(
   gameId: string | undefined | null,
-  options?: Omit<UseQueryOptions<ChessComGameResponse, Error>, "queryKey" | "queryFn">,
+  options?: Omit<
+    UseQueryOptions<ChessComGameResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: queryKeys.chesscom.game(gameId || ""),
@@ -130,14 +143,28 @@ export function useChesscomGamesInfinite(
   username: string | undefined | null,
   archives: string[],
   options?: Omit<
-    UseInfiniteQueryOptions<ChesscomGamesPage, Error, InfiniteData<ChesscomGamesPage>, any, number>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    UseInfiniteQueryOptions<
+      ChesscomGamesPage,
+      Error,
+      InfiniteData<ChesscomGamesPage>,
+      any,
+      number
+    >, // eslint-disable-line @typescript-eslint/no-explicit-any
     "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
   >,
 ) {
   return useInfiniteQuery({
-    queryKey: [...queryKeys.chesscom.games(username || "", "infinite"), archives],
+    queryKey: [
+      ...queryKeys.chesscom.games(username || "", "infinite"),
+      archives,
+    ],
     queryFn: async ({ pageParam }): Promise<ChesscomGamesPage> => {
-      if (!archives.length || !username || pageParam < 0 || pageParam >= archives.length) {
+      if (
+        !archives.length ||
+        !username ||
+        pageParam < 0 ||
+        pageParam >= archives.length
+      ) {
         return { games: [], archiveIndex: -1 };
       }
 
@@ -189,7 +216,13 @@ export function useLichessGamesInfinite(
   username: string | undefined | null,
   gamesPerBatch: number,
   options?: Omit<
-    UseInfiniteQueryOptions<UnifiedGame[], Error, InfiniteData<UnifiedGame[]>, any, number | null>, // eslint-disable-line @typescript-eslint/no-explicit-any
+    UseInfiniteQueryOptions<
+      UnifiedGame[],
+      Error,
+      InfiniteData<UnifiedGame[]>,
+      any,
+      number | null
+    >, // eslint-disable-line @typescript-eslint/no-explicit-any
     "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
   >,
 ) {

@@ -1,14 +1,24 @@
-import { BarChart3Icon, ClockIcon, HandshakeIcon, SwordsIcon, TrophyIcon, XIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
-
-import { useChesscomArchives, useChesscomGamesInfinite, useLichessGamesInfinite } from "@/api/queries";
+import {
+  useChesscomArchives,
+  useChesscomGamesInfinite,
+  useLichessGamesInfinite,
+} from "@/api/queries";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { getChessAccountUsername } from "@/helpers/chess-username";
 import { parsePgnSimple, type ParsedPgnSimple } from "@/helpers/pgn";
 import { ROUTES } from "@/router/routes";
 import type { BlackOrWhite, UnifiedGame } from "@/types";
+import {
+  BarChart3Icon,
+  ClockIcon,
+  HandshakeIcon,
+  SwordsIcon,
+  TrophyIcon,
+  XIcon,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 
 const GAMES_PER_BATCH = 20;
 
@@ -17,14 +27,18 @@ export default function GamesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeSource, setActiveSource] = useState<"chesscom" | "lichess">(() => {
-    const platformParam = searchParams.get("platform");
-    if (platformParam === "chesscom" || platformParam === "lichess") {
-      return platformParam;
-    }
-    return user?.chesscomId ? "chesscom" : "lichess";
-  });
-  const [resultFilter, setResultFilter] = useState<"all" | "win" | "loss" | "draw">("all");
+  const [activeSource, setActiveSource] = useState<"chesscom" | "lichess">(
+    () => {
+      const platformParam = searchParams.get("platform");
+      if (platformParam === "chesscom" || platformParam === "lichess") {
+        return platformParam;
+      }
+      return user?.chesscomId ? "chesscom" : "lichess";
+    },
+  );
+  const [resultFilter, setResultFilter] = useState<
+    "all" | "win" | "loss" | "draw"
+  >("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Update query params when platform changes
@@ -33,9 +47,10 @@ export default function GamesPage() {
   }, [activeSource, setSearchParams]);
 
   // Fetch Chess.com archives with centralized hook
-  const { data: chesscomArchives = [], isLoading: isLoadingChesscomArchives } = useChesscomArchives(user?.chesscomId, {
-    enabled: !!user?.chesscomId && activeSource === "chesscom",
-  });
+  const { data: chesscomArchives = [], isLoading: isLoadingChesscomArchives } =
+    useChesscomArchives(user?.chesscomId, {
+      enabled: !!user?.chesscomId && activeSource === "chesscom",
+    });
 
   // Fetch Chess.com games with infinite query
   const {
@@ -46,7 +61,10 @@ export default function GamesPage() {
     isFetchingNextPage: isFetchingMoreChesscom,
     error: chessComError,
   } = useChesscomGamesInfinite(user?.chesscomId, chesscomArchives, {
-    enabled: !!user?.chesscomId && chesscomArchives.length > 0 && activeSource === "chesscom",
+    enabled:
+      !!user?.chesscomId &&
+      chesscomArchives.length > 0 &&
+      activeSource === "chesscom",
   });
 
   // Fetch Lichess games with infinite query
@@ -62,7 +80,8 @@ export default function GamesPage() {
   });
 
   // Flatten all pages into a single array
-  const chesscomGames: UnifiedGame[] = chesscomGamesData?.pages.flatMap((page) => page.games) ?? [];
+  const chesscomGames: UnifiedGame[] =
+    chesscomGamesData?.pages.flatMap((page) => page.games) ?? [];
   const lichessGames: UnifiedGame[] = lichessGamesData?.pages.flat() ?? [];
 
   if (chessComError) {
@@ -74,13 +93,18 @@ export default function GamesPage() {
   }
 
   // Show games based on selected source
-  const allGames = (activeSource === "chesscom" ? chesscomGames : lichessGames).sort(
-    (a: UnifiedGame, b: UnifiedGame) => b.timestamp - a.timestamp,
-  );
+  const allGames = (
+    activeSource === "chesscom" ? chesscomGames : lichessGames
+  ).sort((a: UnifiedGame, b: UnifiedGame) => b.timestamp - a.timestamp);
 
-  const isLoading = isLoadingChesscomArchives || isLoadingChesscom || isLoadingLichess;
-  const hasMore = activeSource === "chesscom" ? hasMoreChesscom : hasMoreLichess;
-  const isFetchingMore = activeSource === "chesscom" ? isFetchingMoreChesscom : isFetchingMoreLichess;
+  const isLoading =
+    isLoadingChesscomArchives || isLoadingChesscom || isLoadingLichess;
+  const hasMore =
+    activeSource === "chesscom" ? hasMoreChesscom : hasMoreLichess;
+  const isFetchingMore =
+    activeSource === "chesscom"
+      ? isFetchingMoreChesscom
+      : isFetchingMoreLichess;
 
   const fetchMoreGames = () => {
     if (activeSource === "chesscom") {
@@ -111,7 +135,10 @@ export default function GamesPage() {
   const searchFilteredGames = allGames.filter((game) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      return game.white.username.toLowerCase().includes(query) || game.black.username.toLowerCase().includes(query);
+      return (
+        game.white.username.toLowerCase().includes(query) ||
+        game.black.username.toLowerCase().includes(query)
+      );
     }
     return true;
   });
@@ -146,7 +173,9 @@ export default function GamesPage() {
           {user?.chesscomId && user?.lichessId && (
             <select
               value={activeSource}
-              onChange={(e) => setActiveSource(e.target.value as "chesscom" | "lichess")}
+              onChange={(e) =>
+                setActiveSource(e.target.value as "chesscom" | "lichess")
+              }
               className="px-3 py-2 bg-neutral-800 text-white text-sm rounded-lg border border-neutral-700 shrink-0"
             >
               <option value="chesscom">Chess.com</option>
@@ -173,7 +202,9 @@ export default function GamesPage() {
             }`}
           >
             <span>All</span>
-            <span className="text-xs opacity-60">({searchFilteredGames.length})</span>
+            <span className="text-xs opacity-60">
+              ({searchFilteredGames.length})
+            </span>
           </button>
           <button
             onClick={() => setResultFilter("win")}
@@ -185,7 +216,9 @@ export default function GamesPage() {
           >
             <TrophyIcon className="w-3.5 h-3.5" />
             <span>Wins</span>
-            <span className="text-xs opacity-60">({searchFilteredGames.filter((g) => g.result === "win").length})</span>
+            <span className="text-xs opacity-60">
+              ({searchFilteredGames.filter((g) => g.result === "win").length})
+            </span>
           </button>
           <button
             onClick={() => setResultFilter("loss")}
@@ -229,7 +262,9 @@ export default function GamesPage() {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <p className="text-neutral-400 text-lg mb-2">No games found</p>
-              <p className="text-neutral-500 text-sm">Try adjusting your filters</p>
+              <p className="text-neutral-500 text-sm">
+                Try adjusting your filters
+              </p>
             </div>
           </div>
         ) : (
@@ -239,7 +274,8 @@ export default function GamesPage() {
                 <Game
                   key={game.id}
                   userColor={
-                    game.white.username.toLowerCase() === getChessAccountUsername(user!, activeSource)
+                    game.white.username.toLowerCase() ===
+                    getChessAccountUsername(user!, activeSource)
                       ? "white"
                       : "black"
                   }
@@ -333,7 +369,9 @@ const Game: React.FC<GameProps> = ({ userColor, game, onAnalyze }) => {
     }
 
     let timeControl = parsedGame.headers.get("TimeControl");
-    const tcParts = (timeControl ? timeControl.split("+") : []).map((part) => parseInt(part, 10));
+    const tcParts = (timeControl ? timeControl.split("+") : []).map((part) =>
+      parseInt(part, 10),
+    );
     if (tcParts.length === 2 && !isNaN(tcParts[0]) && !isNaN(tcParts[1])) {
       timeControl = `${Math.floor(tcParts[0] / 60)}+${tcParts[1]}`;
     } else {
@@ -375,7 +413,9 @@ const Game: React.FC<GameProps> = ({ userColor, game, onAnalyze }) => {
             <span>{moveCount}</span>
           </div>
         </div>
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getResultBadgeColor(game.result)}`}>
+        <span
+          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getResultBadgeColor(game.result)}`}
+        >
           {game.result.toUpperCase()}
         </span>
       </div>
@@ -385,9 +425,15 @@ const Game: React.FC<GameProps> = ({ userColor, game, onAnalyze }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 bg-white rounded-full" />
-            <span className={`text-sm ${userColor === "white" ? "font-semibold text-white" : "text-neutral-300"}`}>
+            <span
+              className={`text-sm ${userColor === "white" ? "font-semibold text-white" : "text-neutral-300"}`}
+            >
               {game.white.username}
-              {userColor === "white" && <span className="text-neutral-500 font-normal text-xs ml-1">(you)</span>}
+              {userColor === "white" && (
+                <span className="text-neutral-500 font-normal text-xs ml-1">
+                  (you)
+                </span>
+              )}
             </span>
           </div>
           <span className="text-xs text-neutral-400">{game.white.rating}</span>
@@ -395,9 +441,15 @@ const Game: React.FC<GameProps> = ({ userColor, game, onAnalyze }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 bg-neutral-900 rounded-full border border-neutral-500" />
-            <span className={`text-sm ${userColor === "black" ? "font-semibold text-white" : "text-neutral-300"}`}>
+            <span
+              className={`text-sm ${userColor === "black" ? "font-semibold text-white" : "text-neutral-300"}`}
+            >
               {game.black.username}
-              {userColor === "black" && <span className="text-neutral-500 font-normal text-xs ml-1">(you)</span>}
+              {userColor === "black" && (
+                <span className="text-neutral-500 font-normal text-xs ml-1">
+                  (you)
+                </span>
+              )}
             </span>
           </div>
           <span className="text-xs text-neutral-400">{game.black.rating}</span>

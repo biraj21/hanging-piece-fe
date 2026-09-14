@@ -1,12 +1,10 @@
+import { ChessPiece } from "@/components/ChessBoard/ChessPiece";
+import { getMoveClasses } from "@/helpers/move-quality";
+import { isPawnsEval, type GameMove } from "@/helpers/pgn";
+import { scrollIntoViewCentered } from "@/utils/dom";
 import clsx from "clsx";
 import React, { useEffect, useRef } from "react";
 
-import { ChessPiece } from "@/components/ChessBoard/ChessPiece";
-import { getMoveClasses } from "@/helpers/move-quality";
-import type { GameMove } from "@/helpers/pgn";
-import { isPawnsEval } from "@/helpers/pgn";
-
-import { scrollIntoViewCentered } from "@/utils/dom";
 import { MoveQualityIcon } from "./MoveQualityIcon";
 
 type Props = {
@@ -29,9 +27,16 @@ const formatEval = (move: GameMove) => {
   return `#${move.evaluation.mate}`;
 };
 
-const getEvalTextColor = (isSelected: boolean) => (isSelected ? "text-white" : "text-neutral-300");
+const getEvalTextColor = (isSelected: boolean) =>
+  isSelected ? "text-white" : "text-neutral-300";
 
-export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, className = "" }) => {
+export const MoveItem: React.FC<Props> = ({
+  move,
+  index,
+  isSelected,
+  onClick,
+  className = "",
+}) => {
   const moveQuality = move.getQuality();
   const elementRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,14 +55,25 @@ export const MoveItem: React.FC<Props> = ({ move, index, isSelected, onClick, cl
       ref={elementRef}
     >
       <div className="flex items-center justify-between w-full">
-        <div className={clsx("flex items-center gap-1 font-semibold text-white", {})}>
-          {moveQuality && <MoveQualityIcon moveQuality={moveQuality} size="small" />}
+        <div
+          className={clsx(
+            "flex items-center gap-1 font-semibold text-white",
+            {},
+          )}
+        >
+          {moveQuality && (
+            <MoveQualityIcon moveQuality={moveQuality} size="small" />
+          )}
           <ChessPiece san={move.san} ply={move.ply} />
           <span>{move.san}</span>
         </div>
         <div className="flex items-end gap-1">
           {move.evaluation && (
-            <span className={`${getEvalTextColor(isSelected)} text-[10px] opacity-80 ml-1`}>{formatEval(move)}</span>
+            <span
+              className={`${getEvalTextColor(isSelected)} text-[10px] opacity-80 ml-1`}
+            >
+              {formatEval(move)}
+            </span>
           )}
         </div>
       </div>

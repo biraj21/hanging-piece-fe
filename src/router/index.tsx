@@ -1,6 +1,7 @@
-import { Route, Routes } from "react-router";
-
-import { ProtectedRoutes, StrictlyPublicRoutes } from "@/components/route-protection";
+import {
+  ProtectedRoutes,
+  StrictlyPublicRoutes,
+} from "@/components/route-protection";
 import { DashboardLayout } from "@/layouts/dashboard";
 import AboutPage from "@/pages/about";
 import AnalysisPage from "@/pages/analysis";
@@ -13,6 +14,7 @@ import OnboardingPage from "@/pages/onboarding";
 import PrivacyPage from "@/pages/privacy";
 import ProfilePage from "@/pages/profile";
 import TermsPage from "@/pages/terms";
+import { Route, Routes } from "react-router";
 
 import { ROUTES } from "./routes";
 
@@ -40,10 +42,22 @@ export default function AppRouter() {
 
       {/* Redirected routes from Chess.com */}
       <Route element={<DashboardLayout />}>
-        <Route path={`${ROUTES.CHESSCOM_GAME_LIVE}/:gameId`} element={<GamePage />} />
-        <Route path={`${ROUTES.CHESSCOM_GAME}/:gameId`} element={<GamePage />} />
-        <Route path={`${ROUTES.CHESSCOM_GAME_REDIRECT_ANALYSIS}/:gameId/analysis`} element={<GamePage />} />
-        <Route path={`${ROUTES.CHESSCOM_GAME_REDIRECT_REVIEW}/:gameId/review`} element={<GamePage />} />
+        <Route
+          path={`${ROUTES.CHESSCOM_GAME_LIVE}/:gameId`}
+          element={<GamePage />}
+        />
+        <Route
+          path={`${ROUTES.CHESSCOM_GAME}/:gameId`}
+          element={<GamePage />}
+        />
+        <Route
+          path={`${ROUTES.CHESSCOM_GAME_REDIRECT_ANALYSIS}/:gameId/analysis`}
+          element={<GamePage />}
+        />
+        <Route
+          path={`${ROUTES.CHESSCOM_GAME_REDIRECT_REVIEW}/:gameId/review`}
+          element={<GamePage />}
+        />
       </Route>
 
       {/* catch all */}

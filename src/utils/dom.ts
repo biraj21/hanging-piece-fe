@@ -14,7 +14,10 @@ export function scrollIntoViewCentered(el: HTMLElement) {
   const parentRect = parent.getBoundingClientRect();
   const elRect = el.getBoundingClientRect();
 
-  const scrollTop = parent.scrollTop + (elRect.top - parentRect.top) - (parentRect.height / 2 - elRect.height / 2);
+  const scrollTop =
+    parent.scrollTop +
+    (elRect.top - parentRect.top) -
+    (parentRect.height / 2 - elRect.height / 2);
 
   parent.scrollTo({ top: scrollTop, behavior: "smooth" });
 }

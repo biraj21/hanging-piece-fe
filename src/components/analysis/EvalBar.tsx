@@ -1,8 +1,7 @@
-import type { Evaluation } from "chessops/pgn";
-import React from "react";
-
 import { isMateEval } from "@/helpers/pgn";
 import type { BlackOrWhite } from "@/types";
+import type { Evaluation } from "chessops/pgn";
+import React from "react";
 
 interface EvalBarProps {
   evaluation: Evaluation;
@@ -20,7 +19,11 @@ function evalToPercentage(pawns: number): number {
   return 100 / (1 + Math.pow(10, -pawns / 4));
 }
 
-export const EvalBar: React.FC<EvalBarProps> = ({ evaluation, className = "", orientation = "white" }) => {
+export const EvalBar: React.FC<EvalBarProps> = ({
+  evaluation,
+  className = "",
+  orientation = "white",
+}) => {
   let whitePercentage = 50;
   let evalText = "0.0";
   let isMate = false;
@@ -55,8 +58,10 @@ export const EvalBar: React.FC<EvalBarProps> = ({ evaluation, className = "", or
   const blackPercentage = 100 - whitePercentage;
 
   // When viewing from black's perspective, flip the bar
-  const topPercentage = orientation === "white" ? blackPercentage : whitePercentage;
-  const bottomPercentage = orientation === "white" ? whitePercentage : blackPercentage;
+  const topPercentage =
+    orientation === "white" ? blackPercentage : whitePercentage;
+  const bottomPercentage =
+    orientation === "white" ? whitePercentage : blackPercentage;
   const topColor = orientation === "white" ? "black" : "white";
   const bottomColor = orientation === "white" ? "white" : "black";
 
@@ -70,7 +75,9 @@ export const EvalBar: React.FC<EvalBarProps> = ({ evaluation, className = "", or
         style={{ height: `${topPercentage}%` }}
       >
         {topPercentage > 70 && isMate && (
-          <div className={`text-[9px] font-semibold pb-1 ${topColor === "black" ? "text-white" : "text-neutral-900"}`}>
+          <div
+            className={`text-[9px] font-semibold pb-1 ${topColor === "black" ? "text-white" : "text-neutral-900"}`}
+          >
             {evalText}
           </div>
         )}

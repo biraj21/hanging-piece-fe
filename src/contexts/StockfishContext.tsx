@@ -1,7 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-
 import { Stockfish } from "@/helpers/stockfish";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 type StockfishStatus = "idle" | "loading" | "ready" | "error";
 
@@ -11,13 +16,17 @@ interface StockfishContextType {
   error: Error | null;
 }
 
-const StockfishContext = createContext<StockfishContextType | undefined>(undefined);
+const StockfishContext = createContext<StockfishContextType | undefined>(
+  undefined,
+);
 
 interface StockfishProviderProps {
   children: ReactNode;
 }
 
-export const StockfishProvider: React.FC<StockfishProviderProps> = ({ children }) => {
+export const StockfishProvider: React.FC<StockfishProviderProps> = ({
+  children,
+}) => {
   const [engine, setEngine] = useState<Stockfish | null>(null);
   const [status, setStatus] = useState<StockfishStatus>("idle");
   const [error, setError] = useState<Error | null>(null);
@@ -45,7 +54,11 @@ export const StockfishProvider: React.FC<StockfishProviderProps> = ({ children }
         }
 
         console.error("Failed to initialize Stockfish engine:", err);
-        setError(err instanceof Error ? err : new Error("Failed to initialize Stockfish engine"));
+        setError(
+          err instanceof Error
+            ? err
+            : new Error("Failed to initialize Stockfish engine"),
+        );
         setStatus("error");
       });
 
@@ -58,7 +71,11 @@ export const StockfishProvider: React.FC<StockfishProviderProps> = ({ children }
     };
   }, []);
 
-  return <StockfishContext.Provider value={{ engine, status, error }}>{children}</StockfishContext.Provider>;
+  return (
+    <StockfishContext.Provider value={{ engine, status, error }}>
+      {children}
+    </StockfishContext.Provider>
+  );
 };
 
 export function useStockfish() {

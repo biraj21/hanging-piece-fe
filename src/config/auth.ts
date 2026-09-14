@@ -1,7 +1,6 @@
-import { createAuthClient } from "better-auth/client";
-
 import { env } from "@/config/env";
 import { ROUTES } from "@/router/routes";
+import { createAuthClient } from "better-auth/client";
 
 export const authClient = createAuthClient({
   baseURL: env.VITE_API_BASE_URL.toString(),

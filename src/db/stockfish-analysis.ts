@@ -1,9 +1,12 @@
-import type { ParsedGame } from "@/helpers/pgn";
-import { GameMove } from "@/helpers/pgn";
+import { GameMove, type ParsedGame } from "@/helpers/pgn";
+
 import { analysysDb } from "./index";
 
 export class StockfishAnalysis {
-  static async findOne(gameId: string, depth: number): Promise<ParsedGame | null> {
+  static async findOne(
+    gameId: string,
+    depth: number,
+  ): Promise<ParsedGame | null> {
     try {
       const doc = await analysysDb.stockfishAnalysis.get([gameId, depth]);
       if (!doc) {
@@ -20,7 +23,11 @@ export class StockfishAnalysis {
     }
   }
 
-  static async create(gameId: string, depth: number, game: ParsedGame): Promise<void> {
+  static async create(
+    gameId: string,
+    depth: number,
+    game: ParsedGame,
+  ): Promise<void> {
     try {
       await analysysDb.stockfishAnalysis.put({
         gameId,
@@ -49,7 +56,10 @@ export class StockfishAnalysis {
   static async deleteOlderThan(days: number = 7): Promise<number> {
     try {
       const cutoffTime = Date.now() - days * 24 * 60 * 60 * 1000;
-      return await analysysDb.stockfishAnalysis.where("timestamp").below(cutoffTime).delete();
+      return await analysysDb.stockfishAnalysis
+        .where("timestamp")
+        .below(cutoffTime)
+        .delete();
     } catch (error) {
       console.error("Failed to clean old analysis:", error);
       return 0;

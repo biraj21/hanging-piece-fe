@@ -1,4 +1,11 @@
-import { isNormal, makeSquare, makeUci, parseUci, Position, type Board } from "chessops";
+import {
+  isNormal,
+  makeSquare,
+  makeUci,
+  parseUci,
+  Position,
+  type Board,
+} from "chessops";
 import { makeFen } from "chessops/fen";
 import {
   parseComment,
@@ -174,7 +181,10 @@ function parseSanAndAdvancePosition(position: Position, san: string) {
   };
 }
 
-function collectionVariations(prevMoveNode: ChildNode<PgnNodeData>, basePosition: Position): Variation[] | undefined {
+function collectionVariations(
+  prevMoveNode: ChildNode<PgnNodeData>,
+  basePosition: Position,
+): Variation[] | undefined {
   if (prevMoveNode.children.length === 1) {
     return undefined;
   }
@@ -484,7 +494,9 @@ export function constructPgnFromChessComGame(data: ChessComGameData): string {
   // Play moves and collect SANs
   const sans: string[] = [];
   for (const move of moves) {
-    const uciMove = parseUci(`${move.from || ""}${move.to}${move.promotion || ""}`);
+    const uciMove = parseUci(
+      `${move.from || ""}${move.to}${move.promotion || ""}`,
+    );
     if (uciMove) {
       const san = makeSan(position, uciMove);
       sans.push(san);
@@ -511,7 +523,9 @@ export function constructPgnFromChessComGame(data: ChessComGameData): string {
   }
 
   const result = pgnHeaders.Result || "*";
-  const headerLines = Array.from(headersMap.entries()).map(([key, value]) => `[${key} "${value}"]`);
+  const headerLines = Array.from(headersMap.entries()).map(
+    ([key, value]) => `[${key} "${value}"]`,
+  );
 
   return `${headerLines.join("\n")}\n\n${moveText} ${result}`;
 }

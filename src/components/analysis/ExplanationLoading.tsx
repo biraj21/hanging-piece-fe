@@ -32,7 +32,9 @@ const CHESS_TRIVIA = [
 
 export const ExplanationLoading: React.FC = () => {
   const [stageIndex, setStageIndex] = useState(0);
-  const [triviaIndex] = useState(() => Math.floor(Math.random() * CHESS_TRIVIA.length));
+  const [triviaIndex] = useState(() =>
+    Math.floor(Math.random() * CHESS_TRIVIA.length),
+  );
   const [progress, setProgress] = useState(0);
   const CurrentIcon = LOADING_STAGES[stageIndex].icon;
 
@@ -89,19 +91,27 @@ export const ExplanationLoading: React.FC = () => {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-xs text-neutral-500 mt-2 text-center">{Math.round(progress)}%</p>
+        <p className="text-xs text-neutral-500 mt-2 text-center">
+          {Math.round(progress)}%
+        </p>
       </div>
 
       <div className="w-full max-w-lg px-2">
         <div className="bg-neutral-800/80 border border-neutral-700/60 rounded-xl p-5 shadow-xl">
           <div>
-            <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Did you know?</p>
-            <p className="text-sm text-neutral-300 leading-relaxed">{CHESS_TRIVIA[triviaIndex]}</p>
+            <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
+              Did you know?
+            </p>
+            <p className="text-sm text-neutral-300 leading-relaxed">
+              {CHESS_TRIVIA[triviaIndex]}
+            </p>
           </div>
         </div>
       </div>
 
-      <p className="text-xs text-neutral-500 mt-8">Great explanations take a moment to craft</p>
+      <p className="text-xs text-neutral-500 mt-8">
+        Great explanations take a moment to craft
+      </p>
     </div>
   );
 };

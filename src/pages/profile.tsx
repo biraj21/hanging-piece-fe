@@ -1,13 +1,12 @@
-import clsx from "clsx";
-import { Edit2Icon, LogOutIcon, MailIcon, SaveIcon, XIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-
 import { backendApi } from "@/api/backend";
 import { useDebounced } from "@/components/hooks/use-debounced";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/router/routes";
+import clsx from "clsx";
+import { Edit2Icon, LogOutIcon, MailIcon, SaveIcon, XIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 
 export default function ProfilePage() {
   const { user, signOut, refreshSession } = useAuth();
@@ -16,8 +15,12 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [chesscomId, setChesscomId] = useState(user?.chesscomId || "");
   const [lichessId, setLichessId] = useState(user?.lichessId || "");
-  const [chesscomIdForQuery, setChesscomIdForQuery] = useState(user?.chesscomId || "");
-  const [lichessIdForQuery, setLichessIdForQuery] = useState(user?.lichessId || "");
+  const [chesscomIdForQuery, setChesscomIdForQuery] = useState(
+    user?.chesscomId || "",
+  );
+  const [lichessIdForQuery, setLichessIdForQuery] = useState(
+    user?.lichessId || "",
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
@@ -103,7 +106,9 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white mb-2">Profile</h1>
-        <p className="text-neutral-400 text-sm">Manage your Hanging Piece account and chess platforms</p>
+        <p className="text-neutral-400 text-sm">
+          Manage your Hanging Piece account and chess platforms
+        </p>
       </div>
 
       <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-5 mb-6">
@@ -121,8 +126,12 @@ export default function ProfilePage() {
             </div>
           )}
           <div>
-            <h2 className="text-lg font-semibold text-white">{user?.name || user?.email}</h2>
-            <p className="text-xs text-neutral-400">{user?.name ? user.email : "Chess Analyst"}</p>
+            <h2 className="text-lg font-semibold text-white">
+              {user?.name || user?.email}
+            </h2>
+            <p className="text-xs text-neutral-400">
+              {user?.name ? user.email : "Chess Analyst"}
+            </p>
           </div>
         </div>
 
@@ -138,8 +147,12 @@ export default function ProfilePage() {
       <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-5 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-semibold text-white">Chess Accounts</h3>
-            <p className="text-xs text-neutral-400 mt-0.5">Connect your chess platforms</p>
+            <h3 className="text-base font-semibold text-white">
+              Chess Accounts
+            </h3>
+            <p className="text-xs text-neutral-400 mt-0.5">
+              Connect your chess platforms
+            </p>
           </div>
           {!isEditing && (
             <button
@@ -154,7 +167,10 @@ export default function ProfilePage() {
 
         <div className="flex flex-col gap-4">
           <div className="space-y-1.5">
-            <label htmlFor="chesscomId" className="block text-xs text-neutral-400 font-medium">
+            <label
+              htmlFor="chesscomId"
+              className="block text-xs text-neutral-400 font-medium"
+            >
               Your Chess.com
             </label>
             <input
@@ -181,7 +197,10 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="lichessId" className="block text-xs text-neutral-400 font-medium">
+            <label
+              htmlFor="lichessId"
+              className="block text-xs text-neutral-400 font-medium"
+            >
               Your Lichess
             </label>
             <input
@@ -208,7 +227,9 @@ export default function ProfilePage() {
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-2.5 rounded-lg">{error}</div>
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-2.5 rounded-lg">
+              {error}
+            </div>
           )}
 
           <div
@@ -238,7 +259,9 @@ export default function ProfilePage() {
       </div>
 
       <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-5">
-        <h3 className="text-base font-semibold text-white mb-3">Account Actions</h3>
+        <h3 className="text-base font-semibold text-white mb-3">
+          Account Actions
+        </h3>
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2 w-full px-4 py-2.5 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 rounded-lg transition text-sm font-medium"

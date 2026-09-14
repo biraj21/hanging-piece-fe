@@ -1,6 +1,5 @@
-import clsx from "clsx";
-
 import type { MoveQuality } from "@/helpers/pgn";
+import clsx from "clsx";
 
 /**
  * Get the symbol for a move quality (e.g., "??", "?", "?!", "!", "!!")
@@ -37,14 +36,26 @@ export function getNagFromQuality(quality: MoveQuality): number | undefined {
 /**
  * Get hex colors for move quality (for SVG/Canvas rendering)
  */
-export function getMoveQualityColor(quality: MoveQuality): { bg: string; border: string } {
+export function getMoveQualityColor(quality: MoveQuality): {
+  bg: string;
+  border: string;
+} {
   switch (quality) {
     case "blunder":
-      return { bg: "oklch(63.7% 0.237 25.331)", border: "oklch(63.7% 0.237 25.331)" };
+      return {
+        bg: "oklch(63.7% 0.237 25.331)",
+        border: "oklch(63.7% 0.237 25.331)",
+      };
     case "mistake":
-      return { bg: "oklch(70.5% 0.213 47.604)", border: "oklch(70.5% 0.213 47.604)" };
+      return {
+        bg: "oklch(70.5% 0.213 47.604)",
+        border: "oklch(70.5% 0.213 47.604)",
+      };
     case "inaccuracy":
-      return { bg: "oklch(79.5% 0.184 86.047)", border: "oklch(79.5% 0.184 86.047)" };
+      return {
+        bg: "oklch(79.5% 0.184 86.047)",
+        border: "oklch(79.5% 0.184 86.047)",
+      };
     default:
       return { bg: "#6b7280", border: "#4b5563" };
   }
@@ -53,7 +64,10 @@ export function getMoveQualityColor(quality: MoveQuality): { bg: string; border:
 /**
  * Get Tailwind CSS classes for annotation blocks (background, border, text colors)
  */
-export function getMoveClasses(moveQuality?: MoveQuality, isSelected?: boolean): string {
+export function getMoveClasses(
+  moveQuality?: MoveQuality,
+  isSelected?: boolean,
+): string {
   switch (moveQuality) {
     case "blunder":
       return clsx("bg-red-500/50 border-2", {
@@ -97,7 +111,10 @@ export function getIconColorClasses(moveQuality: MoveQuality): string {
 /**
  * Get display text and text color for move quality
  */
-export function getMoveQualityDisplay(quality?: MoveQuality): { text: string; color: string } {
+export function getMoveQualityDisplay(quality?: MoveQuality): {
+  text: string;
+  color: string;
+} {
   switch (quality) {
     case "blunder":
       return { text: "BLUNDER", color: "text-red-400" };

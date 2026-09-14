@@ -34,7 +34,11 @@ export interface ExplainMovePayload {
 interface ExplainMoveResponse {
   explanation: string;
   badContinuation: Array<{ move: string; color: BlackOrWhite; reason: string }>;
-  bestContinuation: Array<{ move: string; color: BlackOrWhite; reason: string }>;
+  bestContinuation: Array<{
+    move: string;
+    color: BlackOrWhite;
+    reason: string;
+  }>;
 }
 
 export interface ChessComGameResponse {
@@ -85,7 +89,10 @@ export const backendApi = {
   /**
    * Get AI explanation for a chess move
    */
-  async explainMove(payload: ExplainMovePayload, isAuthenticated = true): Promise<ExplainMoveResponse> {
+  async explainMove(
+    payload: ExplainMovePayload,
+    isAuthenticated = true,
+  ): Promise<ExplainMoveResponse> {
     const endpoint = isAuthenticated ? "explain" : "explain/try";
     const response = await fetch(`${env.VITE_API_BASE_URL}${endpoint}`, {
       method: "POST",

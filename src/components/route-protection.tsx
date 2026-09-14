@@ -1,6 +1,5 @@
-import { Navigate, Outlet } from "react-router";
-
 import { useAuth } from "@/contexts/AuthContext";
+import { Navigate, Outlet } from "react-router";
 
 interface ProtectedRoutesProps {
   redirectTo: string;
@@ -12,7 +11,9 @@ interface ProtectedRoutesProps {
  * For example, if the user *isn't* logged in and they try to access the dashboard, then they will be
  * redirected to the page specified by the `redirectTo` prop.
  */
-export const ProtectedRoutes: React.FC<ProtectedRoutesProps> = ({ redirectTo }) => {
+export const ProtectedRoutes: React.FC<ProtectedRoutesProps> = ({
+  redirectTo,
+}) => {
   const { user } = useAuth();
 
   if (!user) {
@@ -28,7 +29,9 @@ export const ProtectedRoutes: React.FC<ProtectedRoutesProps> = ({ redirectTo }) 
  * For example, if the user *is* logged in and they try to access the login page, they will be
  * redirected to the page specified by the `redirectTo` prop.
  */
-export const StrictlyPublicRoutes: React.FC<ProtectedRoutesProps> = ({ redirectTo }) => {
+export const StrictlyPublicRoutes: React.FC<ProtectedRoutesProps> = ({
+  redirectTo,
+}) => {
   const { user } = useAuth();
 
   if (user) {

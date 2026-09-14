@@ -1,9 +1,8 @@
-import { DownloadIcon, XIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-
 import { useAuth } from "@/contexts/AuthContext";
 import { isOnboardingComplete } from "@/helpers/onboarding";
 import { isMobileDevice } from "@/utils/device";
+import { DownloadIcon, XIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent/BeforeInstallPromptEvent
@@ -45,7 +44,10 @@ export const PWAInstaller: React.FC = () => {
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
@@ -94,9 +96,12 @@ export const PWAInstaller: React.FC = () => {
             </div>
 
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white">Install Hanging Piece</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Install Hanging Piece
+              </h3>
               <p className="text-sm text-neutral-400 mt-1">
-                Add to home screen for the best experience. Access your games and analysis faster.
+                Add to home screen for the best experience. Access your games
+                and analysis faster.
               </p>
             </div>
           </div>

@@ -54,7 +54,9 @@ export const chesscomApi = {
    * Fetch user profile from Chess.com
    */
   async getProfile(username: string): Promise<ChesscomProfile> {
-    const response = await fetch(`https://api.chess.com/pub/player/${username}`);
+    const response = await fetch(
+      `https://api.chess.com/pub/player/${username}`,
+    );
 
     if (!response.ok) {
       throw new Error(`Chess.com profile not found: ${response.statusText}`);
@@ -76,7 +78,9 @@ export const chesscomApi = {
    * Fetch user stats from Chess.com
    */
   async getStats(username: string): Promise<ChesscomStats> {
-    const response = await fetch(`https://api.chess.com/pub/player/${username}/stats`);
+    const response = await fetch(
+      `https://api.chess.com/pub/player/${username}/stats`,
+    );
 
     if (!response.ok) {
       throw new Error(`Chess.com stats not found: ${response.statusText}`);
@@ -84,7 +88,12 @@ export const chesscomApi = {
 
     const data = await response.json();
 
-    const categories = ["chess_bullet", "chess_blitz", "chess_rapid", "chess_daily"];
+    const categories = [
+      "chess_bullet",
+      "chess_blitz",
+      "chess_rapid",
+      "chess_daily",
+    ];
     let totalWins = 0;
     let totalLosses = 0;
     let totalDraws = 0;
@@ -113,7 +122,9 @@ export const chesscomApi = {
   /**
    * Fetch user profile with stats from Chess.com
    */
-  async getProfileWithStats(username: string): Promise<ChesscomProfileWithStats> {
+  async getProfileWithStats(
+    username: string,
+  ): Promise<ChesscomProfileWithStats> {
     const profile = await this.getProfile(username);
     const stats = await this.getStats(username);
 
@@ -127,10 +138,14 @@ export const chesscomApi = {
    * Fetch list of available monthly archives for a user
    */
   async getArchives(username: string): Promise<string[]> {
-    const response = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
+    const response = await fetch(
+      `https://api.chess.com/pub/player/${username}/games/archives`,
+    );
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch Chess.com archives: ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch Chess.com archives: ${response.statusText}`,
+      );
     }
 
     const data: ChesscomArchivesResponse = await response.json();
@@ -140,18 +155,26 @@ export const chesscomApi = {
   /**
    * Fetch games from a specific monthly archive
    */
-  async getArchiveGames(archiveUrl: string, username: string): Promise<UnifiedGame[]> {
+  async getArchiveGames(
+    archiveUrl: string,
+    username: string,
+  ): Promise<UnifiedGame[]> {
     const response = await fetch(archiveUrl);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch Chess.com archive: ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch Chess.com archive: ${response.statusText}`,
+      );
     }
 
     const data: ChesscomGamesResponse = await response.json();
     const games = data.games || [];
 
     return games.map((game) => {
-      const userColor = game.white.username.toLowerCase() === username.toLowerCase() ? "white" : "black";
+      const userColor =
+        game.white.username.toLowerCase() === username.toLowerCase()
+          ? "white"
+          : "black";
       const userResult = game[userColor].result;
 
       let result = "draw";

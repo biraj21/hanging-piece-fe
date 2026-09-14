@@ -1,3 +1,8 @@
+import { PWAInstaller } from "@/components/PWAInstaller";
+import { env } from "@/config/env";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { StockfishProvider } from "@/contexts/StockfishContext";
+import AppRouter from "@/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
@@ -5,12 +10,6 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { Toaster } from "sonner";
-
-import { PWAInstaller } from "@/components/PWAInstaller";
-import { env } from "@/config/env";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { StockfishProvider } from "@/contexts/StockfishContext";
-import AppRouter from "@/router";
 
 import "./index.css";
 

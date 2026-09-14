@@ -1,10 +1,9 @@
-import { useEffect, useMemo } from "react";
-import { toast } from "sonner";
-
 import { useChesscomGame } from "@/api/queries";
 import { Analysis } from "@/components/analysis";
 import { Loader } from "@/components/Loader";
 import { constructPgnFromChessComGame } from "@/helpers/pgn";
+import { useEffect, useMemo } from "react";
+import { toast } from "sonner";
 
 export default function GamePage() {
   // Extract gameId from the URL path
@@ -24,7 +23,9 @@ export default function GamePage() {
   useEffect(() => {
     if (error) {
       console.error("Failed to load game:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to load game");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load game",
+      );
     }
   }, [error]);
 
@@ -46,7 +47,9 @@ export default function GamePage() {
   if (error || !gameId) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-red-400">{error ? "Failed to load game" : "Invalid game ID"}</div>
+        <div className="text-red-400">
+          {error ? "Failed to load game" : "Invalid game ID"}
+        </div>
       </div>
     );
   }
@@ -55,5 +58,12 @@ export default function GamePage() {
     return null;
   }
 
-  return <Analysis pgn={gameData.pgn} gameId={gameData.gameId} source="chesscom" boardOrientation="white" />;
+  return (
+    <Analysis
+      pgn={gameData.pgn}
+      gameId={gameData.gameId}
+      source="chesscom"
+      boardOrientation="white"
+    />
+  );
 }

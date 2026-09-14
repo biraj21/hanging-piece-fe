@@ -43,14 +43,20 @@ export interface LichessProfile {
   };
 }
 
-function getLichessPlayerName(player: LichessGame["players"]["white"], color: "white" | "black"): string {
+function getLichessPlayerName(
+  player: LichessGame["players"]["white"],
+  color: "white" | "black",
+): string {
   if (player.user?.name) {
     return player.user.name;
   }
   return `Anonymous ${color}`;
 }
 
-function getLichessUserColor(game: LichessGame, username: string): "white" | "black" {
+function getLichessUserColor(
+  game: LichessGame,
+  username: string,
+): "white" | "black" {
   const normalizedUsername = username.toLowerCase();
 
   if (game.players.white.user?.id?.toLowerCase() === normalizedUsername) {
@@ -80,7 +86,9 @@ export const lichessApi = {
     const perfs = data.perfs || {};
     const ratings = Object.values(perfs)
       .map((perf: any) => (perf.prov ? null : perf.rating))
-      .filter((rating): rating is number => rating !== null && rating !== undefined);
+      .filter(
+        (rating): rating is number => rating !== null && rating !== undefined,
+      );
     const highestRating = ratings.length > 0 ? Math.max(...ratings) : undefined;
 
     return {
@@ -104,7 +112,11 @@ export const lichessApi = {
    * @param untilTimestamp - Optional timestamp to paginate (fetch games before this timestamp)
    * @param max - Maximum number of games to fetch
    */
-  async getGames(username: string, untilTimestamp: number | null = null, max: number = 20): Promise<UnifiedGame[]> {
+  async getGames(
+    username: string,
+    untilTimestamp: number | null = null,
+    max: number = 20,
+  ): Promise<UnifiedGame[]> {
     const url = new URL(`https://lichess.org/api/games/user/${username}`);
     url.searchParams.set("max", max.toString());
     url.searchParams.set("pgnInJson", "true");

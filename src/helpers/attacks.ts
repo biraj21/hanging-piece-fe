@@ -6,7 +6,14 @@
  * guess/hallucinate what pieces are attacked.
  */
 
-import { bishopAttacks, kingAttacks, knightAttacks, pawnAttacks, queenAttacks, rookAttacks } from "chessops/attacks";
+import {
+  bishopAttacks,
+  kingAttacks,
+  knightAttacks,
+  pawnAttacks,
+  queenAttacks,
+  rookAttacks,
+} from "chessops/attacks";
 import { Board } from "chessops/board";
 import { parseFen } from "chessops/fen";
 import { SquareSet } from "chessops/squareSet";
@@ -132,7 +139,11 @@ function getAttacksFrom(board: Board, square: Square, piece: Piece): SquareSet {
   }
 }
 
-function getDefenderCount(board: Board, square: Square, byColor: Color): number {
+function getDefenderCount(
+  board: Board,
+  square: Square,
+  byColor: Color,
+): number {
   let count = 0;
   for (const sq of board[byColor]) {
     if (sq === square) continue;
@@ -143,7 +154,10 @@ function getDefenderCount(board: Board, square: Square, byColor: Color): number 
   return count;
 }
 
-function getAllAttacksOnEnemyPieces(board: Board, attackingColor: Color): PieceAttack[] {
+function getAllAttacksOnEnemyPieces(
+  board: Board,
+  attackingColor: Color,
+): PieceAttack[] {
   const attacks: PieceAttack[] = [];
   const enemyColor: Color = attackingColor === "white" ? "black" : "white";
 
@@ -157,7 +171,12 @@ function getAllAttacksOnEnemyPieces(board: Board, attackingColor: Color): PieceA
       if (attackSet.has(targetSq)) {
         const targetPiece = board.get(targetSq);
         if (targetPiece) {
-          attacks.push({ attackerSquare: attackerSq, attackerPiece, targetSquare: targetSq, targetPiece });
+          attacks.push({
+            attackerSquare: attackerSq,
+            attackerPiece,
+            targetSquare: targetSq,
+            targetPiece,
+          });
         }
       }
     }
@@ -173,7 +192,12 @@ function getAllAttacksOnEnemyPieces(board: Board, attackingColor: Color): PieceA
  * @param uci - UCI move string (e.g., "d4b3")
  * @param movingColor - Color that made the move
  */
-export function analyzeThreatDelta(beforeFen: string, afterFen: string, uci: string, movingColor: Color): ThreatInfo {
+export function analyzeThreatDelta(
+  beforeFen: string,
+  afterFen: string,
+  uci: string,
+  movingColor: Color,
+): ThreatInfo {
   const result: ThreatInfo = {
     attacks: [],
     discoveredAttacks: [],
@@ -203,7 +227,9 @@ export function analyzeThreatDelta(beforeFen: string, afterFen: string, uci: str
 
   for (const atk of attacksAfter) {
     const existedBefore = attacksBefore.some(
-      (b) => b.attackerSquare === atk.attackerSquare && b.targetSquare === atk.targetSquare
+      (b) =>
+        b.attackerSquare === atk.attackerSquare &&
+        b.targetSquare === atk.targetSquare,
     );
 
     if (!existedBefore) {
@@ -212,7 +238,7 @@ export function analyzeThreatDelta(beforeFen: string, afterFen: string, uci: str
       const targetName = roleName(atk.targetPiece.role);
 
       const desc = `${attackerName} on ${squareName(
-        atk.attackerSquare
+        atk.attackerSquare,
       )} attacks ${targetName.toLowerCase()} on ${squareName(atk.targetSquare)}`;
 
       if (isDiscovered) {
@@ -223,18 +249,24 @@ export function analyzeThreatDelta(beforeFen: string, afterFen: string, uci: str
 
       // Check if this is a check
       if (atk.targetPiece.role === "king") {
-        result.checks.push(`${attackerName} on ${squareName(atk.attackerSquare)} gives check`);
+        result.checks.push(
+          `${attackerName} on ${squareName(atk.attackerSquare)} gives check`,
+        );
       }
     }
 
     // Track hanging pieces (only count each target once)
     if (!seenTargets.has(atk.targetSquare)) {
       seenTargets.add(atk.targetSquare);
-      const defenders = getDefenderCount(afterBoard, atk.targetSquare, enemyColor);
+      const defenders = getDefenderCount(
+        afterBoard,
+        atk.targetSquare,
+        enemyColor,
+      );
       if (defenders === 0 && atk.targetPiece.role !== "king") {
         const value = PIECE_VALUES[atk.targetPiece.role];
         result.hangingPieces.push(
-          `${roleName(atk.targetPiece.role)} on ${squareName(atk.targetSquare)} is undefended (${value} pts)`
+          `${roleName(atk.targetPiece.role)} on ${squareName(atk.targetSquare)} is undefended (${value} pts)`,
         );
         result.materialAtRisk = Math.max(result.materialAtRisk, value);
       }
@@ -269,8 +301,10 @@ export function formatThreatInfo(info: ThreatInfo): string {
   return lines.length > 0 ? lines.join("\n") : "No immediate tactical threats";
 }
 
-const beforeFen = "r4rk1/ppq3pp/4pp2/2bp4/N2n4/P2Q3P/1PP2PP1/R1B1R1K1 w - - 5 19";
-const afterFen = "r4rk1/ppq3pp/4pp2/2bp4/N2n4/P1PQ3P/1P3PP1/R1B1R1K1 b - - 0 19";
+const beforeFen =
+  "r4rk1/ppq3pp/4pp2/2bp4/N2n4/P2Q3P/1PP2PP1/R1B1R1K1 w - - 5 19";
+const afterFen =
+  "r4rk1/ppq3pp/4pp2/2bp4/N2n4/P1PQ3P/1P3PP1/R1B1R1K1 b - - 0 19";
 const uci = "c2c3";
 const color = "white";
 

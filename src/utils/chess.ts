@@ -13,7 +13,10 @@ export type ContinuationMove = {
 /**
  * Convert UCI moves to full continuation with SAN and FENs
  */
-export function parseUciContinuation(uciMoves: string[], startFen: string): ContinuationMove[] {
+export function parseUciContinuation(
+  uciMoves: string[],
+  startFen: string,
+): ContinuationMove[] {
   const result: ContinuationMove[] = [];
 
   // Parse starting position
@@ -53,7 +56,9 @@ export function parseUciContinuation(uciMoves: string[], startFen: string): Cont
 /**
  * Generate a hash for the game (simple hash of PGN moves)
  */
-export function generateGameHash(moves: Array<{ san: string; fen: string }>): string {
+export function generateGameHash(
+  moves: Array<{ san: string; fen: string }>,
+): string {
   // Create a simple hash from the move sequence and final position
   const moveString = moves.map((m) => m.san).join("");
   const finalFen = moves[moves.length - 1]?.fen || "";

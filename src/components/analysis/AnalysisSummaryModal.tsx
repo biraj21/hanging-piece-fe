@@ -1,7 +1,6 @@
+import type { MoveQuality } from "@/helpers/pgn";
 import { XIcon } from "lucide-react";
 import React from "react";
-
-import type { MoveQuality } from "@/helpers/pgn";
 
 import { AnalysisSummary, type AnalysisSummaryProps } from "./AnalysisSummary";
 
@@ -41,7 +40,12 @@ export const AnalysisSummaryModal: React.FC<AnalysisSummaryModalProps> = ({
 
         {/* Content */}
         <div className="px-4 sm:px-6 py-5">
-          <AnalysisSummary game={game} whiteName={whiteName} blackName={blackName} userColor={userColor} />
+          <AnalysisSummary
+            game={game}
+            whiteName={whiteName}
+            blackName={blackName}
+            userColor={userColor}
+          />
         </div>
 
         {/* Footer - Only show when opened right after analysis */}

@@ -1,4 +1,5 @@
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
+
 import { useEffect, useRef } from "react";
 
 interface ChessPieceProps {

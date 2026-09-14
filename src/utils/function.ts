@@ -10,7 +10,7 @@
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  delay: number = 500
+  delay: number = 500,
 ): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout>;
 

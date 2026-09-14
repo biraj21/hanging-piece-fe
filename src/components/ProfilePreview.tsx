@@ -3,6 +3,7 @@ import type { LichessProfile } from "@/api/lichess";
 import { useChesscomProfile, useLichessProfile } from "@/api/queries";
 import clsx from "clsx";
 import { useEffect } from "react";
+
 import { PlayOnPlatform } from "./PlayOnPlatform";
 
 interface ProfilePreviewProps {
@@ -24,13 +25,23 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
   const isChesscom = platform === "chesscom";
   const shouldFetch = !!username;
 
-  const chesscomQuery = useChesscomProfile(username || undefined, { enabled: shouldFetch && isChesscom });
-  const lichessQuery = useLichessProfile(username || undefined, { enabled: shouldFetch && !isChesscom });
+  const chesscomQuery = useChesscomProfile(username || undefined, {
+    enabled: shouldFetch && isChesscom,
+  });
+  const lichessQuery = useLichessProfile(username || undefined, {
+    enabled: shouldFetch && !isChesscom,
+  });
 
   const data = isChesscom ? chesscomQuery.data : lichessQuery.data;
-  const isLoading = isChesscom ? chesscomQuery.isLoading : lichessQuery.isLoading;
+  const isLoading = isChesscom
+    ? chesscomQuery.isLoading
+    : lichessQuery.isLoading;
   const isError = isChesscom ? chesscomQuery.isError : lichessQuery.isError;
-  const error = !shouldFetch ? null : isChesscom ? chesscomQuery.error : lichessQuery.error;
+  const error = !shouldFetch
+    ? null
+    : isChesscom
+      ? chesscomQuery.error
+      : lichessQuery.error;
 
   const chesscomData = chesscomQuery.data;
   const lichessData = lichessQuery.data;
@@ -47,7 +58,9 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
     }
   }, [isError, error, onError]);
 
-  const displayName = isChesscom ? chesscomData?.name || username : lichessData?.name || username;
+  const displayName = isChesscom
+    ? chesscomData?.name || username
+    : lichessData?.name || username;
   const avatar = isChesscom ? chesscomData?.avatar : undefined;
   const country = isChesscom ? chesscomData?.country : lichessData?.country;
   const league = isChesscom ? chesscomData?.league : undefined;
@@ -95,9 +108,15 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
           }`}
         >
           {!isLoading && avatar ? (
-            <img src={avatar} alt={`${username}'s avatar`} className="w-full h-full rounded-full object-cover" />
+            <img
+              src={avatar}
+              alt={`${username}'s avatar`}
+              className="w-full h-full rounded-full object-cover"
+            />
           ) : !isLoading && !avatar ? (
-            <span className="text-white text-xs font-semibold">{getInitials(displayName)}</span>
+            <span className="text-white text-xs font-semibold">
+              {getInitials(displayName)}
+            </span>
           ) : null}
         </div>
         <div className="flex-1 min-w-0">
@@ -105,7 +124,9 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
             {isLoading ? (
               <div className="h-4 w-24 bg-neutral-700 rounded animate-pulse" />
             ) : (
-              <h3 className="text-white text-sm font-semibold truncate">{displayName}</h3>
+              <h3 className="text-white text-sm font-semibold truncate">
+                {displayName}
+              </h3>
             )}
             {isLoading ? (
               <div className="h-4 w-12 bg-neutral-700 rounded animate-pulse" />
@@ -160,11 +181,21 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
             "bg-neutral-700 rounded animate-pulse": isLoading,
           })}
         >
-          <div className={clsx("flex items-center gap-2", { "opacity-0": isLoading })}>
+          <div
+            className={clsx("flex items-center gap-2", {
+              "opacity-0": isLoading,
+            })}
+          >
             <span>{totalGames.toLocaleString()} games</span>
-            <span className="text-green-400/70">{stats?.wins.toLocaleString()}W</span>
-            <span className="text-red-400/70">{stats?.losses.toLocaleString()}L</span>
-            <span className="text-neutral-400/70">{stats?.draws.toLocaleString()}D</span>
+            <span className="text-green-400/70">
+              {stats?.wins.toLocaleString()}W
+            </span>
+            <span className="text-red-400/70">
+              {stats?.losses.toLocaleString()}L
+            </span>
+            <span className="text-neutral-400/70">
+              {stats?.draws.toLocaleString()}D
+            </span>
           </div>
         </div>
       }

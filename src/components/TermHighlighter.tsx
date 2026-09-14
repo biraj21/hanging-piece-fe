@@ -1,5 +1,10 @@
-import { CHESS_GLOSSARY, ChessTerm, VARIATION_TO_BASE_TERM } from "@/constants/chess-glossary";
+import {
+  CHESS_GLOSSARY,
+  ChessTerm,
+  VARIATION_TO_BASE_TERM,
+} from "@/constants/chess-glossary";
 import React, { Component } from "react";
+
 import { Tooltip } from "./Tooltip";
 
 const CHESS_GLOSSARY_OBJ = CHESS_GLOSSARY as Record<string, string>;
@@ -17,10 +22,17 @@ export class TermHighlighter extends Component<TermHighlighterProps> {
     let currentIndex = 0;
 
     // Sort terms by length (longer first) to handle compound terms
-    const sortedTerms = Object.keys(CHESS_GLOSSARY).sort((a, b) => b.length - a.length);
+    const sortedTerms = Object.keys(CHESS_GLOSSARY).sort(
+      (a, b) => b.length - a.length,
+    );
 
     while (currentIndex < text.length) {
-      let bestMatch: { term: string; baseTerm: ChessTerm; index: number; length: number } | null = null;
+      let bestMatch: {
+        term: string;
+        baseTerm: ChessTerm;
+        index: number;
+        length: number;
+      } | null = null;
 
       // Find earliest matching term in remaining text
       for (const term of sortedTerms) {
@@ -36,7 +48,9 @@ export class TermHighlighter extends Component<TermHighlighterProps> {
         const lowerTerm = term.toLowerCase();
 
         // Escape special regex characters
-        const escapedTerm = lowerTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/[-/]/g, "[-/]?");
+        const escapedTerm = lowerTerm
+          .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+          .replace(/[-/]/g, "[-/]?");
         const pattern = `\\b${escapedTerm}\\b`;
         const regex = new RegExp(pattern, "i");
         const match = lowerText.match(regex);
@@ -48,9 +62,15 @@ export class TermHighlighter extends Component<TermHighlighterProps> {
           if (
             !bestMatch ||
             absoluteIndex < bestMatch.index ||
-            (absoluteIndex === bestMatch.index && match[0].length > bestMatch.length)
+            (absoluteIndex === bestMatch.index &&
+              match[0].length > bestMatch.length)
           ) {
-            bestMatch = { term, baseTerm, index: absoluteIndex, length: match[0].length };
+            bestMatch = {
+              term,
+              baseTerm,
+              index: absoluteIndex,
+              length: match[0].length,
+            };
           }
         }
       }
@@ -62,7 +82,10 @@ export class TermHighlighter extends Component<TermHighlighterProps> {
         }
 
         // Add highlighted term
-        const matchedText = text.slice(bestMatch.index, bestMatch.index + bestMatch.length);
+        const matchedText = text.slice(
+          bestMatch.index,
+          bestMatch.index + bestMatch.length,
+        );
         nodes.push(
           <Tooltip
             key={bestMatch.index}

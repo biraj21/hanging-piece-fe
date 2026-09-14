@@ -1,16 +1,23 @@
+import {
+  CONTINUATION_LENGTH,
+  INITIAL_FEN,
+  STOCKFISH_DEFAULT_DEPTH,
+} from "@/constants";
+import { StockfishAnalysis } from "@/db/stockfish-analysis";
+import { getNagFromQuality } from "@/helpers/move-quality";
+import {
+  GameMove,
+  type MoveQuality,
+  type ParsedGame,
+  type Variation,
+} from "@/helpers/pgn";
+import { isCentipawnEval, isMateEval, Stockfish } from "@/helpers/stockfish";
+import type { EngineEvaluation } from "@/types";
+import { parseUciContinuation } from "@/utils/chess";
 import type { Chess } from "chessops/chess";
 import { makeFen } from "chessops/fen";
 import { startingPosition, type Evaluation } from "chessops/pgn";
 import { parseUci } from "chessops/util";
-
-import { CONTINUATION_LENGTH, INITIAL_FEN, STOCKFISH_DEFAULT_DEPTH } from "@/constants";
-import { StockfishAnalysis } from "@/db/stockfish-analysis";
-import { getNagFromQuality } from "@/helpers/move-quality";
-import type { MoveQuality, ParsedGame, Variation } from "@/helpers/pgn";
-import { GameMove } from "@/helpers/pgn";
-import { isCentipawnEval, isMateEval, Stockfish } from "@/helpers/stockfish";
-import type { EngineEvaluation } from "@/types";
-import { parseUciContinuation } from "@/utils/chess";
 
 export type AnalysisProgress = {
   currentMoveIndex: number;
@@ -79,7 +86,10 @@ export async function analyzeGame(
 
   // Helper to convert eval to white's perspective based on side to move
   // Stockfish returns eval from the perspective of the side to move!
-  const toWhitePerspective = (ev: EngineEvaluation, sideToMove: "white" | "black"): EngineEvaluation => {
+  const toWhitePerspective = (
+    ev: EngineEvaluation,
+    sideToMove: "white" | "black",
+  ): EngineEvaluation => {
     if (sideToMove === "white") {
       return ev; // Already from white's perspective
     }
@@ -147,7 +157,11 @@ export async function analyzeGame(
     if (previousEvalWhite && evalAfterWhite && !isCheckmate) {
       // Use Lichess-compatible classification
       // Both evals are from WHITE's perspective, classifyMoveLichess handles the rest
-      const quality = classifyMoveLichess(previousEvalWhite, evalAfterWhite, moverColor);
+      const quality = classifyMoveLichess(
+        previousEvalWhite,
+        evalAfterWhite,
+        moverColor,
+      );
 
       if (quality) {
         const nag = getNagFromQuality(quality);
@@ -155,15 +169,26 @@ export async function analyzeGame(
           nags = [nag];
 
           // Get best line for bad moves (blunder, mistake, inaccuracy)
-          if (quality === "blunder" || quality === "mistake" || quality === "inaccuracy") {
+          if (
+            quality === "blunder" ||
+            quality === "mistake" ||
+            quality === "inaccuracy"
+          ) {
             try {
               // Get best continuation from the position before the move
               const beforeFen = i === 0 ? INITIAL_FEN : game.moves[i - 1].fen;
-              const bestUciMoves = await engine.getContinuation(beforeFen, CONTINUATION_LENGTH[quality], depth);
+              const bestUciMoves = await engine.getContinuation(
+                beforeFen,
+                CONTINUATION_LENGTH[quality],
+                depth,
+              );
 
               // Only create variation if we got moves back
               if (bestUciMoves.length > 0) {
-                const bestContinuation = parseUciContinuation(bestUciMoves, beforeFen);
+                const bestContinuation = parseUciContinuation(
+                  bestUciMoves,
+                  beforeFen,
+                );
 
                 // Convert to Variation format
                 const variation: Variation = bestContinuation.map((item) => ({
@@ -179,7 +204,12 @@ export async function analyzeGame(
 
                 // Generate text comment in Lichess format
                 const bestMove = bestContinuation[0];
-                const comment = generateMoveComment(quality, previousEvalWhite, evalAfterWhite, bestMove.san);
+                const comment = generateMoveComment(
+                  quality,
+                  previousEvalWhite,
+                  evalAfterWhite,
+                  bestMove.san,
+                );
                 // Store comment to be used when creating the new GameMove
                 if (!textCommentsPerMove[i]) {
                   textCommentsPerMove[i] = [];
@@ -205,7 +235,10 @@ export async function analyzeGame(
     }
 
     // Create analyzed move with text comments
-    const allTextComments = [...move.textComments, ...(textCommentsPerMove[i] || [])];
+    const allTextComments = [
+      ...move.textComments,
+      ...(textCommentsPerMove[i] || []),
+    ];
     analyzedMoves.push(
       new GameMove({
         ply: move.ply,
@@ -380,7 +413,11 @@ export function classifyMoveLichess(
   moverColor: "white" | "black",
 ): MoveQuality | undefined {
   // Handle mate transitions first (Lichess MateAdvice logic)
-  const mateClassification = classifyMateTransition(prevEval, currEval, moverColor);
+  const mateClassification = classifyMateTransition(
+    prevEval,
+    currEval,
+    moverColor,
+  );
   if (mateClassification) {
     return mateClassification;
   }
@@ -418,7 +455,10 @@ export function cpToWinningChance(cp: number): number {
   return 50 + 50 * winningChances(cp);
 }
 
-export function calculateWinningChanceDelta(evalBefore: EngineEvaluation, evalAfter: EngineEvaluation): number {
+export function calculateWinningChanceDelta(
+  evalBefore: EngineEvaluation,
+  evalAfter: EngineEvaluation,
+): number {
   const before = getWinningChances(evalBefore);
   const after = getWinningChances(evalAfter);
   // Convert from [-1,+1] scale to [0,100] scale for backwards compat
@@ -453,8 +493,12 @@ export function classifyMateTransition(
   // Normalize to mover's perspective
   const invertIfBlack = (val: number) => (moverColor === "black" ? -val : val);
 
-  const prevMate = isMateEval(prevEval) ? invertIfBlack(prevEval.mate) : undefined;
-  const currMate = isMateEval(currEval) ? invertIfBlack(currEval.mate) : undefined;
+  const prevMate = isMateEval(prevEval)
+    ? invertIfBlack(prevEval.mate)
+    : undefined;
+  const currMate = isMateEval(currEval)
+    ? invertIfBlack(currEval.mate)
+    : undefined;
   const prevCp = isCentipawnEval(prevEval) ? invertIfBlack(prevEval.cp) : 0;
   const currCp = isCentipawnEval(currEval) ? invertIfBlack(currEval.cp) : 0;
 
