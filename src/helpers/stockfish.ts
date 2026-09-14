@@ -3,7 +3,6 @@ import type {
   EngineEvaluation,
   EngineMateEval,
 } from "@/types";
-import { isMobileDevice } from "@/utils/device";
 
 export function isMateEval(ev: EngineEvaluation): ev is EngineMateEval {
   return "mate" in ev;
@@ -15,63 +14,14 @@ export function isCentipawnEval(
   return "cp" in ev;
 }
 
-const ALWAYS_SINGLE_LITE = true;
-
-/**
- * Minimal Stockfish.js integration for testing
- * Provides engine initialization and continuation generation
- */
-
-interface EngineVariant {
-  path: string;
-  variant: "lite" | "full";
-  sizeMb: number;
-  name: string;
-  threads: number;
-}
-
-type EngineVariantKey =
-  "LITE_MULTI" | "LITE_SINGLE" | "FULL_MULTI" | "FULL_SINGLE";
-
-const STOCKFISH_ENGINE: Record<EngineVariantKey, EngineVariant> = {
-  LITE_MULTI: {
-    path: "/stockfish/stockfish-17.1-lite-51f59da.js",
-    variant: "lite",
-    sizeMb: 7,
-    name: "Multi-threaded Lite",
-    threads: Math.min(navigator.hardwareConcurrency || 2, 4),
-  },
-  LITE_SINGLE: {
-    path: "/stockfish/stockfish-17.1-lite-single-03e3232.js",
-    variant: "lite",
-    sizeMb: 7,
-    name: "Single-threaded Lite",
-    threads: 1,
-  },
-  FULL_MULTI: {
-    path: "/stockfish/stockfish-17.1-8e4d048.js",
-    variant: "full",
-    sizeMb: 75,
-    name: "Multi-threaded Full",
-    threads: navigator.hardwareConcurrency || 4,
-  },
-  FULL_SINGLE: {
-    path: "/stockfish/stockfish-17.1-single-a496a04.js",
-    variant: "full",
-    sizeMb: 75,
-    name: "Single-threaded Full",
-    threads: 1,
-  },
-};
+const STOCKFISH_PATH = "/stockfish/stockfish-18-lite-single.js";
 
 class StockfishEngine {
   private worker: Worker | null = null;
   private messageQueue: Set<(data: string) => void> = new Set();
   private uciSent = false;
   private isReady = false;
-  private variant: EngineVariant | null = null;
-
-  async init(variant: EngineVariant, hashMemoryMb?: number): Promise<void> {
+  async init(): Promise<void> {
     if (this.worker) {
       console.debug("Engine already initialized");
       return;
@@ -81,13 +31,8 @@ class StockfishEngine {
 
     return new Promise((resolve, reject) => {
       try {
-        // Get the appropriate engine variant
-        this.variant = variant;
-
-        console.debug(`Loading ${variant.name}`);
-        console.debug(`Threads: ${variant.threads}`);
-
-        this.worker = new Worker(variant.path);
+        console.debug("Loading Stockfish 18 lite (single-threaded)");
+        this.worker = new Worker(STOCKFISH_PATH);
 
         const handleMsgLine = (msg: string) => {
           // Notify all listeners
@@ -96,25 +41,13 @@ class StockfishEngine {
           // Check if ready
           if (msg === "readyok") {
             this.isReady = true;
-            console.debug(`✅ ${variant.name} engine ready!`);
+            console.debug("✅ Stockfish engine ready!");
             resolve();
             return;
           }
 
           if (msg === "uciok") {
             console.debug("✅ UCI protocol confirmed");
-            // Configure threads if multi-threaded
-            if (variant.threads > 1) {
-              // see https://official-stockfish.github.io/docs/stockfish-wiki/UCI-&-Commands.html#setoption
-              this.send(`setoption name Threads value ${variant.threads}`);
-
-              console.debug(`⚙️ Configured ${variant.threads} threads`);
-            }
-
-            if (hashMemoryMb) {
-              this.send(`setoption name Hash value ${hashMemoryMb || 16}`);
-            }
-
             // Request ready status
             this.send("isready");
             return;
@@ -290,10 +223,6 @@ class StockfishEngine {
     });
   }
 
-  getEngineVariant(): EngineVariant | null {
-    return this.variant;
-  }
-
   terminate(): void {
     if (this.worker) {
       console.debug("Terminating engine...");
@@ -302,88 +231,27 @@ class StockfishEngine {
       this.uciSent = false;
       this.isReady = false;
       this.messageQueue = new Set();
-      this.variant = null;
     }
   }
 }
 
 /**
- * Check if SharedArrayBuffer is available (required for multi-threaded engine)
- * This requires proper CORS headers: Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy
- */
-function isSharedArrayBufferAvailable(): boolean {
-  return typeof SharedArrayBuffer !== "undefined";
-}
-
-/**
- * Get the appropriate Stockfish variant based on device and capabilities
- * Files are served from public/stockfish/ folder
- *
- * Desktop = Full engine (75MB, strongest)
- * Mobile = Lite engine (7MB, fast & battery-friendly)
- * @param useLite - Force Lite engine (for full-game analysis)
- */
-function getEngineVariant(useLite: boolean = false): EngineVariant {
-  const hasCORS = isSharedArrayBufferAvailable();
-  if (hasCORS) {
-    return useLite ? STOCKFISH_ENGINE.LITE_MULTI : STOCKFISH_ENGINE.FULL_MULTI;
-  } else {
-    return useLite
-      ? STOCKFISH_ENGINE.LITE_SINGLE
-      : STOCKFISH_ENGINE.FULL_SINGLE;
-  }
-}
-
-/**
- * Instance-based Stockfish wrapper that retains engine variant.
- * Create instances using static factory methods:
- * - Stockfish.createLite() - Fast, battery-friendly (for full-game analysis)
- * - Stockfish.createFull() - Strongest engine (for single-position analysis)
+ * Stockfish wrapper using the single-threaded lite engine.
  */
 export class Stockfish {
   private engine: StockfishEngine;
   private initPromise: Promise<void>;
 
-  private constructor(variant: EngineVariant, hashMemoryMb?: number) {
+  private constructor() {
     this.engine = new StockfishEngine();
-    this.initPromise = this.engine.init(variant, hashMemoryMb);
+    this.initPromise = this.engine.init();
   }
 
   /**
-   * Create a Stockfish instance based on the device
-   *
-   * - Desktop: Full engine (75MB, strongest)
-   * - Mobile: Lite engine (7MB, fast & battery-friendly)
+   * Create a Stockfish instance.
    */
   static create(): Stockfish {
-    if (ALWAYS_SINGLE_LITE) {
-      return new Stockfish(STOCKFISH_ENGINE.LITE_SINGLE);
-    }
-
-    const isMobile = isMobileDevice();
-    if (isMobile) {
-      return this.createLite();
-    } else {
-      return this.createFull();
-    }
-  }
-
-  /**
-   * Create a Lite engine instance (fast, battery-friendly, 7MB)
-   * Best for full-game analysis where speed matters
-   */
-  private static createLite(): Stockfish {
-    const variant = getEngineVariant(true);
-    return new Stockfish(variant);
-  }
-
-  /**
-   * Create a Full engine instance (strongest, 75MB)
-   * Best for single-position deep analysis
-   */
-  private static createFull(): Stockfish {
-    const variant = getEngineVariant(false);
-    return new Stockfish(variant);
+    return new Stockfish();
   }
 
   /**
