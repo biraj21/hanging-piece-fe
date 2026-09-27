@@ -23,9 +23,13 @@ const queryClient = new QueryClient({
   },
 });
 
-if (!["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname)) {
+if (
+  env.VITE_PUBLIC_POSTHOG_KEY &&
+  env.VITE_PUBLIC_POSTHOG_HOST &&
+  !["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname)
+) {
   posthog.init(env.VITE_PUBLIC_POSTHOG_KEY, {
-    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+    api_host: env.VITE_PUBLIC_POSTHOG_HOST,
     defaults: "2025-11-30",
   });
 }
